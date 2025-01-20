@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">Spool RFID</string>
+    <string name="this_device_does_not_support_mifare_classic_tags">This device does not support \"Mifare Classic\" tags\'</string>
+    <string name="please_activate_nfc">Please activate NFC</string>
+    <string name="tag_found">"TAG Found: "</string>
+    <string name="data_read_from_tag">Data read from TAG</string>
+    <string name="unknown_or_empty_tag">Unknown or empty TAG</string>
+    <string name="authentication_failed">Authentication failed</string>
+    <string name="error_reading_tag">Error reading TAG</string>
+    <string name="error_closing_connection">Error closing connection</string>
+    <string name="data_written_to_tag">Data written to TAG</string>
+    <string name="error_writing_to_tag">Error writing to TAG</string>
+    <string name="pick_color">Pick Color</string>
+    <string name="read">Read</string>
+    <string name="write">Write</string>
+    <string name="_00_00_00_00">00 00 00 00</string>
+    <string name="close">Close</string>
+    <string name="picker">picker</string>
+    <string name="invalid_tag_type">Invalid tag type</string>
+    <string name="tag_id">Tag ID:</string>
+    <string name="color">Color:</string>
+    <string name="size">Size:</string>
+    <string name="type">Type:</string>
+    <string name="brand">Brand:</string>
+    <string name="auto_read_on_tag_scan">Auto read on tag scan?</string>
+    <string name="select">Select</string>
+</resources>
