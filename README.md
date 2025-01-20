@@ -61,6 +61,7 @@ Extracted from cfs0_050_G32-cfs0_000_112.bin
  /mnt/UDISK/creality/userdata/box/tn_data.json
  /mnt/UDISK/creality/userdata/box/material_box_info.json
  /mnt/UDISK/creality/userdata/box/material_database.json
+ /mnt/UDISK/creality/userdata/box/material_modify_info.json
 ```
 
 
