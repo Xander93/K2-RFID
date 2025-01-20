@@ -1,5 +1,7 @@
 # K2-RFID
-K2/CFS RFID Programming
+K2/CFS RFID Programming.<br>
+The tags required are <a href=https://en.wikipedia.org/wiki/MIFARE>MIFARE</a> Classic 1k tags.<br>
+
 
 <br>
 <a href=https://github.com/DnG-Crafts/K2-RFID/tree/main/Android/SpoolID>Android Code</a>
@@ -60,3 +62,20 @@ Extracted from cfs0_050_G32-cfs0_000_112.bin
  /mnt/UDISK/creality/userdata/box/material_box_info.json
  /mnt/UDISK/creality/userdata/box/material_database.json
 ```
+
+
+## Arduino Hardware
+
+<a href=https://en.wikipedia.org/wiki/ESP32>ESP32</a><br>
+
+<a href=https://esphome.io/components/binary_sensor/rc522.html>RC522</a><br>
+
+Pinout<br>
+<img src=https://github.com/DnG-Crafts/K2-RFID/blob/main/pins.jpg>
+
+
+
+
+
+
+
