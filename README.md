@@ -65,13 +65,20 @@ Extracted from cfs0_050_G32-cfs0_000_112.bin
 ```
 
 
-## Arduino Hardware
+## Arduino
 
+Default Access point information:<br>
+```
+SSID:    K2_RFID
+PASS:    password
+Web URL: http://10.1.0.1/
+```
+<br>
+Hardware:<br>
 <a href=https://en.wikipedia.org/wiki/ESP32>ESP32</a><br>
-
 <a href=https://esphome.io/components/binary_sensor/rc522.html>RC522</a><br>
-
-Pinout<br>
+<br>
+GPIO Connections:<br>
 <img src=https://github.com/DnG-Crafts/K2-RFID/blob/main/pins.jpg>
 
 
