@@ -24,4 +24,16 @@
     <string name="brand">Brand:</string>
     <string name="auto_read_on_tag_scan">Auto read on tag scan?</string>
     <string name="select">Select</string>
+    <string name="cancel">Cancel</string>
+    <string name="apply">Apply</string>
+    <string name="day">Day:</string>
+    <string name="year">Year:</string>
+    <string name="vendor">Vendor:</string>
+    <string name="batch">Batch:</string>
+    <string name="material">Material:</string>
+    <string name="serial">Serial:</string>
+    <string name="reserve">Reserve:</string>
+    <string name="custom_tag_data">Custom Tag Data</string>
+    <string name="incorrect_tag_data_length">Incorrect tag data length</string>
+    <string name="open_custom_tag_editor">Open Custom Tag Editor</string>
 </resources>

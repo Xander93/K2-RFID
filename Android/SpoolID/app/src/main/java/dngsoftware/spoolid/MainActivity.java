@@ -8,6 +8,7 @@ import static dngsoftware.spoolid.Utils.GetMaterialWeight;
 import static dngsoftware.spoolid.Utils.GetSetting;
 import static dngsoftware.spoolid.Utils.SaveSetting;
 import static dngsoftware.spoolid.Utils.SetPermissions;
+import static dngsoftware.spoolid.Utils.dp2Px;
 import static dngsoftware.spoolid.Utils.playBeep;
 import static dngsoftware.spoolid.Utils.materialBrands;
 import static dngsoftware.spoolid.Utils.bytesToHex;
@@ -36,6 +37,7 @@ import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Spinner;
@@ -60,10 +62,8 @@ public class MainActivity extends AppCompatActivity{
     String MaterialName, MaterialWeight, MaterialColor;
     TextView tagID;
     View colorView;
-    float scrHeight, scrWwidth;
-    Dialog dialog;
+    Dialog pickerDialog, customDialog;
     MaterialSwitch autoread;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +71,7 @@ public class MainActivity extends AppCompatActivity{
         setContentView(R.layout.activity_main);
         Button rbtn = findViewById(R.id.readbutton);
         Button wbtn = findViewById(R.id.writebutton);
+        ImageView cbtn = findViewById(R.id.cbtn);
         colorView = findViewById(R.id.colorview);
         Spinner colorspin = findViewById(R.id.colorspin);
         autoread = findViewById(R.id.autoread);
@@ -79,6 +80,7 @@ public class MainActivity extends AppCompatActivity{
         spoolsize = findViewById(R.id.spoolsize);
         material = findViewById(R.id.material);
 
+
         SetPermissions(this);
         if (!canMfc(this)) {
             Toast.makeText(getApplicationContext(), R.string.this_device_does_not_support_mifare_classic_tags, Toast.LENGTH_SHORT).show();
@@ -86,17 +88,13 @@ public class MainActivity extends AppCompatActivity{
 
         nfcReader = new nAdapter(this);
 
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        scrHeight = displayMetrics.heightPixels;
-        scrWwidth = displayMetrics.widthPixels;
-
         colorView.setBackgroundColor(Color.argb(255, 0, 0, 255));
         MaterialColor = "0000FF";
 
         colorView.setOnClickListener(view -> openPicker());
 
         rbtn.setOnClickListener(view -> ReadSpoolData());
+        cbtn.setOnClickListener(view -> openCustom());
 
         wbtn.setOnClickListener(view -> WriteSpoolData(GetMaterialID(MaterialName), MaterialColor, GetMaterialLength(MaterialWeight)));
 
@@ -159,7 +157,6 @@ public class MainActivity extends AppCompatActivity{
         ReadTagUID(getIntent());
     }
 
-
     void setMaterial(String brand)
     {
         madapter = new ArrayAdapter<>(this, R.layout.spinner_item, getMaterials(brand));
@@ -190,6 +187,14 @@ public class MainActivity extends AppCompatActivity{
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (pickerDialog != null && pickerDialog.isShowing())
+        {
+            pickerDialog.dismiss();
+        }
+        if (customDialog != null && customDialog.isShowing())
+        {
+            customDialog.dismiss();
+        }
     }
 
     @Override
@@ -198,11 +203,6 @@ public class MainActivity extends AppCompatActivity{
         try {
             nfcReader.disableForeground();
         }catch (Exception ignored){}
-        if (dialog != null && dialog.isShowing())
-        {
-            assert dialog != null;
-            dialog.dismiss();
-        }
     }
 
     @Override
@@ -214,14 +214,9 @@ public class MainActivity extends AppCompatActivity{
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        scrHeight = displayMetrics.heightPixels;
-        scrWwidth = displayMetrics.widthPixels;
-        if (dialog != null && dialog.isShowing())
+        if (pickerDialog != null && pickerDialog.isShowing())
         {
-            assert dialog != null;
-            dialog.dismiss();
+            pickerDialog.dismiss();
             openPicker();
         }
     }
@@ -241,8 +236,7 @@ public class MainActivity extends AppCompatActivity{
         }
     }
 
-
-    void ReadSpoolData() {
+    String ReadTag() {
         if (currentTag != null) {
             MifareClassic mfc = MifareClassic.get(currentTag);
             if (mfc != null && mfc.getType() == MifareClassic.TYPE_CLASSIC) {
@@ -254,20 +248,8 @@ public class MainActivity extends AppCompatActivity{
                         for (int i = 4; i < 7; i++) {
                             sb.append(new String(mfc.readBlock(i), StandardCharsets.UTF_8));
                         }
-                        String MaterialID = sb.toString().substring(12, 17);
-                        if (GetMaterialName(MaterialID) != null) {
-                            MaterialColor = sb.toString().substring(18, 24);
-                            String Length = sb.toString().substring(24, 28);
-                            colorView.setBackgroundColor(Color.parseColor("#" + MaterialColor));
-                            MaterialName = Objects.requireNonNull(GetMaterialName(MaterialID))[0];
-                            material.setSelection(madapter.getPosition(MaterialName));
-                            brand.setSelection(badapter.getPosition(Objects.requireNonNull(GetMaterialName(MaterialID))[1]));
-                            spoolsize.setSelection(sadapter.getPosition(GetMaterialWeight(Length)));
-                            Toast.makeText(getApplicationContext(), R.string.data_read_from_tag, Toast.LENGTH_SHORT).show();
-                        }
-                        else {
-                            Toast.makeText(getApplicationContext(), R.string.unknown_or_empty_tag, Toast.LENGTH_SHORT).show();
-                        }
+                        mfc.close();
+                        return sb.toString();
                     } else {
                         Toast.makeText(getApplicationContext(), R.string.authentication_failed, Toast.LENGTH_SHORT).show();
                     }
@@ -282,33 +264,23 @@ public class MainActivity extends AppCompatActivity{
             }else{
                 Toast.makeText(getApplicationContext(), R.string.invalid_tag_type, Toast.LENGTH_SHORT).show();
             }
+            return null;
         }
+        return null;
     }
 
-
-    void WriteSpoolData(String MaterialID, String Color, String Length) {
-        if (currentTag != null) {
-            SecureRandom random = new SecureRandom();
-
-            String filamentId = "1" + MaterialID; //material_database.json
-            String vendorId = "0276"; //0276 creality
-            String color = "0" + Color;
-            String filamentLen = Length;
-            String serialNum = format(Locale.getDefault(),"%06d", random.nextInt(100000)); //000001
-            String reserve = "000000";
-
-            String spoolData = "AB124" + vendorId + "A2" + filamentId + color + filamentLen + serialNum + reserve + "00000000";
-
+    void WriteTag(String tagData) {
+        if (currentTag != null && tagData.length() == 40) {
             MifareClassic mfc = MifareClassic.get(currentTag);
             if (mfc != null && mfc.getType() == MifareClassic.TYPE_CLASSIC) {
                 try {
                     mfc.connect();
                     boolean auth = mfc.authenticateSectorWithKeyA(1, MifareClassic.KEY_DEFAULT);
                     if (auth) {
-                        byte[] sectorData = spoolData.getBytes();
+                        byte[] sectorData = (tagData+"00000000").getBytes();
                         int blockIndex = 4;
-                        for (int i = 0; i < sectorData.length; i+=MifareClassic.BLOCK_SIZE) {
-                            byte[] block = Arrays.copyOfRange(sectorData, i, i+MifareClassic.BLOCK_SIZE);
+                        for (int i = 0; i < sectorData.length; i += MifareClassic.BLOCK_SIZE) {
+                            byte[] block = Arrays.copyOfRange(sectorData, i, i + MifareClassic.BLOCK_SIZE);
                             mfc.writeBlock(blockIndex, block);
                             blockIndex++;
                         }
@@ -324,26 +296,54 @@ public class MainActivity extends AppCompatActivity{
                 try {
                     mfc.close();
                 } catch (Exception ignored) {}
-            }else{
+            } else {
                 Toast.makeText(getApplicationContext(), R.string.invalid_tag_type, Toast.LENGTH_SHORT).show();
             }
         }
     }
 
+    void ReadSpoolData() {
+        String tagData = ReadTag();
+        if (tagData != null) {
+            String MaterialID = tagData.substring(12, 17);
+            if (GetMaterialName(MaterialID) != null) {
+                MaterialColor = tagData.substring(18, 24);
+                String Length = tagData.substring(24, 28);
+                colorView.setBackgroundColor(Color.parseColor("#" + MaterialColor));
+                MaterialName = Objects.requireNonNull(GetMaterialName(MaterialID))[0];
+                material.setSelection(madapter.getPosition(MaterialName));
+                brand.setSelection(badapter.getPosition(Objects.requireNonNull(GetMaterialName(MaterialID))[1]));
+                spoolsize.setSelection(sadapter.getPosition(GetMaterialWeight(Length)));
+                Toast.makeText(getApplicationContext(), R.string.data_read_from_tag, Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getApplicationContext(), R.string.unknown_or_empty_tag, Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
 
+    void WriteSpoolData(String MaterialID, String Color, String Length) {
+        SecureRandom random = new SecureRandom();
+        String filamentId = "1" + MaterialID; //material_database.json
+        String vendorId = "0276"; //0276 creality
+        String color = "0" + Color;
+        String filamentLen = Length;
+        String serialNum = format(Locale.getDefault(), "%06d", random.nextInt(100000)); //000001
+        String reserve = "000000";
+        WriteTag("AB124" + vendorId + "A2" + filamentId + color + filamentLen + serialNum + reserve);
+    }
 
     @SuppressLint("ClickableViewAccessibility")
     void openPicker() {
         try {
-            dialog = new Dialog(this, R.style.Theme_SpoolID);
-            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-            dialog.setContentView(R.layout.picker_dialog);
-            dialog.setCanceledOnTouchOutside(false);
-            dialog.setTitle(R.string.pick_color);
-            final Button btnCls = dialog.findViewById(R.id.btncls);
-            btnCls.setOnClickListener(v -> dialog.dismiss());
-            View dcolorView = dialog.findViewById(R.id.dcolorview);
-            ImageView picker = dialog.findViewById(R.id.picker);
+            pickerDialog = new Dialog(this, R.style.Theme_SpoolID);
+            pickerDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            pickerDialog.setContentView(R.layout.picker_dialog);
+            pickerDialog.setCanceledOnTouchOutside(false);
+            pickerDialog.setTitle(R.string.pick_color);
+            final Button btnCls = pickerDialog.findViewById(R.id.btncls);
+            btnCls.setOnClickListener(v -> pickerDialog.dismiss());
+            View dcolorView = pickerDialog.findViewById(R.id.dcolorview);
+            ImageView picker = pickerDialog.findViewById(R.id.picker);
             dcolorView.setBackgroundColor(Color.parseColor("#" + MaterialColor));
             picker.setOnTouchListener((v, event) -> {
                 final int currPixel = getPixelColor(event, picker);
@@ -351,12 +351,16 @@ public class MainActivity extends AppCompatActivity{
                     MaterialColor = String.format("%02x%02x%02x", Color.red(currPixel), Color.green(currPixel), Color.blue(currPixel)).toUpperCase();
                     colorView.setBackgroundColor(Color.argb(255, Color.red(currPixel), Color.green(currPixel), Color.blue(currPixel)));
                     dcolorView.setBackgroundColor(Color.argb(255, Color.red(currPixel), Color.green(currPixel), Color.blue(currPixel)));
-                    dialog.dismiss();
+                    pickerDialog.dismiss();
                 }
                 return false;
             });
-            SeekBar seekBarFont = dialog.findViewById(R.id.seekbar_font);
-            LinearGradient test = new LinearGradient(50.f, 0.f, scrWwidth - 250.0f, 0.0f, new int[]{0xFF000000, 0xFF0000FF, 0xFF00FF00, 0xFF00FFFF, 0xFFFF0000, 0xFFFF00FF, 0xFFFFFF00, 0xFFFFFFFF}, null, Shader.TileMode.CLAMP);
+            DisplayMetrics displayMetrics = new DisplayMetrics();
+            getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+            float scrWwidth = displayMetrics.widthPixels;
+            if (scrWwidth > dp2Px(this, 500) ) scrWwidth = dp2Px(this, 500);
+            SeekBar seekBarFont = pickerDialog.findViewById(R.id.seekbar_font);
+            LinearGradient test = new LinearGradient(50.f, 0.f, scrWwidth -250 , 0.0f, new int[]{0xFF000000, 0xFF0000FF, 0xFF00FF00, 0xFF00FFFF, 0xFFFF0000, 0xFFFF00FF, 0xFFFFFF00, 0xFFFFFFFF}, null, Shader.TileMode.CLAMP);
             ShapeDrawable shape = new ShapeDrawable(new RectShape());
             shape.getPaint().setShader(test);
             seekBarFont.setProgressDrawable(shape);
@@ -406,7 +410,64 @@ public class MainActivity extends AppCompatActivity{
                 public void onStopTrackingTouch(SeekBar seekBar) {}
             });
 
-            dialog.show();
+            pickerDialog.show();
+        }catch (Exception ignored){}
+    }
+
+    void openCustom() {
+        try {
+            customDialog = new Dialog(this, R.style.Theme_SpoolID);
+            customDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            customDialog.setContentView(R.layout.manual_dialog);
+            customDialog.setCanceledOnTouchOutside(false);
+            customDialog.setTitle(R.string.custom_tag_data);
+            final Button btnread = customDialog.findViewById(R.id.btnread);
+            final Button btnwrite = customDialog.findViewById(R.id.btnwrite);
+            final Button btncls = customDialog.findViewById(R.id.btncls);
+            final EditText txtmonth = customDialog.findViewById(R.id.txtmonth);
+            final EditText txtday = customDialog.findViewById(R.id.txtday);
+            final EditText txtyear = customDialog.findViewById(R.id.txtyear);
+            final EditText txtvendor = customDialog.findViewById(R.id.txtvendor);
+            final EditText txtbatch = customDialog.findViewById(R.id.txtbatch);
+            final EditText txtmaterial = customDialog.findViewById(R.id.txtmaterial);
+            final EditText txtcolor = customDialog.findViewById(R.id.txtcolor);
+            final EditText txtlength = customDialog.findViewById(R.id.txtlength);
+            final EditText txtserial = customDialog.findViewById(R.id.txtserial);
+            final EditText txtreserve = customDialog.findViewById(R.id.txtreserve);
+            btncls.setOnClickListener(v -> customDialog.dismiss());
+            btnread.setOnClickListener(v -> {
+                String tagData = ReadTag();
+                if (tagData != null) {
+                    if (!tagData.contains("\0")) {
+                        txtmonth.setText(tagData.substring(0, 1).toUpperCase());
+                        txtday.setText(tagData.substring(1, 3).toUpperCase());
+                        txtyear.setText(tagData.substring(3, 5).toUpperCase());
+                        txtvendor.setText(tagData.substring(5, 9).toUpperCase());
+                        txtbatch.setText(tagData.substring(9, 11).toUpperCase());
+                        txtmaterial.setText(tagData.substring(11, 17).toUpperCase());
+                        txtcolor.setText(tagData.substring(17, 24).toUpperCase());
+                        txtlength.setText(tagData.substring(24, 28).toUpperCase());
+                        txtserial.setText(tagData.substring(28, 34).toUpperCase());
+                        txtreserve.setText(tagData.substring(34, 40).toUpperCase());
+                        Toast.makeText(getApplicationContext(), R.string.data_read_from_tag, Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getApplicationContext(), R.string.unknown_or_empty_tag, Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+            btnwrite.setOnClickListener(v -> {
+                if (txtmonth.getText().length() == 1 && txtday.getText().length() == 2 && txtyear.getText().length() == 2
+                        && txtvendor.getText().length() == 4 && txtbatch.getText().length() == 2 && txtmaterial.getText().length() == 6
+                        && txtcolor.getText().length() == 7 && txtlength.getText().length() == 4
+                        && txtserial.getText().length() == 6 && txtreserve.getText().length() == 6) {
+                    WriteTag(txtmonth.getText().toString() + txtday.getText().toString() + txtyear.getText().toString()
+                            + txtvendor.getText().toString() + txtbatch.getText().toString() + txtmaterial.getText().toString() + txtcolor.getText().toString()
+                            + txtlength.getText().toString() + txtserial.getText().toString() + txtreserve.getText().toString());
+                } else {
+                    Toast.makeText(getApplicationContext(), R.string.incorrect_tag_data_length, Toast.LENGTH_SHORT).show();
+                }
+            });
+            customDialog.show();
         }catch (Exception ignored){}
     }
 

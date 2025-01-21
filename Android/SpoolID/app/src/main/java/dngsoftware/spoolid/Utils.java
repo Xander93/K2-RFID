@@ -11,6 +11,8 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.widget.ImageView;
 import androidx.core.content.ContextCompat;
@@ -404,4 +406,10 @@ public class Utils {
             } catch (Exception ignored) {}
         }).start();
     }
+
+    public static float dp2Px(Context context, float dipValue){
+        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,  dipValue, metrics);
+    }
+
 }
