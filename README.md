@@ -1,5 +1,9 @@
 # K2-RFID
 K2/CFS RFID Programming.<br>
+
+## Note i have been informed by Guilouz that in the upcoming beta firmware creality is blocking the use of your own RFID tags stating its a "security risk".<br> This can only mean that the "security" of their filament sales is at risk if you use your own tags on generic filament.<br><br>For now the highest version of firmware for this to work is V1.1.1.7
+
+
 The tags required are <a href=https://en.wikipedia.org/wiki/MIFARE>MIFARE</a> Classic 1k tags.<br>
 
 
