@@ -256,10 +256,7 @@ public class MainActivity extends AppCompatActivity{
                 } catch (Exception ignored) {
                     Toast.makeText(getApplicationContext(), R.string.error_reading_tag, Toast.LENGTH_SHORT).show();
                 }
-                try {
-                    mfc.close();
-                } catch (Exception ignored) {}
-            }else{
+            } else {
                 Toast.makeText(getApplicationContext(), R.string.invalid_tag_type, Toast.LENGTH_SHORT).show();
             }
         }
