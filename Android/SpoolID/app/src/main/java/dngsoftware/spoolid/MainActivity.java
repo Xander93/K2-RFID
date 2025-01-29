@@ -236,10 +236,31 @@ public class MainActivity extends AppCompatActivity{
                 Toast.makeText(getApplicationContext(), getString(R.string.tag_found) + bytesToHex(currentTag.getId()), Toast.LENGTH_SHORT).show();
                 tagID.setText(bytesToHex(currentTag.getId()));
                 encKey = createKey(currentTag.getId());
+                CheckTag();
                 if(GetSetting(this, "autoread", false))
                 {
                     ReadSpoolData();
                 }
+            }
+        }
+    }
+
+    void CheckTag() {
+        if (currentTag != null) {
+            MifareClassic mfc = MifareClassic.get(currentTag);
+            if (mfc != null && mfc.getType() == MifareClassic.TYPE_CLASSIC) {
+                try {
+                    mfc.connect();
+                    encrypted = mfc.authenticateSectorWithKeyA(1, encKey);
+                    mfc.close();
+                } catch (Exception ignored) {
+                    Toast.makeText(getApplicationContext(), R.string.error_reading_tag, Toast.LENGTH_SHORT).show();
+                }
+                try {
+                    mfc.close();
+                } catch (Exception ignored) {}
+            }else{
+                Toast.makeText(getApplicationContext(), R.string.invalid_tag_type, Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -258,7 +279,6 @@ public class MainActivity extends AppCompatActivity{
                         buff.put(mfc.readBlock(5));
                         buff.put(mfc.readBlock(6));
                         mfc.close();
-                        encrypted = true;
                         return decData(buff.array());
                     } else {
                         Toast.makeText(getApplicationContext(), R.string.authentication_failed, Toast.LENGTH_SHORT).show();
@@ -292,12 +312,11 @@ public class MainActivity extends AppCompatActivity{
                             sb.append(new String(mfc.readBlock(i), StandardCharsets.UTF_8));
                         }
                         mfc.close();
-                        encrypted = false;
                         return sb.toString();
                     } else {
-                        mfc.close();
-                        return ReadEncTag();
+                        Toast.makeText(getApplicationContext(), R.string.authentication_failed, Toast.LENGTH_SHORT).show();
                     }
+                    mfc.close();
                 } catch (Exception e) {
                     Toast.makeText(getApplicationContext(), R.string.error_reading_tag, Toast.LENGTH_SHORT).show();
                     Log.e("Error", Log.getStackTraceString(e));
@@ -359,7 +378,14 @@ public class MainActivity extends AppCompatActivity{
     }
 
     void ReadSpoolData() {
-        String tagData = ReadTag();
+        String tagData;
+        if (encrypted)
+        {
+            tagData = ReadEncTag();
+        }
+        else {
+             tagData = ReadTag();
+        }
         if (tagData != null) {
             String MaterialID = tagData.substring(12, 17);
             if (GetMaterialName(MaterialID) != null) {
@@ -492,7 +518,14 @@ public class MainActivity extends AppCompatActivity{
             final EditText txtreserve = customDialog.findViewById(R.id.txtreserve);
             btncls.setOnClickListener(v -> customDialog.dismiss());
             btnread.setOnClickListener(v -> {
-                String tagData = ReadTag();
+                String tagData;
+                if (encrypted)
+                {
+                    tagData = ReadEncTag();
+                }
+                else {
+                    tagData = ReadTag();
+                }
                 if (tagData != null) {
                     if (!tagData.startsWith("\0")) {
                         txtmonth.setText(tagData.substring(0, 1).toUpperCase());
