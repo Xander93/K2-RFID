@@ -237,6 +237,9 @@ public class MainActivity extends AppCompatActivity{
                 tagID.setText(bytesToHex(currentTag.getId()));
                 encKey = createKey(currentTag.getId());
                 CheckTag();
+                if (encrypted){
+                    tagID.setText(String.format("\uD83D\uDD10 %s", bytesToHex(currentTag.getId())));
+                }
                 if(GetSetting(this, "autoread", false))
                 {
                     ReadSpoolData();
