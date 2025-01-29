@@ -45,21 +45,12 @@ Creality RFID Tag Data
 |           |          |       |            |         |             |           |         |
 |  A B1 24  |   0276   |  A2   |   101001   | 0C12E1F |    0165     |   000001  |  000000 |
   
-
-Extracted from cfs0_050_G32-cfs0_000_112.bin
-
-[character]   month=%c       >  ?
-[string]      day=%.*s       >  ?
-[string]      year=%.*s      >  ?
-[string]      supplier=%.*s  >  venderId
-[string]      batch=%.*s     >  ?
-[string]      mat_id=%.*s    >  filamentId
-[string]      col=%.*s       >  color
-[string]      len=%.*s       >  filamentLen
-[string]      number=%.*s    >  serialNum
-[string]      reserve=%.*s   >  reserve
-
 ```
+
+<img src=https://github.com/DnG-Crafts/K2-RFID/blob/main/ghi.jpg width=50% height=50%>
+
+
+
 
 ## Files of interest
 ```
@@ -70,7 +61,7 @@ Extracted from cfs0_050_G32-cfs0_000_112.bin
 ```
 
 
-## Arduino
+# Arduino
 
 Default Access point information:<br>
 ```
@@ -83,6 +74,13 @@ Hardware:<br>
 <a href=https://en.wikipedia.org/wiki/ESP32>ESP32</a><br>
 <a href=https://esphome.io/components/binary_sensor/rc522.html>RC522</a><br>
 <br>
+
+Required Libraries:<br>
+<a href=https://github.com/miguelbalboa/rfid>MFRC522</a><br>
+<a href=https://github.com/Seeed-Studio/Seeed_Arduino_mbedtls>Seeed_Arduino_mbedtls</a><br><br>
+<img src=https://github.com/DnG-Crafts/K2-RFID/blob/main/libs.jpg width=50% height=50%><br>
+
+
 GPIO Connections:<br>
 <img src=https://github.com/DnG-Crafts/K2-RFID/blob/main/pins.jpg>
 
