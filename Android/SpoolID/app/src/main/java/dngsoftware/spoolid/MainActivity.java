@@ -282,7 +282,7 @@ public class MainActivity extends AppCompatActivity{
     String ReadTag() {
         if (currentTag != null) {
             MifareClassic mfc = MifareClassic.get(currentTag);
-            if (mfc != null && mfc.getType() ==  MifareClassic.TYPE_CLASSIC) {
+            if (mfc != null && mfc.getType() == MifareClassic.TYPE_CLASSIC) {
                 try {
                     mfc.connect();
                     boolean auth = mfc.authenticateSectorWithKeyA(1, MifareClassic.KEY_DEFAULT);
@@ -336,7 +336,8 @@ public class MainActivity extends AppCompatActivity{
                         if (!encrypted)
                         {
                             byte[]  data = mfc.readBlock(7);
-                            System.arraycopy(encKey, 0, data, 0, encKey.length);  //a
+                            System.arraycopy(encKey, 0, data, 0, encKey.length);
+                            System.arraycopy(encKey, 0, data, 10, encKey.length);
                             mfc.writeBlock(7, data);
                         }
                         playBeep();
