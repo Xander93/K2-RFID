@@ -8,7 +8,10 @@ import static dngsoftware.spoolid.Utils.GetMaterialWeight;
 import static dngsoftware.spoolid.Utils.GetSetting;
 import static dngsoftware.spoolid.Utils.SaveSetting;
 import static dngsoftware.spoolid.Utils.SetPermissions;
+import static dngsoftware.spoolid.Utils.createKey;
+import static dngsoftware.spoolid.Utils.decData;
 import static dngsoftware.spoolid.Utils.dp2Px;
+import static dngsoftware.spoolid.Utils.encData;
 import static dngsoftware.spoolid.Utils.playBeep;
 import static dngsoftware.spoolid.Utils.materialBrands;
 import static dngsoftware.spoolid.Utils.bytesToHex;
@@ -29,6 +32,7 @@ import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.MifareClassic;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -46,6 +50,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.materialswitch.MaterialSwitch;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Arrays;
@@ -64,6 +69,8 @@ public class MainActivity extends AppCompatActivity{
     View colorView;
     Dialog pickerDialog, customDialog;
     MaterialSwitch autoread;
+    boolean encrypted = false;
+    byte[] encKey;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -179,7 +186,7 @@ public class MainActivity extends AppCompatActivity{
             nfcReader.enableForeground();
             if (!nfcReader.getNfc().isEnabled()) {
                 Toast.makeText(getApplicationContext(), R.string.please_activate_nfc, Toast.LENGTH_SHORT).show();
-                startActivity(new Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS));
+                startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
             }
         }catch (Exception ignored){}
     }
@@ -228,6 +235,7 @@ public class MainActivity extends AppCompatActivity{
                 assert currentTag != null;
                 Toast.makeText(getApplicationContext(), getString(R.string.tag_found) + bytesToHex(currentTag.getId()), Toast.LENGTH_SHORT).show();
                 tagID.setText(bytesToHex(currentTag.getId()));
+                encKey = createKey(currentTag.getId());
                 if(GetSetting(this, "autoread", false))
                 {
                     ReadSpoolData();
@@ -236,10 +244,45 @@ public class MainActivity extends AppCompatActivity{
         }
     }
 
+    String ReadEncTag() {
+        if (currentTag != null) {
+            MifareClassic mfc = MifareClassic.get(currentTag);
+            if (mfc != null && mfc.getType() ==  MifareClassic.TYPE_CLASSIC) {
+                try {
+                    mfc.connect();
+                    boolean auth = mfc.authenticateSectorWithKeyA(1, encKey);
+                    if (auth) {
+                        byte[] data = new byte[48];
+                        ByteBuffer buff = ByteBuffer.wrap(data);
+                        buff.put(mfc.readBlock(4));
+                        buff.put(mfc.readBlock(5));
+                        buff.put(mfc.readBlock(6));
+                        mfc.close();
+                        encrypted = true;
+                        return decData(buff.array());
+                    } else {
+                        Toast.makeText(getApplicationContext(), R.string.authentication_failed, Toast.LENGTH_SHORT).show();
+                    }
+                    mfc.close();
+                } catch (Exception e) {
+                    Toast.makeText(getApplicationContext(), R.string.error_reading_tag, Toast.LENGTH_SHORT).show();
+                    Log.e("Error", Log.getStackTraceString(e));
+                }
+                try {
+                    mfc.close();
+                } catch (Exception ignored) {}
+            }else{
+                Toast.makeText(getApplicationContext(), R.string.invalid_tag_type, Toast.LENGTH_SHORT).show();
+            }
+            return null;
+        }
+        return null;
+    }
+
     String ReadTag() {
         if (currentTag != null) {
             MifareClassic mfc = MifareClassic.get(currentTag);
-            if (mfc != null && mfc.getType() == MifareClassic.TYPE_CLASSIC) {
+            if (mfc != null && mfc.getType() ==  MifareClassic.TYPE_CLASSIC) {
                 try {
                     mfc.connect();
                     boolean auth = mfc.authenticateSectorWithKeyA(1, MifareClassic.KEY_DEFAULT);
@@ -249,11 +292,12 @@ public class MainActivity extends AppCompatActivity{
                             sb.append(new String(mfc.readBlock(i), StandardCharsets.UTF_8));
                         }
                         mfc.close();
+                        encrypted = false;
                         return sb.toString();
                     } else {
-                        Toast.makeText(getApplicationContext(), R.string.authentication_failed, Toast.LENGTH_SHORT).show();
+                        mfc.close();
+                        return ReadEncTag();
                     }
-                    mfc.close();
                 } catch (Exception e) {
                     Toast.makeText(getApplicationContext(), R.string.error_reading_tag, Toast.LENGTH_SHORT).show();
                     Log.e("Error", Log.getStackTraceString(e));
@@ -275,14 +319,25 @@ public class MainActivity extends AppCompatActivity{
             if (mfc != null && mfc.getType() == MifareClassic.TYPE_CLASSIC) {
                 try {
                     mfc.connect();
-                    boolean auth = mfc.authenticateSectorWithKeyA(1, MifareClassic.KEY_DEFAULT);
+                    byte[] key = MifareClassic.KEY_DEFAULT;
+                    if (encrypted)
+                    {
+                        key = encKey;
+                    }
+                    boolean auth = mfc.authenticateSectorWithKeyA(1, key);
                     if (auth) {
-                        byte[] sectorData = (tagData+"00000000").getBytes();
+                        byte[] sectorData = encData((tagData+"00000000").getBytes());
                         int blockIndex = 4;
                         for (int i = 0; i < sectorData.length; i += MifareClassic.BLOCK_SIZE) {
                             byte[] block = Arrays.copyOfRange(sectorData, i, i + MifareClassic.BLOCK_SIZE);
                             mfc.writeBlock(blockIndex, block);
                             blockIndex++;
+                        }
+                        if (!encrypted)
+                        {
+                            byte[]  data = mfc.readBlock(7);
+                            System.arraycopy(encKey, 0, data, 0, encKey.length);  //a
+                            mfc.writeBlock(7, data);
                         }
                         playBeep();
                         Toast.makeText(getApplicationContext(), R.string.data_written_to_tag, Toast.LENGTH_SHORT).show();
@@ -290,7 +345,7 @@ public class MainActivity extends AppCompatActivity{
                         Toast.makeText(getApplicationContext(), R.string.authentication_failed, Toast.LENGTH_SHORT).show();
                     }
                     mfc.close();
-                } catch (Exception e) {
+                } catch (Exception ignored) {
                     Toast.makeText(getApplicationContext(), R.string.error_writing_to_tag, Toast.LENGTH_SHORT).show();
                 }
                 try {
@@ -348,7 +403,7 @@ public class MainActivity extends AppCompatActivity{
             picker.setOnTouchListener((v, event) -> {
                 final int currPixel = getPixelColor(event, picker);
                 if (currPixel != 0) {
-                    MaterialColor = String.format("%02x%02x%02x", Color.red(currPixel), Color.green(currPixel), Color.blue(currPixel)).toUpperCase();
+                    MaterialColor = format("%02x%02x%02x", Color.red(currPixel), Color.green(currPixel), Color.blue(currPixel)).toUpperCase();
                     colorView.setBackgroundColor(Color.argb(255, Color.red(currPixel), Color.green(currPixel), Color.blue(currPixel)));
                     dcolorView.setBackgroundColor(Color.argb(255, Color.red(currPixel), Color.green(currPixel), Color.blue(currPixel)));
                     pickerDialog.dismiss();
@@ -397,7 +452,7 @@ public class MainActivity extends AppCompatActivity{
                             g = 255;
                             b = progress % 256;
                         }
-                        MaterialColor = String.format("%02x%02x%02x", r, g, b).toUpperCase();
+                        MaterialColor = format("%02x%02x%02x", r, g, b).toUpperCase();
                         colorView.setBackgroundColor(Color.argb(255, r, g, b));
                         dcolorView.setBackgroundColor(Color.argb(255, r, g, b));
                     }
@@ -438,7 +493,7 @@ public class MainActivity extends AppCompatActivity{
             btnread.setOnClickListener(v -> {
                 String tagData = ReadTag();
                 if (tagData != null) {
-                    if (!tagData.contains("\0")) {
+                    if (!tagData.startsWith("\0")) {
                         txtmonth.setText(tagData.substring(0, 1).toUpperCase());
                         txtday.setText(tagData.substring(1, 3).toUpperCase());
                         txtyear.setText(tagData.substring(3, 5).toUpperCase());
