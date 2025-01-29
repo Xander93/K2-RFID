@@ -2,6 +2,7 @@
 #include <MFRC522.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
+#include "mbedtls/aes.h"
 #include "SPIFFS.h"
 #include "html.h"
 
@@ -11,6 +12,8 @@
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 MFRC522::MIFARE_Key key;
+MFRC522::MIFARE_Key ekey;
+
 WiFiServer webServer(80);
 IPAddress Server_IP(10, 1, 0, 1);
 IPAddress Subnet_Mask(255, 255, 255, 0);
@@ -20,6 +23,7 @@ String AP_PASS = "password";
 String WIFI_SSID = "";
 String WIFI_PASS = "";
 String WIFI_HOSTNAME = "k2.local";
+bool encrypted = false;
 
 void setup()
 {
@@ -71,6 +75,8 @@ void loop()
     if (!mfrc522.PICC_ReadCardSerial())
         return;
 
+    encrypted = false;
+
     MFRC522::PICC_Type piccType = mfrc522.PICC_GetType(mfrc522.uid.sak);
     if (piccType != MFRC522::PICC_TYPE_MIFARE_MINI && piccType != MFRC522::PICC_TYPE_MIFARE_1K && piccType != MFRC522::PICC_TYPE_MIFARE_4K)
     {
@@ -79,15 +85,35 @@ void loop()
         return;
     }
 
+    int x = 0;
+    char tuid[16];
+    for (int i = 0; i < 16; i++)
+    {
+        if (x >= 4)
+            x = 0;
+        tuid[i] = mfrc522.uid.uidByte[x];
+        x++;
+    }
+    createKey(tuid);
+
     MFRC522::StatusCode status;
     status = (MFRC522::StatusCode)mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, 7, &key, &(mfrc522.uid));
     if (status != MFRC522::STATUS_OK)
     {
-        tone(SPK_PIN, 400, 150);
-        delay(300);
-        tone(SPK_PIN, 400, 150);
-        delay(2000);
-        return;
+        if (!mfrc522.PICC_IsNewCardPresent())
+            return;
+        if (!mfrc522.PICC_ReadCardSerial())
+            return;
+        status = (MFRC522::StatusCode)mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, 7, &ekey, &(mfrc522.uid));
+        if (status != MFRC522::STATUS_OK)
+        {
+            tone(SPK_PIN, 400, 150);
+            delay(300);
+            tone(SPK_PIN, 400, 150);
+            delay(2000);
+            return;
+        }
+        encrypted = true;
     }
 
     byte blockData[17];
@@ -97,14 +123,61 @@ void loop()
         spoolData.substring(i, i + 16).getBytes(blockData, 17);
         if (blockID >= 4 && blockID < 7)
         {
-            mfrc522.MIFARE_Write(blockID, blockData, 16);
+            unsigned char bufOut[16];
+            encrypt((char *)blockData, bufOut);
+            mfrc522.MIFARE_Write(blockID, bufOut, 16);
         }
         blockID++;
     }
+
+    if (!encrypted)
+    {
+        byte buffer[18];
+        byte byteCount = sizeof(buffer);
+        byte block = 7;
+        status = mfrc522.MIFARE_Read(block, buffer, &byteCount);
+        int y = 0;
+        for (int i = 10; i < 16; i++)
+        {
+            buffer[i] = ekey.keyByte[y];
+            y++;
+        }
+        for (int i = 0; i < 6; i++)
+        {
+            buffer[i] = ekey.keyByte[i];
+        }
+        mfrc522.MIFARE_Write(7, buffer, 16);
+    }
+
     mfrc522.PICC_HaltA();
     mfrc522.PCD_StopCrypto1();
     tone(SPK_PIN, 1000, 200);
     delay(2000);
+}
+
+void encrypt(char *dataChr, unsigned char *outDat)
+{
+    char seed[16] = {0x48, 0x40, 0x43, 0x46, 0x6B, 0x52, 0x6E, 0x7A, 0x40, 0x4B, 0x41, 0x74, 0x42, 0x4A, 0x70, 0x32};
+    mbedtls_aes_context aes;
+    mbedtls_aes_init(&aes);
+    mbedtls_aes_setkey_enc(&aes, (const unsigned char *)seed, strlen(seed) * 8);
+    mbedtls_aes_crypt_ecb(&aes, MBEDTLS_AES_ENCRYPT, (const unsigned char *)dataChr, outDat);
+    mbedtls_aes_free(&aes);
+}
+
+void createKey(char *uid)
+{
+    char seed[16] = {0x71, 0x33, 0x62, 0x75, 0x5e, 0x74, 0x31, 0x6e, 0x71, 0x66, 0x5a, 0x28, 0x70, 0x66, 0x24, 0x31};
+    unsigned char bufOut[6];
+    mbedtls_aes_context aes;
+    mbedtls_aes_init(&aes);
+    mbedtls_aes_setkey_enc(&aes, (const unsigned char *)seed, strlen(seed) * 8);
+    mbedtls_aes_crypt_ecb(&aes, MBEDTLS_AES_ENCRYPT, (const unsigned char *)uid, bufOut);
+    mbedtls_aes_free(&aes);
+    for (int i = 0; i < 6; i++)
+    {
+        ekey.keyByte[i] = bufOut[i];
+    }
 }
 
 void handleWebServer()
@@ -195,7 +268,7 @@ void handleWebServer()
                         String materialColor = split(pdata, "materialColor[", "]");
                         materialColor.replace("#", "");
                         String filamentId = "1" + GetMaterialID(split(pdata, "materialType[", "]")); // material_database.json
-                        String vendorId = "0276"; // 0276 creality
+                        String vendorId = "0276";                                                    // 0276 creality
                         String color = "0" + materialColor;
                         String filamentLen = GetMaterialLength(split(pdata, "materialWeight[", "]"));
                         String serialNum = String(random(100000, 999999)); // 000001
