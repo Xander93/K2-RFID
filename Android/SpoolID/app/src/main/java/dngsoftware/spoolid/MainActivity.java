@@ -33,7 +33,6 @@ import android.nfc.tech.MifareClassic;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
@@ -265,13 +264,17 @@ public class MainActivity extends AppCompatActivity{
         }
     }
 
-    String ReadEncTag() {
+    String ReadTag() {
         if (currentTag != null) {
             MifareClassic mfc = MifareClassic.get(currentTag);
             if (mfc != null && mfc.getType() ==  MifareClassic.TYPE_CLASSIC) {
                 try {
                     mfc.connect();
-                    boolean auth = mfc.authenticateSectorWithKeyA(1, encKey);
+                    byte[] key = MifareClassic.KEY_DEFAULT;
+                    if (encrypted) {
+                        key = encKey;
+                    }
+                    boolean auth = mfc.authenticateSectorWithKeyA(1, key);
                     if (auth) {
                         byte[] data = new byte[48];
                         ByteBuffer buff = ByteBuffer.wrap(data);
@@ -279,47 +282,16 @@ public class MainActivity extends AppCompatActivity{
                         buff.put(mfc.readBlock(5));
                         buff.put(mfc.readBlock(6));
                         mfc.close();
-                        return new String(cipherData(2, buff.array()), StandardCharsets.UTF_8);
-                    } else {
-                        Toast.makeText(getApplicationContext(), R.string.authentication_failed, Toast.LENGTH_SHORT).show();
-                    }
-                    mfc.close();
-                } catch (Exception e) {
-                    Toast.makeText(getApplicationContext(), R.string.error_reading_tag, Toast.LENGTH_SHORT).show();
-                    Log.e("Error", Log.getStackTraceString(e));
-                }
-                try {
-                    mfc.close();
-                } catch (Exception ignored) {}
-            }else{
-                Toast.makeText(getApplicationContext(), R.string.invalid_tag_type, Toast.LENGTH_SHORT).show();
-            }
-            return null;
-        }
-        return null;
-    }
-
-    String ReadTag() {
-        if (currentTag != null) {
-            MifareClassic mfc = MifareClassic.get(currentTag);
-            if (mfc != null && mfc.getType() == MifareClassic.TYPE_CLASSIC) {
-                try {
-                    mfc.connect();
-                    boolean auth = mfc.authenticateSectorWithKeyA(1, MifareClassic.KEY_DEFAULT);
-                    if (auth) {
-                        StringBuilder sb = new StringBuilder();
-                        for (int i = 4; i < 7; i++) {
-                            sb.append(new String(mfc.readBlock(i), StandardCharsets.UTF_8));
+                        if (encrypted) {
+                            return new String(cipherData(2, buff.array()), StandardCharsets.UTF_8);
                         }
-                        mfc.close();
-                        return sb.toString();
+                        return new String(buff.array(), StandardCharsets.UTF_8);
                     } else {
                         Toast.makeText(getApplicationContext(), R.string.authentication_failed, Toast.LENGTH_SHORT).show();
                     }
                     mfc.close();
                 } catch (Exception e) {
                     Toast.makeText(getApplicationContext(), R.string.error_reading_tag, Toast.LENGTH_SHORT).show();
-                    Log.e("Error", Log.getStackTraceString(e));
                 }
                 try {
                     mfc.close();
@@ -433,14 +405,7 @@ public class MainActivity extends AppCompatActivity{
     }
 
     void ReadSpoolData() {
-        String tagData;
-        if (encrypted)
-        {
-            tagData = ReadEncTag();
-        }
-        else {
-             tagData = ReadTag();
-        }
+        String tagData = ReadTag();
         if (tagData != null) {
             String MaterialID = tagData.substring(12, 17);
             if (GetMaterialName(MaterialID) != null) {
@@ -573,12 +538,7 @@ public class MainActivity extends AppCompatActivity{
             final ImageView btnfmt = customDialog.findViewById(R.id.btnfmt);
             btncls.setOnClickListener(v -> customDialog.dismiss());
             btnread.setOnClickListener(v -> {
-                String tagData;
-                if (encrypted) {
-                    tagData = ReadEncTag();
-                } else {
-                    tagData = ReadTag();
-                }
+                String tagData = ReadTag();
                 if (tagData != null) {
                     if (!tagData.startsWith("\0")) {
                         txtmonth.setText(tagData.substring(0, 1).toUpperCase());

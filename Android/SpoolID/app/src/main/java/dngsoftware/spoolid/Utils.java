@@ -12,6 +12,7 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
+import android.nfc.tech.MifareClassic;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.MotionEvent;
@@ -432,8 +433,8 @@ public class Utils {
                 x++;
             }
             return Arrays.copyOfRange(cipher.doFinal(encB), 0, 6);
-        }catch (Exception e){
-            return null;
+        }catch (Exception ignored){
+            return MifareClassic.KEY_DEFAULT;
         }
     }
 
