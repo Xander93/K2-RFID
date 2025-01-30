@@ -536,6 +536,17 @@ public class MainActivity extends AppCompatActivity{
             final EditText txtserial = customDialog.findViewById(R.id.txtserial);
             final EditText txtreserve = customDialog.findViewById(R.id.txtreserve);
             final ImageView btnfmt = customDialog.findViewById(R.id.btnfmt);
+            final ImageView btnrst = customDialog.findViewById(R.id.btnrst);
+            txtmonth.setText(GetSetting(this, "mon", getResources().getString(R.string.def_mon)));
+            txtday.setText(GetSetting(this, "day", getResources().getString(R.string.def_day)));
+            txtyear.setText(GetSetting(this, "yr", getResources().getString(R.string.def_yr)));
+            txtvendor.setText(GetSetting(this, "ven", getResources().getString(R.string.def_ven)));
+            txtbatch.setText(GetSetting(this, "bat", getResources().getString(R.string.def_bat)));
+            txtmaterial.setText(GetSetting(this, "mat", getResources().getString(R.string.def_mat)));
+            txtcolor.setText(GetSetting(this, "col", getResources().getString(R.string.def_col)));
+            txtlength.setText(GetSetting(this, "len", getResources().getString(R.string.def_len)));
+            txtserial.setText(GetSetting(this, "ser", getResources().getString(R.string.def_ser)));
+            txtreserve.setText(GetSetting(this, "res", getResources().getString(R.string.def_res)));
             btncls.setOnClickListener(v -> customDialog.dismiss());
             btnread.setOnClickListener(v -> {
                 String tagData = ReadTag();
@@ -565,6 +576,16 @@ public class MainActivity extends AppCompatActivity{
                     WriteTag(txtmonth.getText().toString() + txtday.getText().toString() + txtyear.getText().toString()
                             + txtvendor.getText().toString() + txtbatch.getText().toString() + txtmaterial.getText().toString() + txtcolor.getText().toString()
                             + txtlength.getText().toString() + txtserial.getText().toString() + txtreserve.getText().toString());
+                    SaveSetting(this, "mon", txtmonth.getText().toString().toUpperCase());
+                    SaveSetting(this, "day", txtday.getText().toString().toUpperCase());
+                    SaveSetting(this, "yr", txtyear.getText().toString().toUpperCase());
+                    SaveSetting(this, "ven", txtvendor.getText().toString().toUpperCase());
+                    SaveSetting(this, "bat", txtbatch.getText().toString().toUpperCase());
+                    SaveSetting(this, "mat", txtmaterial.getText().toString().toUpperCase());
+                    SaveSetting(this, "col", txtcolor.getText().toString().toUpperCase());
+                    SaveSetting(this, "len", txtlength.getText().toString().toUpperCase());
+                    SaveSetting(this, "ser", txtserial.getText().toString().toUpperCase());
+                    SaveSetting(this, "res", txtreserve.getText().toString().toUpperCase());
                 } else {
                     Toast.makeText(getApplicationContext(), R.string.incorrect_tag_data_length, Toast.LENGTH_SHORT).show();
                 }
@@ -580,6 +601,29 @@ public class MainActivity extends AppCompatActivity{
                 builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
                 AlertDialog alert = builder.create();
                 alert.show();
+            });
+            btnrst.setOnClickListener(v -> {
+                txtmonth.setText(R.string.def_mon);
+                txtday.setText(R.string.def_day);
+                txtyear.setText(R.string.def_yr);
+                txtvendor.setText(R.string.def_ven);
+                txtbatch.setText(R.string.def_bat);
+                txtmaterial.setText(R.string.def_mat);
+                txtcolor.setText(R.string.def_col);
+                txtlength.setText(R.string.def_len);
+                txtserial.setText(R.string.def_ser);
+                txtreserve.setText(R.string.def_res);
+                SaveSetting(this, "mon", txtmonth.getText().toString().toUpperCase());
+                SaveSetting(this, "day", txtday.getText().toString().toUpperCase());
+                SaveSetting(this, "yr", txtyear.getText().toString().toUpperCase());
+                SaveSetting(this, "ven", txtvendor.getText().toString().toUpperCase());
+                SaveSetting(this, "bat", txtbatch.getText().toString().toUpperCase());
+                SaveSetting(this, "mat", txtmaterial.getText().toString().toUpperCase());
+                SaveSetting(this, "col", txtcolor.getText().toString().toUpperCase());
+                SaveSetting(this, "len", txtlength.getText().toString().toUpperCase());
+                SaveSetting(this, "ser", txtserial.getText().toString().toUpperCase());
+                SaveSetting(this, "res", txtreserve.getText().toString().toUpperCase());
+                Toast.makeText(getApplicationContext(), R.string.values_reset, Toast.LENGTH_SHORT).show();
             });
             customDialog.show();
         } catch (Exception ignored) {}

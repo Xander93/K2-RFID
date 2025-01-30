@@ -39,4 +39,18 @@
     <string name="tag_formatted">Tag formatted</string>
     <string name="error_formatting_tag">Error formatting tag</string>
     <string name="failed_to_encrypt_data">Failed to encrypt data</string>
+    <string name="month">Month:</string>
+    <string name="reset_to_default">Reset to default</string>
+    <string name="format_tag">Format Tag</string>
+    <string name="def_mon">A</string>
+    <string name="def_day">B1</string>
+    <string name="def_yr">24</string>
+    <string name="def_ven">0276</string>
+    <string name="def_bat">A2</string>
+    <string name="def_mat">101001</string>
+    <string name="def_col">00000FF</string>
+    <string name="def_len">0330</string>
+    <string name="def_ser">000001</string>
+    <string name="def_res">000000</string>
+    <string name="values_reset">Values reset</string>
 </resources>
