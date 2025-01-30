@@ -31,7 +31,7 @@ void setup()
     loadConfig();
     SPI.begin();
     mfrc522.PCD_Init();
-    key = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+    key = {255, 255, 255, 255, 255, 255};
     pinMode(SPK_PIN, OUTPUT);
     if (AP_SSID == "" || AP_PASS == "")
     {
@@ -157,7 +157,7 @@ void loop()
 
 void encrypt(char *dataChr, unsigned char *outDat)
 {
-    char seed[16] = {0x48, 0x40, 0x43, 0x46, 0x6B, 0x52, 0x6E, 0x7A, 0x40, 0x4B, 0x41, 0x74, 0x42, 0x4A, 0x70, 0x32};
+    char seed[16] = {72, 64, 67, 70, 107, 82, 110, 122, 64, 75, 65, 116, 66, 74, 112, 50};
     mbedtls_aes_context aes;
     mbedtls_aes_init(&aes);
     mbedtls_aes_setkey_enc(&aes, (const unsigned char *)seed, strlen(seed) * 8);
@@ -167,7 +167,7 @@ void encrypt(char *dataChr, unsigned char *outDat)
 
 void createKey(char *uid)
 {
-    char seed[16] = {0x71, 0x33, 0x62, 0x75, 0x5e, 0x74, 0x31, 0x6e, 0x71, 0x66, 0x5a, 0x28, 0x70, 0x66, 0x24, 0x31};
+    char seed[16] = {113, 51, 98, 117, 94, 116, 49, 110, 113, 102, 90, 40, 112, 102, 36, 49};
     unsigned char bufOut[6];
     mbedtls_aes_context aes;
     mbedtls_aes_init(&aes);
