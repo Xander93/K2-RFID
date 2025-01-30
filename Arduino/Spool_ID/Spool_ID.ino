@@ -51,16 +51,13 @@ void setup()
         if (WiFi.waitForConnectResult() == WL_CONNECTED)
         {
             IPAddress LAN_IP = WiFi.localIP();
-            if (LAN_IP)
-            {
-                if (WIFI_HOSTNAME != "")
-                {
-                    String mdnsHost = WIFI_HOSTNAME;
-                    mdnsHost.replace(".local", "");
-                    MDNS.begin(mdnsHost.c_str());
-                }
-            }
         }
+    }
+    if (WIFI_HOSTNAME != "")
+    {
+        String mdnsHost = WIFI_HOSTNAME;
+        mdnsHost.replace(".local", "");
+        MDNS.begin(mdnsHost.c_str());
     }
     webServer.setTimeout(100);
     webServer.begin();
