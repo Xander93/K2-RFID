@@ -23,11 +23,24 @@
             android:layout_marginBottom="0dp"
             android:orientation="vertical">
 
+
+            <ImageView
+                android:id="@+id/btnfmt"
+                android:layout_width="55dp"
+                android:layout_height="47dp"
+                android:layout_marginTop="28dp"
+                android:contentDescription="@string/open_custom_tag_editor"
+                app:layout_constraintEnd_toEndOf="@+id/txtreserve"
+                app:layout_constraintTop_toBottomOf="@+id/txtreserve"
+                app:srcCompat="@drawable/twotone_layers_clear_24"
+                app:tint="#1976D2" />
+
+
             <Button
                 android:id="@+id/btnread"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="60dp"
+                android:layout_marginTop="50dp"
                 android:layout_marginBottom="51dp"
                 android:padding="14dp"
                 android:text="@string/read"
@@ -35,13 +48,13 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/btnwrite"
                 app:layout_constraintStart_toEndOf="@+id/btncls"
-                app:layout_constraintTop_toBottomOf="@+id/txtreserve" />
+                app:layout_constraintTop_toBottomOf="@+id/btnfmt" />
 
             <Button
                 android:id="@+id/btnwrite"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="60dp"
+                android:layout_marginTop="50dp"
                 android:layout_marginBottom="51dp"
                 android:padding="14dp"
                 android:text="@string/write"
@@ -49,13 +62,13 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/btnread"
-                app:layout_constraintTop_toBottomOf="@+id/txtreserve" />
+                app:layout_constraintTop_toBottomOf="@+id/btnfmt" />
 
             <Button
                 android:id="@+id/btncls"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="60dp"
+                android:layout_marginTop="50dp"
                 android:layout_marginBottom="51dp"
                 android:padding="14dp"
                 android:text="@string/close"
@@ -63,7 +76,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/btnread"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/txtreserve" />
+                app:layout_constraintTop_toBottomOf="@+id/btnfmt" />
 
             <EditText
                 android:id="@+id/txtmonth"

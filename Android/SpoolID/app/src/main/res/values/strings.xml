@@ -36,4 +36,7 @@
     <string name="custom_tag_data">Custom Tag Data</string>
     <string name="incorrect_tag_data_length">Incorrect tag data length</string>
     <string name="open_custom_tag_editor">Open Custom Tag Editor</string>
+    <string name="tag_formatted">Tag formatted</string>
+    <string name="error_formatting_tag">Error formatting tag</string>
+    <string name="failed_to_encrypt_data">Failed to encrypt data</string>
 </resources>

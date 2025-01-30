@@ -48,6 +48,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import java.nio.ByteBuffer;
@@ -346,6 +347,11 @@ public class MainActivity extends AppCompatActivity{
                     boolean auth = mfc.authenticateSectorWithKeyA(1, key);
                     if (auth) {
                         byte[] sectorData = encData((tagData+"00000000").getBytes());
+                        if (sectorData == null) {
+                            mfc.close();
+                            Toast.makeText(getApplicationContext(), R.string.failed_to_encrypt_data, Toast.LENGTH_SHORT).show();
+                            return;
+                        }
                         int blockIndex = 4;
                         for (int i = 0; i < sectorData.length; i += MifareClassic.BLOCK_SIZE) {
                             byte[] block = Arrays.copyOfRange(sectorData, i, i + MifareClassic.BLOCK_SIZE);
@@ -358,6 +364,8 @@ public class MainActivity extends AppCompatActivity{
                             System.arraycopy(encKey, 0, data, 0, encKey.length);
                             System.arraycopy(encKey, 0, data, 10, encKey.length);
                             mfc.writeBlock(7, data);
+                            encrypted = true;
+                            tagID.setText(String.format("\uD83D\uDD10 %s", bytesToHex(currentTag.getId())));
                         }
                         playBeep();
                         Toast.makeText(getApplicationContext(), R.string.data_written_to_tag, Toast.LENGTH_SHORT).show();
@@ -367,6 +375,54 @@ public class MainActivity extends AppCompatActivity{
                     mfc.close();
                 } catch (Exception ignored) {
                     Toast.makeText(getApplicationContext(), R.string.error_writing_to_tag, Toast.LENGTH_SHORT).show();
+                }
+                try {
+                    mfc.close();
+                } catch (Exception ignored) {}
+            } else {
+                Toast.makeText(getApplicationContext(), R.string.invalid_tag_type, Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    void FormatTag() {
+        if (currentTag != null) {
+            MifareClassic mfc = MifareClassic.get(currentTag);
+            if (mfc != null && mfc.getType() == MifareClassic.TYPE_CLASSIC) {
+                try {
+                    mfc.connect();
+                    byte[] key = MifareClassic.KEY_DEFAULT;
+                    if (encrypted)
+                    {
+                        key = encKey;
+                    }
+                    boolean auth = mfc.authenticateSectorWithKeyA(1, key);
+                    if (auth) {
+                        byte[] sectorData = new byte[48];
+                        Arrays.fill(sectorData,(byte)0);
+                        int blockIndex = 4;
+                        for (int i = 0; i < sectorData.length; i += MifareClassic.BLOCK_SIZE) {
+                            byte[] block = Arrays.copyOfRange(sectorData, i, i + MifareClassic.BLOCK_SIZE);
+                            mfc.writeBlock(blockIndex, block);
+                            blockIndex++;
+                        }
+                        if (encrypted)
+                        {
+                            byte[]  data = mfc.readBlock(7);
+                            System.arraycopy(MifareClassic.KEY_DEFAULT, 0, data, 0, MifareClassic.KEY_DEFAULT.length);
+                            System.arraycopy(MifareClassic.KEY_DEFAULT, 0, data, 10, MifareClassic.KEY_DEFAULT.length);
+                            mfc.writeBlock(7, data);
+                            encrypted = false;
+                            tagID.setText(bytesToHex(currentTag.getId()));
+                        }
+                        playBeep();
+                        Toast.makeText(getApplicationContext(), R.string.tag_formatted, Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getApplicationContext(), R.string.authentication_failed, Toast.LENGTH_SHORT).show();
+                    }
+                    mfc.close();
+                } catch (Exception ignored) {
+                    Toast.makeText(getApplicationContext(), R.string.error_formatting_tag, Toast.LENGTH_SHORT).show();
                 }
                 try {
                     mfc.close();
@@ -408,10 +464,9 @@ public class MainActivity extends AppCompatActivity{
         String filamentId = "1" + MaterialID; //material_database.json
         String vendorId = "0276"; //0276 creality
         String color = "0" + Color;
-        String filamentLen = Length;
         String serialNum = format(Locale.getDefault(), "%06d", random.nextInt(100000)); //000001
         String reserve = "000000";
-        WriteTag("AB124" + vendorId + "A2" + filamentId + color + filamentLen + serialNum + reserve);
+        WriteTag("AB124" + vendorId + "A2" + filamentId + color + Length + serialNum + reserve);
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -516,14 +571,13 @@ public class MainActivity extends AppCompatActivity{
             final EditText txtlength = customDialog.findViewById(R.id.txtlength);
             final EditText txtserial = customDialog.findViewById(R.id.txtserial);
             final EditText txtreserve = customDialog.findViewById(R.id.txtreserve);
+            final ImageView btnfmt = customDialog.findViewById(R.id.btnfmt);
             btncls.setOnClickListener(v -> customDialog.dismiss());
             btnread.setOnClickListener(v -> {
                 String tagData;
-                if (encrypted)
-                {
+                if (encrypted) {
                     tagData = ReadEncTag();
-                }
-                else {
+                } else {
                     tagData = ReadTag();
                 }
                 if (tagData != null) {
@@ -556,8 +610,19 @@ public class MainActivity extends AppCompatActivity{
                     Toast.makeText(getApplicationContext(), R.string.incorrect_tag_data_length, Toast.LENGTH_SHORT).show();
                 }
             });
+            btnfmt.setOnClickListener(v -> {
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("Format Tag?");
+                builder.setMessage("This will erase the tag and set the default MIFARE key");
+                builder.setPositiveButton("Format", (dialog, which) -> {
+                    FormatTag();
+                    dialog.dismiss();
+                });
+                builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+                AlertDialog alert = builder.create();
+                alert.show();
+            });
             customDialog.show();
-        }catch (Exception ignored){}
+        } catch (Exception ignored) {}
     }
-
 }
