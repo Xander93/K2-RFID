@@ -324,7 +324,6 @@ public class Utils {
         return null;
     }
 
-
     public static String[] getMaterials(String brandName) {
         String[] materials;
         if (Objects.equals(brandName, "Creality")) {
@@ -334,7 +333,6 @@ public class Utils {
         }
         return materials;
     }
-
 
     public static boolean canMfc(Context context) {
         FeatureInfo[] info = context.getPackageManager().getSystemAvailableFeatures();
@@ -390,18 +388,6 @@ public class Utils {
         }
     }
 
-    public static boolean GetSetting(Context context, String sKey, boolean bDefault) {
-        SharedPreferences sharedPref = context.getSharedPreferences("Settings", Context.MODE_PRIVATE);
-        return sharedPref.getBoolean(sKey, bDefault);
-    }
-
-    public static void SaveSetting(Context context, String sKey, boolean bValue) {
-        SharedPreferences sharedPref = context.getSharedPreferences("Settings", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putBoolean(sKey, bValue);
-        editor.apply();
-    }
-
     public static void playBeep() {
         new Thread(() -> {
             try {
@@ -444,10 +430,64 @@ public class Utils {
             SecretKeySpec secretKeySpec = new SecretKeySpec(new byte[]
                     {72, 64, 67, 70, 107, 82, 110, 122, 64, 75, 65, 116, 66, 74, 112, 50}, "AES");
             cipher.init(mode, secretKeySpec);
-            byte[] cipherBytes = cipher.doFinal(tagData);
-            cipher.getIV();
-            return cipherBytes;
+            return cipher.doFinal(tagData);
         } catch (Exception ignored) {}
         return null;
+    }
+
+    public static String GetSetting(Context context, String sKey, String sDefault)
+    {
+        SharedPreferences sharedPref = context.getSharedPreferences("Settings", Context.MODE_PRIVATE);
+        return sharedPref.getString(sKey, sDefault);
+    }
+
+    public static boolean GetSetting(Context context, String sKey, boolean bDefault)
+    {
+        SharedPreferences sharedPref = context.getSharedPreferences("Settings", Context.MODE_PRIVATE);
+        return sharedPref.getBoolean(sKey, bDefault);
+    }
+
+    public static int GetSetting(Context context, String sKey, int iDefault)
+    {
+        SharedPreferences sharedPref = context.getSharedPreferences("Settings", Context.MODE_PRIVATE);
+        return sharedPref.getInt(sKey, iDefault);
+    }
+
+    public static long GetSetting(Context context, String sKey, long lDefault)
+    {
+        SharedPreferences sharedPref = context.getSharedPreferences("Settings", Context.MODE_PRIVATE);
+        return sharedPref.getLong(sKey, lDefault);
+    }
+
+    public static void SaveSetting(Context context, String sKey, String sValue)
+    {
+        SharedPreferences sharedPref = context.getSharedPreferences("Settings", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString(sKey, sValue);
+        editor.apply();
+    }
+
+    public static void SaveSetting(Context context, String sKey, boolean bValue)
+    {
+        SharedPreferences sharedPref = context.getSharedPreferences("Settings", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putBoolean(sKey, bValue);
+        editor.apply();
+    }
+
+    public static void SaveSetting(Context context, String sKey, int iValue)
+    {
+        SharedPreferences sharedPref = context.getSharedPreferences("Settings", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putInt(sKey, iValue);
+        editor.apply();
+    }
+
+    public static void SaveSetting(Context context, String sKey, long lValue)
+    {
+        SharedPreferences sharedPref = context.getSharedPreferences("Settings", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putLong(sKey, lValue);
+        editor.apply();
     }
 }
