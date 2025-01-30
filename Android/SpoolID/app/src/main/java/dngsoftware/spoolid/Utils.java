@@ -13,24 +13,17 @@ import android.graphics.drawable.BitmapDrawable;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.widget.ImageView;
 import androidx.core.content.ContextCompat;
-
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Objects;
-
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
 @SuppressLint("GetInstance")
 public class Utils {
-
-    public static byte[] datSeed = {(byte) 0x48, (byte) 0x40, (byte) 0x43, (byte) 0x46, (byte) 0x6B, (byte) 0x52, (byte) 0x6E, (byte) 0x7A, (byte) 0x40, (byte) 0x4B, (byte) 0x41, (byte) 0x74, (byte) 0x42, (byte) 0x4A, (byte) 0x70, (byte) 0x32};
-    public static byte[] keySeed = {(byte) 0x71, (byte) 0x33, (byte) 0x62, (byte) 0x75, (byte) 0x5e, (byte) 0x74, (byte) 0x31, (byte) 0x6e, (byte) 0x71, (byte) 0x66, (byte) 0x5a, (byte) 0x28, (byte) 0x70, (byte) 0x66, (byte) 0x24, (byte) 0x31};
 
     public static String[] materialBrands = {
             "Generic",
@@ -427,7 +420,8 @@ public class Utils {
     public static byte[] createKey(byte[] tagId){
         try {
             Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
-            SecretKeySpec secretKeySpec = new SecretKeySpec(keySeed, "AES");
+            SecretKeySpec secretKeySpec = new SecretKeySpec(new byte[]
+                    {113, 51, 98, 117, 94, 116, 49, 110, 113, 102, 90, 40, 112, 102, 36, 49}, "AES");
             cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
             int x = 0;
             byte[] encB = new byte[16];
@@ -439,33 +433,20 @@ public class Utils {
             }
             return Arrays.copyOfRange(cipher.doFinal(encB), 0, 6);
         }catch (Exception e){
-            Log.e("createKey", Log.getStackTraceString(e));
             return null;
         }
     }
 
-    public static String decData(byte[] encArr)  {
+    public static byte[] cipherData(int mode, byte[] tagData)  {
         try {
             Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
-            SecretKeySpec secretKeySpec = new SecretKeySpec(datSeed, "AES");
-            cipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
-            byte[] decryptedBytes = cipher.doFinal(encArr);
+            SecretKeySpec secretKeySpec = new SecretKeySpec(new byte[]
+                    {72, 64, 67, 70, 107, 82, 110, 122, 64, 75, 65, 116, 66, 74, 112, 50}, "AES");
+            cipher.init(mode, secretKeySpec);
+            byte[] cipherBytes = cipher.doFinal(tagData);
             cipher.getIV();
-            return new String(decryptedBytes, StandardCharsets.UTF_8);
+            return cipherBytes;
         } catch (Exception ignored) {}
         return null;
     }
-
-    public static byte[] encData(byte[] tagData)  {
-        try {
-            Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
-            SecretKeySpec secretKeySpec = new SecretKeySpec(datSeed, "AES");
-            cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
-            byte[] encryptedBytes = cipher.doFinal(tagData);
-            cipher.getIV();
-            return encryptedBytes;
-        } catch (Exception ignored) {}
-        return null;
-    }
-
 }

@@ -9,9 +9,8 @@ import static dngsoftware.spoolid.Utils.GetSetting;
 import static dngsoftware.spoolid.Utils.SaveSetting;
 import static dngsoftware.spoolid.Utils.SetPermissions;
 import static dngsoftware.spoolid.Utils.createKey;
-import static dngsoftware.spoolid.Utils.decData;
+import static dngsoftware.spoolid.Utils.cipherData;
 import static dngsoftware.spoolid.Utils.dp2Px;
-import static dngsoftware.spoolid.Utils.encData;
 import static dngsoftware.spoolid.Utils.playBeep;
 import static dngsoftware.spoolid.Utils.materialBrands;
 import static dngsoftware.spoolid.Utils.bytesToHex;
@@ -280,7 +279,7 @@ public class MainActivity extends AppCompatActivity{
                         buff.put(mfc.readBlock(5));
                         buff.put(mfc.readBlock(6));
                         mfc.close();
-                        return decData(buff.array());
+                        return new String(cipherData(2, buff.array()), StandardCharsets.UTF_8);
                     } else {
                         Toast.makeText(getApplicationContext(), R.string.authentication_failed, Toast.LENGTH_SHORT).show();
                     }
@@ -346,7 +345,7 @@ public class MainActivity extends AppCompatActivity{
                     }
                     boolean auth = mfc.authenticateSectorWithKeyA(1, key);
                     if (auth) {
-                        byte[] sectorData = encData((tagData+"00000000").getBytes());
+                        byte[] sectorData = cipherData(1,(tagData+"00000000").getBytes());
                         if (sectorData == null) {
                             mfc.close();
                             Toast.makeText(getApplicationContext(), R.string.failed_to_encrypt_data, Toast.LENGTH_SHORT).show();
