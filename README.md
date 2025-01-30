@@ -67,7 +67,7 @@ Default Access point information:<br>
 ```
 SSID:    K2_RFID
 PASS:    password
-Web URL: http://10.1.0.1/
+Web URL: http://10.1.0.1 or http://k2.local
 ```
 <br>
 Hardware:<br>
