@@ -4,7 +4,7 @@
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#D1D1D1"
+        android:background="#F4F4F4"
         android:fillViewport="true"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -25,8 +25,8 @@
 
             <ImageView
                 android:id="@+id/btnfmt"
-                android:layout_width="55dp"
-                android:layout_height="47dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_marginTop="28dp"
                 android:contentDescription="@string/format_tag"
                 app:layout_constraintEnd_toEndOf="@+id/txtreserve"
@@ -36,8 +36,8 @@
 
             <ImageView
                 android:id="@+id/btnrst"
-                android:layout_width="55dp"
-                android:layout_height="47dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_marginTop="25dp"
                 android:contentDescription="@string/reset_to_default"
                 app:layout_constraintStart_toStartOf="@+id/txtreserve"
@@ -435,6 +435,18 @@
                 app:layout_constraintEnd_toStartOf="@+id/txtreserve"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/lblserial" />
+
+            <ImageView
+                android:id="@+id/btnrnd"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginTop="7dp"
+                android:layout_marginEnd="5dp"
+                android:contentDescription="@string/reset_to_default"
+                app:layout_constraintEnd_toEndOf="@+id/txtserial"
+                app:layout_constraintTop_toTopOf="@+id/txtserial"
+                app:srcCompat="@drawable/twotone_cached_24"
+                app:tint="#1976D2" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

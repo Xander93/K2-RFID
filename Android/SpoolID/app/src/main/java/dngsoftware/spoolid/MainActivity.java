@@ -424,11 +424,11 @@ public class MainActivity extends AppCompatActivity{
     }
 
     void WriteSpoolData(String MaterialID, String Color, String Length) {
-        SecureRandom random = new SecureRandom();
+        //SecureRandom random = new SecureRandom();
         String filamentId = "1" + MaterialID; //material_database.json
         String vendorId = "0276"; //0276 creality
         String color = "0" + Color;
-        String serialNum = format(Locale.getDefault(), "%06d", random.nextInt(100000)); //000001
+        String serialNum = "000001"; //format(Locale.getDefault(), "%06d", random.nextInt(900000));
         String reserve = "000000";
         WriteTag("AB124" + vendorId + "A2" + filamentId + color + Length + serialNum + reserve);
     }
@@ -537,6 +537,7 @@ public class MainActivity extends AppCompatActivity{
             final EditText txtreserve = customDialog.findViewById(R.id.txtreserve);
             final ImageView btnfmt = customDialog.findViewById(R.id.btnfmt);
             final ImageView btnrst = customDialog.findViewById(R.id.btnrst);
+            final ImageView btnrnd = customDialog.findViewById(R.id.btnrnd);
             txtmonth.setText(GetSetting(this, "mon", getResources().getString(R.string.def_mon)));
             txtday.setText(GetSetting(this, "day", getResources().getString(R.string.def_day)));
             txtyear.setText(GetSetting(this, "yr", getResources().getString(R.string.def_yr)));
@@ -548,6 +549,10 @@ public class MainActivity extends AppCompatActivity{
             txtserial.setText(GetSetting(this, "ser", getResources().getString(R.string.def_ser)));
             txtreserve.setText(GetSetting(this, "res", getResources().getString(R.string.def_res)));
             btncls.setOnClickListener(v -> customDialog.dismiss());
+            btnrnd.setOnClickListener(v -> {
+                SecureRandom random = new SecureRandom();
+                txtserial.setText(format(Locale.getDefault(), "%06d", random.nextInt(900000)));
+            });
             btnread.setOnClickListener(v -> {
                 String tagData = ReadTag();
                 if (tagData != null) {

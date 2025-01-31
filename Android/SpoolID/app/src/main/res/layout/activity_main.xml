@@ -5,6 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#F4F4F4"
     android:fillViewport="true">
 
 <androidx.constraintlayout.widget.ConstraintLayout
@@ -138,7 +139,7 @@
         android:spinnerMode="dialog"
         app:backgroundTint="@color/text_color"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/lolcolor"
+        app:layout_constraintStart_toEndOf="@+id/lblcolor"
         app:layout_constraintTop_toBottomOf="@+id/spoolsize" />
 
     <View
@@ -149,24 +150,24 @@
         android:layout_marginTop="28dp"
         android:layout_marginEnd="20dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/lolcolor"
+        app:layout_constraintStart_toEndOf="@+id/lblcolor"
         app:layout_constraintTop_toBottomOf="@+id/spoolsize"
         />
 
     <View
         android:id="@+id/colorview"
-        android:layout_width="150dp"
+        android:layout_width="140dp"
         android:layout_height="34dp"
-        android:layout_marginStart="12dp"
+        android:layout_marginStart="2dp"
         android:layout_marginTop="35dp"
         android:layout_marginEnd="60dp"
         android:background="#0000FF"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/lolcolor"
+        app:layout_constraintStart_toEndOf="@+id/lblcolor"
         app:layout_constraintTop_toBottomOf="@+id/spoolsize" />
 
     <TextView
-        android:id="@+id/lolcolor"
+        android:id="@+id/lblcolor"
         android:layout_width="62dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -246,13 +247,13 @@
         android:text="@string/auto_read_on_tag_scan"
         app:layout_constraintEnd_toEndOf="@+id/colorspin"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="@id/lolcolor"
+        app:layout_constraintStart_toStartOf="@id/lblcolor"
         app:layout_constraintTop_toBottomOf="@+id/colorspin" />
 
     <ImageView
         android:id="@+id/cbtn"
         android:layout_width="55dp"
-        android:layout_height="47dp"
+        android:layout_height="48dp"
         android:layout_marginTop="28dp"
         android:contentDescription="@string/open_custom_tag_editor"
         app:layout_constraintEnd_toEndOf="@+id/autoread"
