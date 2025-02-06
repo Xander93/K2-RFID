@@ -75,6 +75,12 @@ Hardware:<br>
 <a href=https://esphome.io/components/binary_sensor/rc522.html>RC522</a><br>
 <br>
 
+Maximum ESP32 Core Version:<br>
+Espressif has changed things in later versions so the highest version you can use is <a href=https://github.com/espressif/arduino-esp32/releases/tag/2.0.17>2.0.17</a><br>
+
+<img src=https://github.com/DnG-Crafts/K2-RFID/blob/main/esp32.jpg width=50% height=50%><br>
+
+
 Required Libraries:<br>
 <a href=https://github.com/miguelbalboa/rfid>MFRC522</a><br>
 <a href=https://github.com/Seeed-Studio/Seeed_Arduino_mbedtls>Seeed_Arduino_mbedtls</a><br><br>
