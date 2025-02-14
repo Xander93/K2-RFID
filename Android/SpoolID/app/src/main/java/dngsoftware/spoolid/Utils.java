@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.FeatureInfo;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.media.AudioManager;
@@ -18,6 +19,12 @@ import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.widget.ImageView;
 import androidx.core.content.ContextCompat;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import javax.crypto.Cipher;
@@ -81,7 +88,7 @@ public class Utils {
         Filament item = db.getFilamentById(materialId);
         if (item == null) {
             return null;
-        }else {
+        } else {
             arrRet[0] = item.filamentName;
             arrRet[1] = item.filamentVendor;
             return arrRet;
@@ -141,19 +148,20 @@ public class Utils {
         new Thread(() -> {
             try {
                 ToneGenerator toneGenerator = new ToneGenerator(AudioManager.STREAM_NOTIFICATION, 50);
-                toneGenerator.startTone(ToneGenerator.TONE_CDMA_HIGH_L,300);
+                toneGenerator.startTone(ToneGenerator.TONE_CDMA_HIGH_L, 300);
                 toneGenerator.stopTone();
                 toneGenerator.release();
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }).start();
     }
 
-    public static float dp2Px(Context context, float dipValue){
+    public static float dp2Px(Context context, float dipValue) {
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
-        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,  dipValue, metrics);
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dipValue, metrics);
     }
 
-    public static byte[] createKey(byte[] tagId){
+    public static byte[] createKey(byte[] tagId) {
         try {
             Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
             SecretKeySpec secretKeySpec = new SecretKeySpec(new byte[]
@@ -161,79 +169,105 @@ public class Utils {
             cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
             int x = 0;
             byte[] encB = new byte[16];
-            for (int i = 0; i < 16; i ++)
-            {
+            for (int i = 0; i < 16; i++) {
                 if (x >= 4) x = 0;
                 encB[i] = tagId[x];
                 x++;
             }
             return Arrays.copyOfRange(cipher.doFinal(encB), 0, 6);
-        }catch (Exception ignored){
+        } catch (Exception ignored) {
             return MifareClassic.KEY_DEFAULT;
         }
     }
 
-    public static byte[] cipherData(int mode, byte[] tagData)  {
+    public static byte[] cipherData(int mode, byte[] tagData) {
         try {
             Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
             SecretKeySpec secretKeySpec = new SecretKeySpec(new byte[]
                     {72, 64, 67, 70, 107, 82, 110, 122, 64, 75, 65, 116, 66, 74, 112, 50}, "AES");
             cipher.init(mode, secretKeySpec);
             return cipher.doFinal(tagData);
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         return null;
     }
 
-    public static String GetSetting(Context context, String sKey, String sDefault)
-    {
+    public static JSONArray getMaterialDB(Context context) throws Exception {
+        StringBuilder sb = new StringBuilder();
+        AssetManager assetManager = context.getAssets();
+        InputStream inputStream = assetManager.open("material_database.json");
+        BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+        String line;
+        while ((line = br.readLine()) != null) {
+            sb.append(line);
+        }
+        br.close();
+        JSONObject materials = new JSONObject(sb.toString());
+        JSONObject result = new JSONObject(materials.getString("result"));
+        return result.getJSONArray("list");
+    }
+
+    public static void populateDatabase(Context context, Filament.MatDB db) {
+        try {
+            final JSONArray list = getMaterialDB(context);
+            for (int i = 0; i < list.length(); i++) {
+                JSONObject item = list.getJSONObject(i);
+                JSONObject base = new JSONObject(item.getString("base"));
+                JSONObject kvParam = new JSONObject(item.getString("kvParam"));
+                Filament filament = new Filament();
+                filament.position = i;
+                filament.filamentID = base.getString("id");
+                filament.filamentName = base.getString("name");
+                filament.filamentVendor = base.getString("brand");
+                filament.filamentParam = kvParam.toString();
+                db.addItem(filament);
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
+    public static String GetSetting(Context context, String sKey, String sDefault) {
         SharedPreferences sharedPref = context.getSharedPreferences("Settings", Context.MODE_PRIVATE);
         return sharedPref.getString(sKey, sDefault);
     }
 
-    public static boolean GetSetting(Context context, String sKey, boolean bDefault)
-    {
+    public static boolean GetSetting(Context context, String sKey, boolean bDefault) {
         SharedPreferences sharedPref = context.getSharedPreferences("Settings", Context.MODE_PRIVATE);
         return sharedPref.getBoolean(sKey, bDefault);
     }
 
-    public static int GetSetting(Context context, String sKey, int iDefault)
-    {
+    public static int GetSetting(Context context, String sKey, int iDefault) {
         SharedPreferences sharedPref = context.getSharedPreferences("Settings", Context.MODE_PRIVATE);
         return sharedPref.getInt(sKey, iDefault);
     }
 
-    public static long GetSetting(Context context, String sKey, long lDefault)
-    {
+    public static long GetSetting(Context context, String sKey, long lDefault) {
         SharedPreferences sharedPref = context.getSharedPreferences("Settings", Context.MODE_PRIVATE);
         return sharedPref.getLong(sKey, lDefault);
     }
 
-    public static void SaveSetting(Context context, String sKey, String sValue)
-    {
+    public static void SaveSetting(Context context, String sKey, String sValue) {
         SharedPreferences sharedPref = context.getSharedPreferences("Settings", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putString(sKey, sValue);
         editor.apply();
     }
 
-    public static void SaveSetting(Context context, String sKey, boolean bValue)
-    {
+    public static void SaveSetting(Context context, String sKey, boolean bValue) {
         SharedPreferences sharedPref = context.getSharedPreferences("Settings", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putBoolean(sKey, bValue);
         editor.apply();
     }
 
-    public static void SaveSetting(Context context, String sKey, int iValue)
-    {
+    public static void SaveSetting(Context context, String sKey, int iValue) {
         SharedPreferences sharedPref = context.getSharedPreferences("Settings", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putInt(sKey, iValue);
         editor.apply();
     }
 
-    public static void SaveSetting(Context context, String sKey, long lValue)
-    {
+    public static void SaveSetting(Context context, String sKey, long lValue) {
         SharedPreferences sharedPref = context.getSharedPreferences("Settings", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putLong(sKey, lValue);

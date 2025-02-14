@@ -1,7 +1,6 @@
 package dngsoftware.spoolid;
 
 import static java.lang.String.format;
-import static dngsoftware.spoolid.Filament.populateDatabase;
 import static dngsoftware.spoolid.Utils.GetMaterialID;
 import static dngsoftware.spoolid.Utils.GetMaterialLength;
 import static dngsoftware.spoolid.Utils.GetMaterialName;
@@ -19,6 +18,7 @@ import static dngsoftware.spoolid.Utils.canMfc;
 import static dngsoftware.spoolid.Utils.getMaterials;
 import static dngsoftware.spoolid.Utils.getPixelColor;
 import static dngsoftware.spoolid.Utils.materialWeights;
+import static dngsoftware.spoolid.Utils.populateDatabase;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Intent;
@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
         matDb = rdb.matDB();
 
         if (matDb.getItemCount() == 0) {
-            populateDatabase(matDb);
+            populateDatabase(this, matDb);
         }
 
         SetPermissions(this);
