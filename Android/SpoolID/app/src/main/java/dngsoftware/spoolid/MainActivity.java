@@ -1,6 +1,7 @@
 package dngsoftware.spoolid;
 
 import static java.lang.String.format;
+import static dngsoftware.spoolid.Filament.populateDatabase;
 import static dngsoftware.spoolid.Utils.GetMaterialID;
 import static dngsoftware.spoolid.Utils.GetMaterialLength;
 import static dngsoftware.spoolid.Utils.GetMaterialName;
@@ -48,6 +49,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.room.Room;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -56,16 +58,17 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.Objects;
 
-public class MainActivity extends AppCompatActivity{
-
+public class MainActivity extends AppCompatActivity {
+    private Filament.MatDB matDb;
     ArrayAdapter<String> badapter, sadapter, madapter;
     Spinner brand, spoolsize, material;
     nAdapter nfcReader = null;
     Tag currentTag = null;
-    int SelectedSize,SelectedBrand;
+    int SelectedSize, SelectedBrand;
     String MaterialName, MaterialWeight, MaterialColor;
     TextView tagID;
     View colorView;
+    EditText txtcolor;
     Dialog pickerDialog, customDialog;
     MaterialSwitch autoread;
     boolean encrypted = false;
@@ -86,6 +89,15 @@ public class MainActivity extends AppCompatActivity{
         spoolsize = findViewById(R.id.spoolsize);
         material = findViewById(R.id.material);
 
+        Filament.MatDB.filamentDB rdb = Room.databaseBuilder(this, Filament.MatDB.filamentDB.class, "filament_database")
+                .fallbackToDestructiveMigration()
+                .allowMainThreadQueries()
+                .build();
+        matDb = rdb.matDB();
+
+        if (matDb.getItemCount() == 0) {
+            populateDatabase(matDb);
+        }
 
         SetPermissions(this);
         if (!canMfc(this)) {
@@ -98,11 +110,9 @@ public class MainActivity extends AppCompatActivity{
         MaterialColor = "0000FF";
 
         colorView.setOnClickListener(view -> openPicker());
-
         rbtn.setOnClickListener(view -> ReadSpoolData());
         cbtn.setOnClickListener(view -> openCustom());
-
-        wbtn.setOnClickListener(view -> WriteSpoolData(GetMaterialID(MaterialName), MaterialColor, GetMaterialLength(MaterialWeight)));
+        wbtn.setOnClickListener(view -> WriteSpoolData(GetMaterialID(matDb, MaterialName), MaterialColor, GetMaterialLength(MaterialWeight)));
 
         colorspin.setOnTouchListener((v, event) -> {
             switch (event.getAction()) {
@@ -128,11 +138,13 @@ public class MainActivity extends AppCompatActivity{
         brand.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-                    SelectedBrand = brand.getSelectedItemPosition();
-                    setMaterial(badapter.getItem(position));
+                SelectedBrand = brand.getSelectedItemPosition();
+                setMaterial(badapter.getItem(position));
             }
+
             @Override
-            public void onNothingSelected(AdapterView<?> parentView) {}
+            public void onNothingSelected(AdapterView<?> parentView) {
+            }
         });
 
         sadapter = new ArrayAdapter<>(this, R.layout.spinner_item, materialWeights);
@@ -141,14 +153,16 @@ public class MainActivity extends AppCompatActivity{
         spoolsize.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-                    SelectedSize = spoolsize.getSelectedItemPosition();
-                    MaterialWeight = sadapter.getItem(position);
+                SelectedSize = spoolsize.getSelectedItemPosition();
+                MaterialWeight = sadapter.getItem(position);
             }
+
             @Override
-            public void onNothingSelected(AdapterView<?> parentView) {}
+            public void onNothingSelected(AdapterView<?> parentView) {
+            }
         });
 
-        madapter = new ArrayAdapter<>(this, R.layout.spinner_item, getMaterials(  badapter.getItem(brand.getSelectedItemPosition()))   );
+        madapter = new ArrayAdapter<>(this, R.layout.spinner_item, getMaterials(matDb, badapter.getItem(brand.getSelectedItemPosition())));
         material.setAdapter(madapter);
         material.setSelection(madapter.getPosition(MaterialName));
         material.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -156,16 +170,17 @@ public class MainActivity extends AppCompatActivity{
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
                 MaterialName = madapter.getItem(position);
             }
+
             @Override
-            public void onNothingSelected(AdapterView<?> parentView) {}
+            public void onNothingSelected(AdapterView<?> parentView) {
+            }
         });
 
         ReadTagUID(getIntent());
     }
 
-    void setMaterial(String brand)
-    {
-        madapter = new ArrayAdapter<>(this, R.layout.spinner_item, getMaterials(brand));
+    void setMaterial(String brand) {
+        madapter = new ArrayAdapter<>(this, R.layout.spinner_item, getMaterials(matDb, brand));
         material.setAdapter(madapter);
         material.setSelection(madapter.getPosition(MaterialName));
         material.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -173,8 +188,10 @@ public class MainActivity extends AppCompatActivity{
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
                 MaterialName = madapter.getItem(position);
             }
+
             @Override
-            public void onNothingSelected(AdapterView<?> parentView) {}
+            public void onNothingSelected(AdapterView<?> parentView) {
+            }
         });
     }
 
@@ -187,18 +204,17 @@ public class MainActivity extends AppCompatActivity{
                 Toast.makeText(getApplicationContext(), R.string.please_activate_nfc, Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
             }
-        }catch (Exception ignored){}
+        } catch (Exception ignored) {
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (pickerDialog != null && pickerDialog.isShowing())
-        {
+        if (pickerDialog != null && pickerDialog.isShowing()) {
             pickerDialog.dismiss();
         }
-        if (customDialog != null && customDialog.isShowing())
-        {
+        if (customDialog != null && customDialog.isShowing()) {
             customDialog.dismiss();
         }
     }
@@ -208,7 +224,8 @@ public class MainActivity extends AppCompatActivity{
         super.onPause();
         try {
             nfcReader.disableForeground();
-        }catch (Exception ignored){}
+        } catch (Exception ignored) {
+        }
     }
 
     @Override
@@ -220,29 +237,30 @@ public class MainActivity extends AppCompatActivity{
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        if (pickerDialog != null && pickerDialog.isShowing())
-        {
+        if (pickerDialog != null && pickerDialog.isShowing()) {
             pickerDialog.dismiss();
             openPicker();
         }
     }
 
-    void ReadTagUID(Intent intent){
+    void ReadTagUID(Intent intent) {
         if (intent != null) {
-            if (NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.getAction())) {
-                currentTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-                assert currentTag != null;
-                Toast.makeText(getApplicationContext(), getString(R.string.tag_found) + bytesToHex(currentTag.getId()), Toast.LENGTH_SHORT).show();
-                tagID.setText(bytesToHex(currentTag.getId()));
-                encKey = createKey(currentTag.getId());
-                CheckTag();
-                if (encrypted){
-                    tagID.setText(String.format("\uD83D\uDD10 %s", bytesToHex(currentTag.getId())));
+            try {
+                if (NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.getAction())) {
+                    currentTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+                    assert currentTag != null;
+                    Toast.makeText(getApplicationContext(), getString(R.string.tag_found) + bytesToHex(currentTag.getId()), Toast.LENGTH_SHORT).show();
+                    tagID.setText(bytesToHex(currentTag.getId()));
+                    encKey = createKey(currentTag.getId());
+                    CheckTag();
+                    if (encrypted) {
+                        tagID.setText(String.format("\uD83D\uDD10 %s", bytesToHex(currentTag.getId())));
+                    }
+                    if (GetSetting(this, "autoread", false)) {
+                        ReadSpoolData();
+                    }
                 }
-                if(GetSetting(this, "autoread", false))
-                {
-                    ReadSpoolData();
-                }
+            } catch (Exception ignored) {
             }
         }
     }
@@ -257,6 +275,7 @@ public class MainActivity extends AppCompatActivity{
                     mfc.close();
                 } catch (Exception ignored) {
                     Toast.makeText(getApplicationContext(), R.string.error_reading_tag, Toast.LENGTH_SHORT).show();
+                    encrypted = false;
                 }
             } else {
                 Toast.makeText(getApplicationContext(), R.string.invalid_tag_type, Toast.LENGTH_SHORT).show();
@@ -267,7 +286,7 @@ public class MainActivity extends AppCompatActivity{
     String ReadTag() {
         if (currentTag != null) {
             MifareClassic mfc = MifareClassic.get(currentTag);
-            if (mfc != null && mfc.getType() ==  MifareClassic.TYPE_CLASSIC) {
+            if (mfc != null && mfc.getType() == MifareClassic.TYPE_CLASSIC) {
                 try {
                     mfc.connect();
                     byte[] key = MifareClassic.KEY_DEFAULT;
@@ -295,8 +314,9 @@ public class MainActivity extends AppCompatActivity{
                 }
                 try {
                     mfc.close();
-                } catch (Exception ignored) {}
-            }else{
+                } catch (Exception ignored) {
+                }
+            } else {
                 Toast.makeText(getApplicationContext(), R.string.invalid_tag_type, Toast.LENGTH_SHORT).show();
             }
             return null;
@@ -311,13 +331,12 @@ public class MainActivity extends AppCompatActivity{
                 try {
                     mfc.connect();
                     byte[] key = MifareClassic.KEY_DEFAULT;
-                    if (encrypted)
-                    {
+                    if (encrypted) {
                         key = encKey;
                     }
                     boolean auth = mfc.authenticateSectorWithKeyA(1, key);
                     if (auth) {
-                        byte[] sectorData = cipherData(1,(tagData+"00000000").getBytes());
+                        byte[] sectorData = cipherData(1, (tagData + "00000000").getBytes());
                         if (sectorData == null) {
                             mfc.close();
                             Toast.makeText(getApplicationContext(), R.string.failed_to_encrypt_data, Toast.LENGTH_SHORT).show();
@@ -329,9 +348,8 @@ public class MainActivity extends AppCompatActivity{
                             mfc.writeBlock(blockIndex, block);
                             blockIndex++;
                         }
-                        if (!encrypted)
-                        {
-                            byte[]  data = mfc.readBlock(7);
+                        if (!encrypted) {
+                            byte[] data = mfc.readBlock(7);
                             System.arraycopy(encKey, 0, data, 0, encKey.length);
                             System.arraycopy(encKey, 0, data, 10, encKey.length);
                             mfc.writeBlock(7, data);
@@ -349,7 +367,8 @@ public class MainActivity extends AppCompatActivity{
                 }
                 try {
                     mfc.close();
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             } else {
                 Toast.makeText(getApplicationContext(), R.string.invalid_tag_type, Toast.LENGTH_SHORT).show();
             }
@@ -363,23 +382,21 @@ public class MainActivity extends AppCompatActivity{
                 try {
                     mfc.connect();
                     byte[] key = MifareClassic.KEY_DEFAULT;
-                    if (encrypted)
-                    {
+                    if (encrypted) {
                         key = encKey;
                     }
                     boolean auth = mfc.authenticateSectorWithKeyA(1, key);
                     if (auth) {
                         byte[] sectorData = new byte[48];
-                        Arrays.fill(sectorData,(byte)0);
+                        Arrays.fill(sectorData, (byte) 0);
                         int blockIndex = 4;
                         for (int i = 0; i < sectorData.length; i += MifareClassic.BLOCK_SIZE) {
                             byte[] block = Arrays.copyOfRange(sectorData, i, i + MifareClassic.BLOCK_SIZE);
                             mfc.writeBlock(blockIndex, block);
                             blockIndex++;
                         }
-                        if (encrypted)
-                        {
-                            byte[]  data = mfc.readBlock(7);
+                        if (encrypted) {
+                            byte[] data = mfc.readBlock(7);
                             System.arraycopy(MifareClassic.KEY_DEFAULT, 0, data, 0, MifareClassic.KEY_DEFAULT.length);
                             System.arraycopy(MifareClassic.KEY_DEFAULT, 0, data, 10, MifareClassic.KEY_DEFAULT.length);
                             mfc.writeBlock(7, data);
@@ -397,7 +414,8 @@ public class MainActivity extends AppCompatActivity{
                 }
                 try {
                     mfc.close();
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             } else {
                 Toast.makeText(getApplicationContext(), R.string.invalid_tag_type, Toast.LENGTH_SHORT).show();
             }
@@ -406,20 +424,22 @@ public class MainActivity extends AppCompatActivity{
 
     void ReadSpoolData() {
         String tagData = ReadTag();
-        if (tagData != null) {
+        if (tagData != null && tagData.length() >= 40) {
             String MaterialID = tagData.substring(12, 17);
-            if (GetMaterialName(MaterialID) != null) {
+            if (GetMaterialName(matDb, MaterialID) != null) {
                 MaterialColor = tagData.substring(18, 24);
                 String Length = tagData.substring(24, 28);
                 colorView.setBackgroundColor(Color.parseColor("#" + MaterialColor));
-                MaterialName = Objects.requireNonNull(GetMaterialName(MaterialID))[0];
+                MaterialName = Objects.requireNonNull(GetMaterialName(matDb, MaterialID))[0];
                 material.setSelection(madapter.getPosition(MaterialName));
-                brand.setSelection(badapter.getPosition(Objects.requireNonNull(GetMaterialName(MaterialID))[1]));
+                brand.setSelection(badapter.getPosition(Objects.requireNonNull(GetMaterialName(matDb, MaterialID))[1]));
                 spoolsize.setSelection(sadapter.getPosition(GetMaterialWeight(Length)));
                 Toast.makeText(getApplicationContext(), R.string.data_read_from_tag, Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(getApplicationContext(), R.string.unknown_or_empty_tag, Toast.LENGTH_SHORT).show();
             }
+        } else {
+            Toast.makeText(getApplicationContext(), R.string.error_reading_tag, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -442,7 +462,12 @@ public class MainActivity extends AppCompatActivity{
             pickerDialog.setCanceledOnTouchOutside(false);
             pickerDialog.setTitle(R.string.pick_color);
             final Button btnCls = pickerDialog.findViewById(R.id.btncls);
-            btnCls.setOnClickListener(v -> pickerDialog.dismiss());
+            btnCls.setOnClickListener(v -> {
+                if (customDialog != null && customDialog.isShowing()) {
+                    txtcolor.setText(String.format("0%s", MaterialColor));
+                }
+                pickerDialog.dismiss();
+            });
             View dcolorView = pickerDialog.findViewById(R.id.dcolorview);
             ImageView picker = pickerDialog.findViewById(R.id.picker);
             dcolorView.setBackgroundColor(Color.parseColor("#" + MaterialColor));
@@ -450,8 +475,13 @@ public class MainActivity extends AppCompatActivity{
                 final int currPixel = getPixelColor(event, picker);
                 if (currPixel != 0) {
                     MaterialColor = format("%02x%02x%02x", Color.red(currPixel), Color.green(currPixel), Color.blue(currPixel)).toUpperCase();
-                    colorView.setBackgroundColor(Color.argb(255, Color.red(currPixel), Color.green(currPixel), Color.blue(currPixel)));
-                    dcolorView.setBackgroundColor(Color.argb(255, Color.red(currPixel), Color.green(currPixel), Color.blue(currPixel)));
+                    if (customDialog != null && customDialog.isShowing()) {
+                        txtcolor.setText(String.format("0%s", MaterialColor));
+                    } else {
+
+                        colorView.setBackgroundColor(Color.argb(255, Color.red(currPixel), Color.green(currPixel), Color.blue(currPixel)));
+                        dcolorView.setBackgroundColor(Color.argb(255, Color.red(currPixel), Color.green(currPixel), Color.blue(currPixel)));
+                    }
                     pickerDialog.dismiss();
                 }
                 return false;
@@ -459,9 +489,9 @@ public class MainActivity extends AppCompatActivity{
             DisplayMetrics displayMetrics = new DisplayMetrics();
             getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
             float scrWwidth = displayMetrics.widthPixels;
-            if (scrWwidth > dp2Px(this, 500) ) scrWwidth = dp2Px(this, 500);
+            if (scrWwidth > dp2Px(this, 500)) scrWwidth = dp2Px(this, 500);
             SeekBar seekBarFont = pickerDialog.findViewById(R.id.seekbar_font);
-            LinearGradient test = new LinearGradient(50.f, 0.f, scrWwidth -250 , 0.0f, new int[]{0xFF000000, 0xFF0000FF, 0xFF00FF00, 0xFF00FFFF, 0xFFFF0000, 0xFFFF00FF, 0xFFFFFF00, 0xFFFFFFFF}, null, Shader.TileMode.CLAMP);
+            LinearGradient test = new LinearGradient(50.f, 0.f, scrWwidth - 250, 0.0f, new int[]{0xFF000000, 0xFF0000FF, 0xFF00FF00, 0xFF00FFFF, 0xFFFF0000, 0xFFFF00FF, 0xFFFFFF00, 0xFFFFFFFF}, null, Shader.TileMode.CLAMP);
             ShapeDrawable shape = new ShapeDrawable(new RectShape());
             shape.getPaint().setShader(test);
             seekBarFont.setProgressDrawable(shape);
@@ -505,14 +535,17 @@ public class MainActivity extends AppCompatActivity{
                 }
 
                 @Override
-                public void onStartTrackingTouch(SeekBar seekBar) {}
+                public void onStartTrackingTouch(SeekBar seekBar) {
+                }
 
                 @Override
-                public void onStopTrackingTouch(SeekBar seekBar) {}
+                public void onStopTrackingTouch(SeekBar seekBar) {
+                }
             });
 
             pickerDialog.show();
-        }catch (Exception ignored){}
+        } catch (Exception ignored) {
+        }
     }
 
     void openCustom() {
@@ -531,13 +564,14 @@ public class MainActivity extends AppCompatActivity{
             final EditText txtvendor = customDialog.findViewById(R.id.txtvendor);
             final EditText txtbatch = customDialog.findViewById(R.id.txtbatch);
             final EditText txtmaterial = customDialog.findViewById(R.id.txtmaterial);
-            final EditText txtcolor = customDialog.findViewById(R.id.txtcolor);
+            txtcolor = customDialog.findViewById(R.id.txtcolor);
             final EditText txtlength = customDialog.findViewById(R.id.txtlength);
             final EditText txtserial = customDialog.findViewById(R.id.txtserial);
             final EditText txtreserve = customDialog.findViewById(R.id.txtreserve);
             final ImageView btnfmt = customDialog.findViewById(R.id.btnfmt);
             final ImageView btnrst = customDialog.findViewById(R.id.btnrst);
             final ImageView btnrnd = customDialog.findViewById(R.id.btnrnd);
+            final ImageView btncol = customDialog.findViewById(R.id.btncol);
             txtmonth.setText(GetSetting(this, "mon", getResources().getString(R.string.def_mon)));
             txtday.setText(GetSetting(this, "day", getResources().getString(R.string.def_day)));
             txtyear.setText(GetSetting(this, "yr", getResources().getString(R.string.def_yr)));
@@ -549,6 +583,7 @@ public class MainActivity extends AppCompatActivity{
             txtserial.setText(GetSetting(this, "ser", getResources().getString(R.string.def_ser)));
             txtreserve.setText(GetSetting(this, "res", getResources().getString(R.string.def_res)));
             btncls.setOnClickListener(v -> customDialog.dismiss());
+            btncol.setOnClickListener(view -> openPicker());
             btnrnd.setOnClickListener(v -> {
                 SecureRandom random = new SecureRandom();
                 txtserial.setText(format(Locale.getDefault(), "%06d", random.nextInt(900000)));
@@ -631,6 +666,8 @@ public class MainActivity extends AppCompatActivity{
                 Toast.makeText(getApplicationContext(), R.string.values_reset, Toast.LENGTH_SHORT).show();
             });
             customDialog.show();
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
     }
+
 }

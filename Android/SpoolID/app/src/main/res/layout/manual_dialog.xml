@@ -442,10 +442,22 @@
                 android:layout_height="30dp"
                 android:layout_marginTop="7dp"
                 android:layout_marginEnd="5dp"
-                android:contentDescription="@string/reset_to_default"
+                android:contentDescription="@string/randomize_serial"
                 app:layout_constraintEnd_toEndOf="@+id/txtserial"
                 app:layout_constraintTop_toTopOf="@+id/txtserial"
                 app:srcCompat="@drawable/twotone_cached_24"
+                app:tint="#1976D2" />
+
+            <ImageView
+                android:id="@+id/btncol"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginTop="7dp"
+                android:layout_marginEnd="5dp"
+                android:contentDescription="@string/select_color"
+                app:layout_constraintEnd_toEndOf="@+id/txtcolor"
+                app:layout_constraintTop_toTopOf="@+id/txtcolor"
+                app:srcCompat="@drawable/twotone_palette_24"
                 app:tint="#1976D2" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
