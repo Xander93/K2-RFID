@@ -9,7 +9,7 @@ import android.nfc.tech.MifareClassic;
 import android.nfc.tech.NfcA;
 
 
-public class nAdapter{
+public class nAdapter {
     private final NfcAdapter nfcAdapter;
     private final Activity activity;
 
@@ -26,12 +26,14 @@ public class nAdapter{
             IntentFilter intentFilter = new IntentFilter(NfcAdapter.ACTION_TECH_DISCOVERED);
             try {
                 intentFilter.addDataType("*/*");
-            } catch (Exception ignored) {}
-            IntentFilter[] mFilters = new IntentFilter[] {intentFilter};
+            } catch (Exception ignored) {
+            }
+            IntentFilter[] mFilters = new IntentFilter[]{intentFilter};
             String[][] techLists = {new String[]{MifareClassic.class.getName(), NfcA.class.getName()}};
             try {
                 nfcAdapter.enableForegroundDispatch(activity, pendingIntent, mFilters, techLists);
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
     }
 
@@ -39,7 +41,8 @@ public class nAdapter{
         if (nfcAdapter != null && nfcAdapter.isEnabled()) {
             try {
                 nfcAdapter.disableForegroundDispatch(activity);
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
     }
 

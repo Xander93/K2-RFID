@@ -192,6 +192,25 @@ public class Utils {
         return null;
     }
 
+    public static long getDBVersion(Context context) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            AssetManager assetManager = context.getAssets();
+            InputStream inputStream = assetManager.open("material_database.json");
+            BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+            String line;
+            while ((line = br.readLine()) != null) {
+                sb.append(line);
+            }
+            br.close();
+            JSONObject materials = new JSONObject(sb.toString());
+            JSONObject result = new JSONObject(materials.getString("result"));
+            return result.getLong("version");
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
     public static JSONArray getMaterialDB(Context context) throws Exception {
         StringBuilder sb = new StringBuilder();
         AssetManager assetManager = context.getAssets();
@@ -204,6 +223,7 @@ public class Utils {
         br.close();
         JSONObject materials = new JSONObject(sb.toString());
         JSONObject result = new JSONObject(materials.getString("result"));
+        SaveSetting(context, "version", result.getLong("version"));
         return result.getJSONArray("list");
     }
 

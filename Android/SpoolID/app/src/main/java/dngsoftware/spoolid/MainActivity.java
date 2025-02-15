@@ -11,6 +11,7 @@ import static dngsoftware.spoolid.Utils.SetPermissions;
 import static dngsoftware.spoolid.Utils.createKey;
 import static dngsoftware.spoolid.Utils.cipherData;
 import static dngsoftware.spoolid.Utils.dp2Px;
+import static dngsoftware.spoolid.Utils.getDBVersion;
 import static dngsoftware.spoolid.Utils.playBeep;
 import static dngsoftware.spoolid.Utils.materialBrands;
 import static dngsoftware.spoolid.Utils.bytesToHex;
@@ -97,6 +98,12 @@ public class MainActivity extends AppCompatActivity {
 
         if (matDb.getItemCount() == 0) {
             populateDatabase(this, matDb);
+        } else {
+            long dbVersion = GetSetting(this, "version", -1L);
+            if (getDBVersion(this) > dbVersion) {
+                matDb.deleteAll();
+                populateDatabase(this, matDb);
+            }
         }
 
         SetPermissions(this);
