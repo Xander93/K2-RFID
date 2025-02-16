@@ -81,17 +81,17 @@ public class Utils {
         return "1 KG";
     }
 
-    public static String GetMaterialID(Filament.MatDB db, String materialName) {
+    public static String GetMaterialID(MatDB db, String materialName) {
         Filament item = db.getFilamentByName(materialName);
         return item.filamentID;
     }
 
-    public static String GetMaterialInfo(Filament.MatDB db, String materialName) {
+    public static String GetMaterialInfo(MatDB db, String materialName) {
         Filament item = db.getFilamentByName(materialName);
         return item.filamentParam;
     }
 
-    public static String[] GetMaterialName(Filament.MatDB db, String materialId) {
+    public static String[] GetMaterialName(MatDB db, String materialId) {
         String[] arrRet = new String[2];
         Filament item = db.getFilamentById(materialId);
         if (item == null) {
@@ -103,7 +103,7 @@ public class Utils {
         }
     }
 
-    public static String[] getMaterials(Filament.MatDB db, String brandName) {
+    public static String[] getMaterials(MatDB db, String brandName) {
         List<Filament> items = db.getFilamentsByVendor(brandName);
         String[] materials = new String[items.size()];
         for (int i = 0; i < items.size(); i++) {
@@ -227,7 +227,7 @@ public class Utils {
         }
     }
 
-    public static void populateDatabase(Context context, Filament.MatDB db, String json) {
+    public static void populateDatabase(Context context, MatDB db, String json) {
         try {
             JSONObject materials;
             if (json != null && !json.isEmpty()) {

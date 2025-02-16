@@ -64,7 +64,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
-    private Filament.MatDB matDb;
+    private MatDB matDb;
     ArrayAdapter<String> badapter, sadapter, madapter;
     Spinner brand, spoolsize, material;
     nAdapter nfcReader = null;
@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
         spoolsize = findViewById(R.id.spoolsize);
         material = findViewById(R.id.material);
 
-        Filament.MatDB.filamentDB rdb = Room.databaseBuilder(this, Filament.MatDB.filamentDB.class, "filament_database")
+        filamentDB rdb = Room.databaseBuilder(this, filamentDB.class, "filament_database")
                 .fallbackToDestructiveMigration()
                 .allowMainThreadQueries()
                 .build();
