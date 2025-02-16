@@ -32,8 +32,7 @@ public class nAdapter {
             String[][] techLists = {new String[]{MifareClassic.class.getName(), NfcA.class.getName()}};
             try {
                 nfcAdapter.enableForegroundDispatch(activity, pendingIntent, mFilters, techLists);
-            } catch (Exception ignored) {
-            }
+            } catch (Exception ignored) {}
         }
     }
 
@@ -41,8 +40,7 @@ public class nAdapter {
         if (nfcAdapter != null && nfcAdapter.isEnabled()) {
             try {
                 nfcAdapter.disableForegroundDispatch(activity);
-            } catch (Exception ignored) {
-            }
+            } catch (Exception ignored) {}
         }
     }
 

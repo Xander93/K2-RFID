@@ -2,6 +2,7 @@ package dngsoftware.spoolid;
 
 import static java.lang.String.format;
 import static dngsoftware.spoolid.Utils.GetMaterialID;
+import static dngsoftware.spoolid.Utils.GetMaterialInfo;
 import static dngsoftware.spoolid.Utils.GetMaterialLength;
 import static dngsoftware.spoolid.Utils.GetMaterialName;
 import static dngsoftware.spoolid.Utils.GetMaterialWeight;
@@ -12,6 +13,7 @@ import static dngsoftware.spoolid.Utils.createKey;
 import static dngsoftware.spoolid.Utils.cipherData;
 import static dngsoftware.spoolid.Utils.dp2Px;
 import static dngsoftware.spoolid.Utils.getDBVersion;
+import static dngsoftware.spoolid.Utils.getJsonDB;
 import static dngsoftware.spoolid.Utils.playBeep;
 import static dngsoftware.spoolid.Utils.materialBrands;
 import static dngsoftware.spoolid.Utils.bytesToHex;
@@ -52,10 +54,12 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.room.Room;
 import com.google.android.material.materialswitch.MaterialSwitch;
+import org.json.JSONObject;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -70,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
     TextView tagID;
     View colorView;
     EditText txtcolor;
-    Dialog pickerDialog, customDialog;
+    Dialog pickerDialog, customDialog, infoDialog, updateDialog;
     MaterialSwitch autoread;
     boolean encrypted = false;
     byte[] encKey;
@@ -82,6 +86,8 @@ public class MainActivity extends AppCompatActivity {
         Button rbtn = findViewById(R.id.readbutton);
         Button wbtn = findViewById(R.id.writebutton);
         ImageView cbtn = findViewById(R.id.cbtn);
+        ImageView ibtn = findViewById(R.id.ibtn);
+        ImageView ubtn = findViewById(R.id.ubtn);
         colorView = findViewById(R.id.colorview);
         Spinner colorspin = findViewById(R.id.colorspin);
         autoread = findViewById(R.id.autoread);
@@ -97,12 +103,12 @@ public class MainActivity extends AppCompatActivity {
         matDb = rdb.matDB();
 
         if (matDb.getItemCount() == 0) {
-            populateDatabase(this, matDb);
+            populateDatabase(this, matDb,null);
         } else {
             long dbVersion = GetSetting(this, "version", -1L);
             if (getDBVersion(this) > dbVersion) {
                 matDb.deleteAll();
-                populateDatabase(this, matDb);
+                populateDatabase(this, matDb,null);
             }
         }
 
@@ -120,6 +126,8 @@ public class MainActivity extends AppCompatActivity {
         rbtn.setOnClickListener(view -> ReadSpoolData());
         cbtn.setOnClickListener(view -> openCustom());
         wbtn.setOnClickListener(view -> WriteSpoolData(GetMaterialID(matDb, MaterialName), MaterialColor, GetMaterialLength(MaterialWeight)));
+        ibtn.setOnClickListener(view -> openMaterialInfo());
+        ubtn.setOnClickListener(view -> openUpdate());
 
         colorspin.setOnTouchListener((v, event) -> {
             switch (event.getAction()) {
@@ -223,6 +231,12 @@ public class MainActivity extends AppCompatActivity {
         }
         if (customDialog != null && customDialog.isShowing()) {
             customDialog.dismiss();
+        }
+        if (infoDialog != null && infoDialog.isShowing()) {
+            infoDialog.dismiss();
+        }
+        if (updateDialog != null && updateDialog.isShowing()) {
+            updateDialog.dismiss();
         }
     }
 
@@ -551,8 +565,7 @@ public class MainActivity extends AppCompatActivity {
             });
 
             pickerDialog.show();
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) {}
     }
 
     void openCustom() {
@@ -639,13 +652,13 @@ public class MainActivity extends AppCompatActivity {
             });
             btnfmt.setOnClickListener(v -> {
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setTitle("Format Tag?");
-                builder.setMessage("This will erase the tag and set the default MIFARE key");
-                builder.setPositiveButton("Format", (dialog, which) -> {
+                builder.setTitle(R.string.format_tag_q);
+                builder.setMessage(R.string.erase_message);
+                builder.setPositiveButton(R.string.format, (dialog, which) -> {
                     FormatTag();
                     dialog.dismiss();
                 });
-                builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+                builder.setNegativeButton(R.string.cancel, (dialog, which) -> dialog.dismiss());
                 AlertDialog alert = builder.create();
                 alert.show();
             });
@@ -673,8 +686,125 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), R.string.values_reset, Toast.LENGTH_SHORT).show();
             });
             customDialog.show();
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) {}
+    }
+
+    void openMaterialInfo() {
+        try {
+            infoDialog = new Dialog(this, R.style.Theme_SpoolID);
+            infoDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            infoDialog.setContentView(R.layout.info_dialog);
+            infoDialog.setCanceledOnTouchOutside(false);
+            infoDialog.setTitle(R.string.filament_info);
+            final ImageView btncls = infoDialog.findViewById(R.id.btncls);
+            final TextView txtinfo = infoDialog.findViewById(R.id.txtinfo);
+            btncls.setOnClickListener(v -> infoDialog.dismiss());
+            StringBuilder sb = new StringBuilder();
+            sb.append(MaterialName);
+            sb.append("\n\n");
+            JSONObject info = new JSONObject(GetMaterialInfo(matDb, MaterialName));
+            for (Iterator<String> it = info.keys(); it.hasNext(); ) {
+                String key = it.next();
+                Object value = info.get(key);
+                sb.append(key);
+                sb.append(": ");
+                sb.append(value);
+                sb.append("\n");
+            }
+            txtinfo.setText(sb.toString());
+            infoDialog.show();
+        } catch (Exception ignored) {}
+    }
+
+    void openUpdate() {
+        try {
+            updateDialog = new Dialog(this, R.style.Theme_SpoolID);
+            updateDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            updateDialog.setContentView(R.layout.update_dialog);
+            updateDialog.setCanceledOnTouchOutside(false);
+            updateDialog.setTitle(R.string.update);
+            final Button btncls = updateDialog.findViewById(R.id.btncls);
+            final Button btnupd = updateDialog.findViewById(R.id.btnupd);
+            final Button btnchk = updateDialog.findViewById(R.id.btnchk);
+            final TextView txtcurver = updateDialog.findViewById(R.id.txtcurver);
+            final TextView txtnewver = updateDialog.findViewById(R.id.txtnewver);
+            final TextView txtmsg = updateDialog.findViewById(R.id.txtmsg);
+            final EditText txtaddress = updateDialog.findViewById(R.id.txtaddress);
+            btncls.setOnClickListener(v -> updateDialog.dismiss());
+            btnupd.setVisibility(View.INVISIBLE);
+            String hostString = GetSetting(this, "host", "");
+            txtaddress.setText(hostString);
+            txtcurver.setText(String.format(Locale.getDefault(), getString(R.string.current_version), GetSetting(this, "version", -1L)));
+
+            btnchk.setOnClickListener(v -> {
+                String host = txtaddress.getText().toString();
+                long version = GetSetting(this, "version", -1L);
+                txtcurver.setText(String.format(Locale.getDefault(), getString(R.string.current_version), version));
+                if (!host.isEmpty()) {
+                    SaveSetting(this, "host", host);
+                    new Thread(() -> {
+                        try {
+                            String json = getJsonDB(host);
+                            if (json != null && json.contains("\"kvParam\":{")) {
+                                JSONObject materials = new JSONObject(json);
+                                JSONObject result = new JSONObject(materials.getString("result"));
+                                long newVer = result.getLong("version");
+                                runOnUiThread(() -> txtnewver.setText(format(Locale.getDefault(), getString(R.string.printer_version), newVer)));
+                                runOnUiThread(() -> {
+                                    if (newVer > version) {
+                                        btnupd.setVisibility(View.VISIBLE);
+                                        txtmsg.setTextColor(getColor(R.color.text_color));
+                                        txtmsg.setText(R.string.update_available);
+                                    } else {
+                                        btnupd.setVisibility(View.INVISIBLE);
+                                        txtmsg.setTextColor(getColor(R.color.text_color));
+                                        txtmsg.setText(R.string.no_update_available);
+                                    }
+                                });
+                            }else {
+                                runOnUiThread(() -> {
+                                    txtmsg.setTextColor(Color.RED);
+                                    txtmsg.setText(R.string.unable_to_download_file_from_printer);
+                                });
+                            }
+                        } catch (Exception ignored) {}
+                    }).start();
+                }
+            });
+
+            btnupd.setOnClickListener(v -> {
+                String host = txtaddress.getText().toString();
+                if (!host.isEmpty()) {
+                    SaveSetting(this, "host", host);
+                    new Thread(() -> {
+                        try {
+                            String json = getJsonDB(host);
+                            if (json != null && json.contains("\"kvParam\":{")) {
+                                JSONObject materials = new JSONObject(json);
+                                JSONObject result = new JSONObject(materials.getString("result"));
+                                long newVer = result.getLong("version");
+                                matDb.deleteAll();
+                                populateDatabase(this, matDb, json);
+                                SaveSetting(this, "version", newVer);
+                                runOnUiThread(() -> {
+                                    txtcurver.setText(String.format(Locale.getDefault(), getString(R.string.current_version), newVer));
+                                    btnupd.setVisibility(View.INVISIBLE);
+                                    txtmsg.setTextColor(getColor(R.color.text_color));
+                                    txtmsg.setText(R.string.update_successful);
+                                    setMaterial(badapter.getItem(SelectedBrand));
+                                });
+                            }else {
+                                runOnUiThread(() -> {
+                                    txtmsg.setTextColor(Color.RED);
+                                    txtmsg.setText(R.string.unable_to_download_file_from_printer);
+                                });
+                            }
+                        } catch (Exception ignored) {}
+                    }).start();
+                }
+            });
+            updateDialog.show();
+        } catch (Exception ignored) {}
     }
 
 }

@@ -22,8 +22,11 @@ import androidx.core.content.ContextCompat;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
@@ -83,6 +86,11 @@ public class Utils {
         return item.filamentID;
     }
 
+    public static String GetMaterialInfo(Filament.MatDB db, String materialName) {
+        Filament item = db.getFilamentByName(materialName);
+        return item.filamentParam;
+    }
+
     public static String[] GetMaterialName(Filament.MatDB db, String materialId) {
         String[] arrRet = new String[2];
         Filament item = db.getFilamentById(materialId);
@@ -138,7 +146,7 @@ public class Utils {
 
     public static void SetPermissions(Context context) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.NFC) != PackageManager.PERMISSION_GRANTED) {
-            String[] perms = {Manifest.permission.NFC};
+            String[] perms = {Manifest.permission.NFC, Manifest.permission.INTERNET};
             int permsRequestCode = 200;
             requestPermissions((Activity) context, perms, permsRequestCode);
         }
@@ -192,7 +200,7 @@ public class Utils {
         return null;
     }
 
-    public static long getDBVersion(Context context) {
+    private static String getAssetDB(Context context) {
         try {
             StringBuilder sb = new StringBuilder();
             AssetManager assetManager = context.getAssets();
@@ -203,33 +211,33 @@ public class Utils {
                 sb.append(line);
             }
             br.close();
-            JSONObject materials = new JSONObject(sb.toString());
+            return sb.toString();
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    public static long getDBVersion(Context context) {
+        try {
+            JSONObject materials = new JSONObject(getAssetDB(context));
             JSONObject result = new JSONObject(materials.getString("result"));
             return result.getLong("version");
-        } catch (Exception e) {
+        } catch (Exception ignored) {
             return 0;
         }
     }
 
-    public static JSONArray getMaterialDB(Context context) throws Exception {
-        StringBuilder sb = new StringBuilder();
-        AssetManager assetManager = context.getAssets();
-        InputStream inputStream = assetManager.open("material_database.json");
-        BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-        String line;
-        while ((line = br.readLine()) != null) {
-            sb.append(line);
-        }
-        br.close();
-        JSONObject materials = new JSONObject(sb.toString());
-        JSONObject result = new JSONObject(materials.getString("result"));
-        SaveSetting(context, "version", result.getLong("version"));
-        return result.getJSONArray("list");
-    }
-
-    public static void populateDatabase(Context context, Filament.MatDB db) {
+    public static void populateDatabase(Context context, Filament.MatDB db, String json) {
         try {
-            final JSONArray list = getMaterialDB(context);
+            JSONObject materials;
+            if (json != null && !json.isEmpty()) {
+                materials = new JSONObject(json);
+            }else {
+                materials = new JSONObject(getAssetDB(context));
+            }
+            JSONObject result = new JSONObject(materials.getString("result"));
+            SaveSetting(context, "version", result.getLong("version"));
+            JSONArray list = result.getJSONArray("list");
             for (int i = 0; i < list.length(); i++) {
                 JSONObject item = list.getJSONObject(i);
                 JSONObject base = new JSONObject(item.getString("base"));
@@ -244,6 +252,54 @@ public class Utils {
             }
         } catch (Exception ignored) {
         }
+    }
+
+    public static String getJsonDB(final String Host)
+    {
+        URL url;
+        HttpURLConnection urlConnection;
+        String server_response;
+        try {
+            url = new URL( "http://" + Host +  "/downloads/defData/material_database.json");
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setConnectTimeout(5000);
+            urlConnection.setRequestMethod("GET");
+            urlConnection.setInstanceFollowRedirects(false);
+            final int responseCode = urlConnection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                server_response = readStream(urlConnection.getInputStream());
+           } else {
+                server_response = null;
+            }
+        }
+        catch (Exception e)
+        {
+            server_response = null;
+        }
+        return server_response;
+    }
+
+    private static String readStream(InputStream in)
+    {
+        try {
+            int len;
+            byte[] buf = new byte[ 1024 ];
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            while((len = in.read(buf)) > 0)
+            {
+                outputStream.write(buf, 0, len);
+            }
+            in.close();
+            return outputStream.toString();
+        } catch (Exception ignored) {
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (Exception ignored) {}
+            }
+        }
+        return null;
     }
 
     public static String GetSetting(Context context, String sKey, String sDefault) {

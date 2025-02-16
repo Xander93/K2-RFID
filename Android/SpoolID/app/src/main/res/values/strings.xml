@@ -55,4 +55,18 @@
     <string name="values_reset">Values reset</string>
     <string name="randomize_serial">Randomize Serial</string>
     <string name="select_color">Select Color</string>
+    <string name="check">Check</string>
+    <string name="update">Update</string>
+    <string name="k2_printer_ip">K2 Printer IP:</string>
+    <string name="update_desc">Enter the ip address or hostname of your K2 printer to update the filament database from the printer.\n\nThis can be useful if new filaments are added in firmware updates.</string>
+    <string name="update_available">Update available</string>
+    <string name="no_update_available">No update available</string>
+    <string name="unable_to_download_file_from_printer">Unable to download file from printer</string>
+    <string name="update_successful">Update successful</string>
+    <string name="filament_info">Filament Information</string>
+    <string name="erase_message">This will erase the tag and set the default MIFARE key</string>
+    <string name="format_tag_q">Format Tag?</string>
+    <string name="format">Format</string>
+    <string name="current_version">Current Version: %d</string>
+    <string name="printer_version">Printer Version: %d</string>
 </resources>
