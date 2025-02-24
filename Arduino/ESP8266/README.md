@@ -22,3 +22,4 @@ Required Libraries:<br>
 
 
 GPIO Connections:<br>
+<img src=https://github.com/DnG-Crafts/K2-RFID/blob/main/pins2.jpg>
