@@ -15,7 +15,7 @@ Hardware:<br>
 <br>
 <br>
 This should work on most ESP32 boards including S2 and S3 variants
-
+<br><br>
 
 Maximum ESP32 Core Version:<br>
 Espressif has changed things in later versions so the highest version you can use is <a href=https://github.com/espressif/arduino-esp32/releases/tag/2.0.17>2.0.17</a><br>
