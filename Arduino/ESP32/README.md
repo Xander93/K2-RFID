@@ -20,14 +20,14 @@ This should work on most ESP32 boards including S2 and S3 variants
 Maximum ESP32 Core Version:<br>
 Espressif has changed things in later versions so the highest version you can use is <a href=https://github.com/espressif/arduino-esp32/releases/tag/2.0.17>2.0.17</a><br>
 
-<img src=https://github.com/DnG-Crafts/K2-RFID/blob/main/esp32.jpg width=50% height=50%><br>
+<img src=https://github.com/DnG-Crafts/K2-RFID/blob/main/Arduino/ESP32/esp32.jpg width=50% height=50%><br>
 
 
 Required Libraries:<br>
 <a href=https://github.com/miguelbalboa/rfid>MFRC522</a><br>
 
-<img src=https://github.com/DnG-Crafts/K2-RFID/blob/main/libs.jpg width=50% height=50%><br>
+<img src=https://github.com/DnG-Crafts/K2-RFID/blob/main/Arduino/libs.jpg width=50% height=50%><br>
 
 
 GPIO Connections:<br>
-<img src=https://github.com/DnG-Crafts/K2-RFID/blob/main/pins.jpg>
+<img src=https://github.com/DnG-Crafts/K2-RFID/blob/main/Arduino/ESP32/pins.jpg>
