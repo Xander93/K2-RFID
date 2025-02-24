@@ -12,11 +12,10 @@ typedef unsigned char byte;
 class AES
 {
 public:
-  byte set_key(byte key[], int keylen);
+  byte set_key(byte key[]);
   byte encrypt(byte plain[16], byte cipher[16]);
 
 private:
-  int round;
   byte key_sched[240];
 };
 

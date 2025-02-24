@@ -9,7 +9,7 @@
 
 #define SS_PIN 15
 #define RST_PIN 0
-#define SPK_PIN 2
+#define SPK_PIN 16
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 MFRC522::MIFARE_Key key;
@@ -160,7 +160,7 @@ void writeData(int blockID, byte *blockData)
   byte seed[16] = {72, 64, 67, 70, 107, 82, 110, 122, 64, 75, 65, 116, 66, 74, 112, 50};
   byte cipherData[16];
   AES aes;
-  aes.set_key(seed, 128);
+  aes.set_key(seed);
   aes.encrypt(blockData, cipherData);
   mfrc522.MIFARE_Write(blockID, cipherData, 16);
 }
@@ -170,7 +170,7 @@ void createKey(byte *uid)
   byte seed[16] = {113, 51, 98, 117, 94, 116, 49, 110, 113, 102, 90, 40, 112, 102, 36, 49};
   byte bufOut[16];
   AES aes;
-  aes.set_key(seed, 128);
+  aes.set_key(seed);
   aes.encrypt(uid, bufOut);
   for (int i = 0; i < 6; i++)
   {

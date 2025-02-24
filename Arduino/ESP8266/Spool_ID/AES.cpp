@@ -103,41 +103,20 @@ static void mix_sub_columns(byte dt[16], byte st[16])
   }
 }
 
-byte AES::set_key(byte key[], int keylen)
+byte AES::set_key(byte key[])
 {
   byte hi;
-  switch (keylen)
-  {
-  case 16:
-  case 128:
-    keylen = 16;
-    round = 10;
-    break;
-  case 24:
-  case 192:
-    keylen = 24;
-    round = 12;
-    break;
-  case 32:
-  case 256:
-    keylen = 32;
-    round = 14;
-    break;
-  default:
-    round = 0;
-    return -1;
-  }
-  hi = (round + 1) << 4;
-  copy_n_bytes(key_sched, key, keylen);
+  hi = 11 << 4;
+  copy_n_bytes(key_sched, key, 16);
   byte t[4];
-  byte next = keylen;
-  for (byte cc = keylen, rc = 1; cc < hi; cc += 4)
+  byte next = 16;
+  for (byte cc = 16, rc = 1; cc < hi; cc += 4)
   {
     for (byte i = 0; i < 4; i++)
       t[i] = key_sched[cc - 4 + i];
     if (cc == next)
     {
-      next += keylen;
+      next += 16;
       byte ttt = t[0];
       t[0] = s_box(t[1]) ^ rc;
       t[1] = s_box(t[2]);
@@ -145,12 +124,7 @@ byte AES::set_key(byte key[], int keylen)
       t[3] = s_box(ttt);
       rc = f2(rc);
     }
-    else if (keylen == 32 && (cc & 31) == 16)
-    {
-      for (byte i = 0; i < 4; i++)
-        t[i] = s_box(t[i]);
-    }
-    byte tt = cc - keylen;
+    byte tt = cc - 16;
     for (byte i = 0; i < 4; i++)
       key_sched[cc + i] = key_sched[tt + i] ^ t[i];
   }
@@ -159,12 +133,10 @@ byte AES::set_key(byte key[], int keylen)
 
 byte AES::encrypt(byte plain[16], byte cipher[16])
 {
-  if (round)
-  {
     byte s1[16], r;
     copy_and_key(s1, plain, (byte *)(key_sched));
 
-    for (r = 1; r < round; r++)
+    for (r = 1; r < 10; r++)
     {
       byte s2[16];
       mix_sub_columns(s2, s1);
@@ -172,8 +144,5 @@ byte AES::encrypt(byte plain[16], byte cipher[16])
     }
     shift_sub_rows(s1);
     copy_and_key(cipher, s1, (byte *)(key_sched + r * 16));
-  }
-  else
-    return -1;
   return 0;
 }
