@@ -9,7 +9,7 @@
 
 #define SS_PIN 15
 #define RST_PIN 0
-#define SPK_PIN 16
+#define SPK_PIN 2
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 MFRC522::MIFARE_Key key;
