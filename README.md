@@ -19,7 +19,7 @@ https://www.youtube.com/watch?v=6EA4t7zgq90<br>
 
 
 <br><br><br>
-The app is available on google play<br>
+The android app is available on google play<br>
 <a href="https://play.google.com/store/apps/details?id=dngsoftware.spoolid&hl=en"><img src=https://github.com/DnG-Crafts/K2-RFID/blob/main/docs/gp.webp width="30%" height="30%"></a>
 <br>
 
