@@ -22,6 +22,7 @@ Espressif has changed things in later versions so the highest version you can us
 
 Required Libraries:<br>
 <a href=https://github.com/miguelbalboa/rfid>MFRC522</a><br>
+
 <img src=https://github.com/DnG-Crafts/K2-RFID/blob/main/libs.jpg width=50% height=50%><br>
 
 
