@@ -21,8 +21,8 @@ This should work on any ESP8266 type of board
 Required Libraries:<br>
 <a href=https://github.com/miguelbalboa/rfid>MFRC522</a><br>
 
-<img src=https://github.com/DnG-Crafts/K2-RFID/blob/main/libs.jpg width=50% height=50%><br>
+<img src=https://github.com/DnG-Crafts/K2-RFID/blob/main/Arduino/libs.jpg width=50% height=50%><br>
 
 
 GPIO Connections:<br>
-<img src=https://github.com/DnG-Crafts/K2-RFID/blob/main/pins2.jpg>
+<img src=https://github.com/DnG-Crafts/K2-RFID/blob/main/Arduino/ESP8266/pins.jpg>
