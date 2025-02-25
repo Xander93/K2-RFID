@@ -153,6 +153,11 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
     }
   </style>
   <script>
+    var creFils;
+    var genFils;
+    var dbVersion;
+    var jsonDb;
+    var paramStr;
     function sendData() {
       document.getElementById("message").innerHTML = "<label class=\"msg\">Saving spool settings...</label>";
       var materialBrand = document.getElementById("materialBrand").value;
@@ -185,15 +190,25 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
     function change_types() {
       var selectedValue = document.getElementById("materialBrand").value;
       if (selectedValue == "Creality") {
-        document.getElementById("types").innerHTML = "<select name=\"materialType\" id=\"materialType\"><option value=\"Hyper PLA\">Hyper PLA</option><option value=\"Hyper PLA-CF\">Hyper PLA-CF</option><option value=\"Hyper PETG\">Hyper PETG</option><option value=\"Hyper ABS\">Hyper ABS</option><option value=\"CR-PLA\">CR-PLA</option><option value=\"CR-Silk\">CR-Silk</option><option value=\"CR-PETG\">CR-PETG</option><option value=\"CR-ABS\">CR-ABS</option><option value=\"Ender-PLA\">Ender-PLA</option><option value=\"EN-PLA+\">EN-PLA+</option><option value=\"HP-TPU\">HP-TPU</option><option value=\"CR-Nylon\">CR-Nylon</option><option value=\"CR-PLA Carbon\">CR-PLA Carbon</option><option value=\"CR-PLA Matte\">CR-PLA Matte</option><option value=\"CR-PLA Fluo\">CR-PLA Fluo</option><option value=\"CR-TPU\">CR-TPU</option><option value=\"CR-Wood\">CR-Wood</option><option value=\"HP Ultra PLA\">HP Ultra PLA</option><option value=\"HP-ASA\">HP-ASA</option></select>";
+        document.getElementById("types").innerHTML = "<select name=\"materialType\" id=\"materialType\">" + creFils + "</select>";
       }
       else {
-        document.getElementById("types").innerHTML = "<select name=\"materialType\" id=\"materialType\"><option value=\"Generic PLA\">PLA</option><option value=\"Generic PLA-Silk\">PLA-Silk</option><option value=\"Generic PETG\">PETG</option><option value=\"Generic ABS\">ABS</option><option value=\"Generic TPU\">TPU</option><option value=\"Generic PLA-CF\">PLA-CF</option><option value=\"Generic ASA\">ASA</option><option value=\"Generic PA\">PA</option><option value=\"Generic PA-CF\">PA-CF</option><option value=\"Generic BVOH\">BVOH</option><option value=\"Generic PVA\">PVA</option><option value=\"Generic HIPS\">HIPS</option><option value=\"Generic PET-CF\">PET-CF</option><option value=\"Generic PETG-CF\">PETG-CF</option><option value=\"Generic PA6-CF\">PA6-CF</option><option value=\"Generic PAHT-CF\">PAHT-CF</option><option value=\"Generic PPS\">PPS</option><option value=\"Generic PPS-CF\">PPS-CF</option><option value=\"Generic PP\">PP</option><option value=\"Generic PET\">PET</option><option value=\"Generic PC\">PC</option></select>";
+        document.getElementById("types").innerHTML = "<select name=\"materialType\" id=\"materialType\">" + genFils + "</select>";
       }
     }
     function loadCache() {
-      if (localStorage.getItem("materialBrand") == null) { return; }
+      if (localStorage.getItem("materialBrand") == null) {
+        document.getElementById("types").innerHTML = "<select name=\"materialType\" id=\"materialType\">" + genFils + "</select>";
+        return;
+      }
       document.getElementById("materialBrand").value = localStorage.getItem("materialBrand");
+      var selectedValue = document.getElementById("materialBrand").value;
+      if (selectedValue == "Creality") {
+        document.getElementById("types").innerHTML = "<select name=\"materialType\" id=\"materialType\">" + creFils + "</select>";
+      }
+      else {
+        document.getElementById("types").innerHTML = "<select name=\"materialType\" id=\"materialType\">" + genFils + "</select>";
+      }
       change_types();
       document.getElementById("materialType").value = localStorage.getItem("materialType");
       document.getElementById("materialWeight").value = localStorage.getItem("materialWeight");
@@ -203,7 +218,7 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
       localStorage.clear();
       document.getElementById("materialBrand").value = "Generic";
       change_types();
-      document.getElementById("materialType").value = "Generic PLA";
+      document.getElementById("materialType").value = "00001";
       document.getElementById("materialWeight").value = "1 KG";
       document.getElementById("materialColor").value = "#0000FF";
       sendData();
@@ -250,14 +265,79 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
       xhr.setRequestHeader("Content-length", postdata.length);
       xhr.send(postdata);
     }
+    function loadDb() {
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function () {
+        if (this.readyState == 4) {
+          if (this.status == 200) {
+            if (this.responseText.includes('"kvParam":')) {
+              jsonDb = this.responseText;
+              const objDb = JSON.parse(jsonDb);
+              dbVersion = objDb.result.version;
+              creFils = "";
+              genFils = "";
+              for (let i in objDb.result.list) {
+                if (objDb.result.list[i].base.brand == "Creality") {
+                  creFils += "<option value=\"" + objDb.result.list[i].base.id + "\">" + objDb.result.list[i].base.name + "</option>";
+                }
+                else {
+                  genFils += "<option value=\"" + objDb.result.list[i].base.id + "\">" + objDb.result.list[i].base.name.replace("Generic ", "") + "</option>";
+                }
+              }
+              loadCache();
+            } else {
+              document.getElementById("message").innerHTML = "<label class=\"errormsg\">Error: failed to load material_database.json</label>";
+            }
+          }
+        }
+      };
+      xhr.open("GET", "/material_database.json", true);
+      xhr.send();
+    }
+    function loadParam() {
+      var matID = document.getElementById("materialType").value;
+      const objDb = JSON.parse(jsonDb);
+      for (let i in objDb.result.list) {
+        if (objDb.result.list[i].base.id == matID) {
+          paramStr = "<tr><td></td><td><br>";
+          paramStr += "<label style=\"display: block;text-align: right;\">";
+          paramStr += " <svg xmlns=\"http://www.w3.org/2000/svg\" height=\"32px\" viewBox=\"0 0 24 24\" width=\"32px\"";
+          paramStr += "onClick=\"dialogp.close();\">";
+          paramStr += "<path d=\"M0 0h24v24H0z\" fill=\"none\" />";
+          paramStr += "<path d=\"M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z\" />";
+          paramStr += "</svg></label></td></tr>";
+          paramStr += "<th colspan=\"2\"><b>Filament Type: " + objDb.result.list[i].base.name + "</b></th>";
+          for (var key in objDb.result.list[i].kvParam) {
+            paramStr += "<tr><td><b>" + key + "</b></td><td width=50px><b>" + objDb.result.list[i].kvParam[key] + "</b></td></tr>";
+          }
+        }
+      }
+      paramStr += "</tr>";
+      document.getElementById("param").innerHTML = paramStr;
+      document.getElementById("pDialog").showModal();
+      document.activeElement.blur();
+    }
+    window.addEventListener("DOMContentLoaded", function () {
+      loadDb();
+    });
   </script>
 </head>
-<body onload="loadCache()">
+<body>
   <center>
     <div class="main">
       <table>
         <tr>
-          <td></td>
+          <td>
+            <br>
+            <label style="display: block;text-align: left;">
+              <svg xmlns="http://www.w3.org/2000/svg" height="32px" viewBox="0 0 24 24" width="32px"
+                onClick="loadParam();">
+                <path d="M0 0h24v24H0V0z" fill="none" />
+                <path
+                  d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
+              </svg>
+            </label>
+          </td>
           <td>
             <br>
             <label style="display: block;text-align: right;">
@@ -292,29 +372,7 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
           </td>
           <td>
             <div class="types" id="types">
-              <select name="materialType" id="materialType">
-                <option value="Generic PLA">PLA</option>
-                <option value="Generic PLA-Silk">PLA-Silk</option>
-                <option value="Generic PETG">PETG</option>
-                <option value="Generic ABS">ABS</option>
-                <option value="Generic TPU">TPU</option>
-                <option value="Generic PLA-CF">PLA-CF</option>
-                <option value="Generic ASA">ASA</option>
-                <option value="Generic PA">PA</option>
-                <option value="Generic PA-CF">PA-CF</option>
-                <option value="Generic BVOH">BVOH</option>
-                <option value="Generic PVA">PVA</option>
-                <option value="Generic HIPS">HIPS</option>
-                <option value="Generic PET-CF">PET-CF</option>
-                <option value="Generic PETG-CF">PETG-CF</option>
-                <option value="Generic PA6-CF">PA6-CF</option>
-                <option value="Generic PAHT-CF">PAHT-CF</option>
-                <option value="Generic PPS">PPS</option>
-                <option value="Generic PPS-CF">PPS-CF</option>
-                <option value="Generic PP">PP</option>
-                <option value="Generic PET">PET</option>
-                <option value="Generic PC">PC</option>
-              </select>
+              <select name=\"materialType\" id=\"materialType\"></select>
             </div>
           </td>
         </tr>
@@ -429,10 +487,16 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
         <br>
         <input id="savecfg" type="submit" class="btn" onClick="saveConf();">
       </div>
-      <center>
+    </center>
+  </dialog>
+  <dialog id="pDialog">
+    <center>
+      <table id="param"></table>
+    </center>
   </dialog>
   <script>
     const dialog = document.getElementById("cDialog");
+    const dialogp = document.getElementById("pDialog");
   </script>
 </body>
 </html>)==";

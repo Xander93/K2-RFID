@@ -6,6 +6,7 @@
 #include <ESP8266mDNS.h>
 #include "html.h"
 #include "AES.h"
+#include "matdb.h"
 
 #define SS_PIN 15
 #define RST_PIN 0
@@ -62,9 +63,11 @@ void setup()
 
   webServer.on("/config", HTTP_GET, handleConfig);
   webServer.on("/index.html", HTTP_GET, handleIndex);
+  webServer.on("/", HTTP_GET, handleIndex);
+  webServer.on("/material_database.json", HTTP_GET, handleDb);
   webServer.on("/config", HTTP_POST, handleConfigP);
   webServer.on("/spooldata", HTTP_POST, handleSpoolData);
-  webServer.onNotFound(handleIndex);
+  webServer.onNotFound(handle404);
   webServer.begin(80);
 }
 
@@ -180,8 +183,18 @@ void createKey(byte *uid)
 
 void handleIndex()
 {
-  webServer.setContentLength(sizeof(indexData) - 1);
-  webServer.send_P(200, "text/html", indexData);
+  webServer.send_P(200, "text/html", indexData, sizeof(indexData) - 1);
+}
+
+void handle404()
+{
+  webServer.send(404, "text/plain", "Not Found");
+}
+
+void handleDb()
+{
+  webServer.sendHeader("Content-Encoding", "gzip");
+  webServer.send_P(200, "application/json", material_database, sizeof(material_database));
 }
 
 void handleConfig()
@@ -230,7 +243,7 @@ void handleSpoolData()
   {
     String materialColor = webServer.arg("materialColor");
     materialColor.replace("#", "");
-    String filamentId = "1" + GetMaterialID(webServer.arg("materialType")); // material_database.json
+    String filamentId = "1" + webServer.arg("materialType"); // material_database.json
     String vendorId = "0276";                                               // 0276 creality
     String color = "0" + materialColor;
     String filamentLen = GetMaterialLength(webServer.arg("materialWeight"));
@@ -276,171 +289,6 @@ String GetMaterialLength(String materialWeight)
     return "0082";
   }
   return "0330";
-}
-
-String GetMaterialID(String materialName)
-{
-  if (materialName == "Hyper PLA")
-  {
-    return "01001";
-  }
-  else if (materialName == "Hyper PLA-CF")
-  {
-    return "02001";
-  }
-  else if (materialName == "Hyper PETG")
-  {
-    return "06002";
-  }
-  else if (materialName == "Hyper ABS")
-  {
-    return "03001";
-  }
-  else if (materialName == "CR-PLA")
-  {
-    return "04001";
-  }
-  else if (materialName == "CR-Silk")
-  {
-    return "05001";
-  }
-  else if (materialName == "CR-PETG")
-  {
-    return "06001";
-  }
-  else if (materialName == "CR-ABS")
-  {
-    return "07001";
-  }
-  else if (materialName == "Ender-PLA")
-  {
-    return "08001";
-  }
-  else if (materialName == "EN-PLA+")
-  {
-    return "09001";
-  }
-  else if (materialName == "HP-TPU")
-  {
-    return "10001";
-  }
-  else if (materialName == "CR-Nylon")
-  {
-    return "11001";
-  }
-  else if (materialName == "CR-PLA Carbon")
-  {
-    return "13001";
-  }
-  else if (materialName == "CR-PLA Matte")
-  {
-    return "14001";
-  }
-  else if (materialName == "CR-PLA Fluo")
-  {
-    return "15001";
-  }
-  else if (materialName == "CR-TPU")
-  {
-    return "16001";
-  }
-  else if (materialName == "CR-Wood")
-  {
-    return "17001";
-  }
-  else if (materialName == "HP Ultra PLA")
-  {
-    return "18001";
-  }
-  else if (materialName == "HP-ASA")
-  {
-    return "19001";
-  }
-  else if (materialName == "Generic PLA")
-  {
-    return "00001";
-  }
-  else if (materialName == "Generic PLA-Silk")
-  {
-    return "00002";
-  }
-  else if (materialName == "Generic PETG")
-  {
-    return "00003";
-  }
-  else if (materialName == "Generic ABS")
-  {
-    return "00004";
-  }
-  else if (materialName == "Generic TPU")
-  {
-    return "00005";
-  }
-  else if (materialName == "Generic PLA-CF")
-  {
-    return "00006";
-  }
-  else if (materialName == "Generic ASA")
-  {
-    return "00007";
-  }
-  else if (materialName == "Generic PA")
-  {
-    return "00008";
-  }
-  else if (materialName == "Generic PA-CF")
-  {
-    return "00009";
-  }
-  else if (materialName == "Generic BVOH")
-  {
-    return "00010";
-  }
-  else if (materialName == "Generic PVA")
-  {
-    return "00011";
-  }
-  else if (materialName == "Generic HIPS")
-  {
-    return "00012";
-  }
-  else if (materialName == "Generic PET-CF")
-  {
-    return "00013";
-  }
-  else if (materialName == "Generic PETG-CF")
-  {
-    return "00014";
-  }
-  else if (materialName == "Generic PA6-CF")
-  {
-    return "00015";
-  }
-  else if (materialName == "Generic PAHT-CF")
-  {
-    return "00016";
-  }
-  else if (materialName == "Generic PPS")
-  {
-    return "00017";
-  }
-  else if (materialName == "Generic PPS-CF")
-  {
-    return "00018";
-  }
-  else if (materialName == "Generic PP")
-  {
-    return "00019";
-  }
-  else if (materialName == "Generic PET")
-  {
-    return "00020";
-  }
-  else if (materialName == "Generic PC")
-  {
-    return "00021";
-  }
-  return "00001";
 }
 
 void loadConfig()
