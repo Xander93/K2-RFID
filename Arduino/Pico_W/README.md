@@ -20,7 +20,7 @@ A Pico <b>W</b>(wireless) variant is required for this to work
 
 Board:<br>
 The <a href=https://github.com/earlephilhower/arduino-pico>Arduino-Pico</a> core is required<br><br>
-<img src=https://github.com/DnG-Crafts/K2-RFID/blob/main/Arduino/Pico_W/pico.jpg>
+<img src=https://github.com/DnG-Crafts/K2-RFID/blob/main/Arduino/Pico_W/pico.png>
 
 
 GPIO Connections:<br>
