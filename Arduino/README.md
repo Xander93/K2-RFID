@@ -3,7 +3,10 @@
 
 <a href=https://github.com/DnG-Crafts/K2-RFID/tree/main/Arduino/ESP32>Code for ESP32 boards</a><br><br>
 
-<a href=https://github.com/DnG-Crafts/K2-RFID/tree/main/Arduino/ESP8266>Code for ESP8266 boards</a>
+<a href=https://github.com/DnG-Crafts/K2-RFID/tree/main/Arduino/ESP8266>Code for ESP8266 boards</a><br><br>
+
+<a href=https://github.com/DnG-Crafts/K2-RFID/tree/main/Arduino/Pico_W>Code for Pico W boards</a>
+
 
 <br><br>
 

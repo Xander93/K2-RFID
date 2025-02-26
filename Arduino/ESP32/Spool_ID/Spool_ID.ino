@@ -170,7 +170,7 @@ void createKey()
 
 void handleIndex()
 {
-  webServer.send_P(200, "text/html", indexData, sizeof(indexData) - 1);
+  webServer.send_P(200, "text/html", indexData);
 }
 
 void handle404()

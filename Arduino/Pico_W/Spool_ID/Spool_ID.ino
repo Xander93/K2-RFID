@@ -1,18 +1,21 @@
 #include <SPI.h>
-#include <ESP8266WiFi.h>
-#include <ESP8266WebServer.h>
-#include <ESP8266mDNS.h>
+#include <WiFi.h>
+#include <LEAmDNS.h>
+#include <WebServer.h>
 #include <LittleFS.h>
 #include "src/includes.h"
 
-#define SS_PIN 15
-#define RST_PIN 0
-#define SPK_PIN 16
+#define SS_PIN 5
+#define RST_PIN 22
+#define MISO_PIN 4
+#define MOSI_PIN 7
+#define SCK_PIN 6
+#define SPK_PIN 19
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 MFRC522::MIFARE_Key key;
 MFRC522::MIFARE_Key ekey;
-ESP8266WebServer webServer;
+WebServer webServer(80);
 AES aes;
 
 IPAddress Server_IP(10, 1, 0, 1);
@@ -27,38 +30,14 @@ bool encrypted = false;
 
 void setup()
 {
-  LittleFS.begin();
-  loadConfig();
+  SPI.setMISO(MISO_PIN);
+  SPI.setCS(SS_PIN);
+  SPI.setSCK(SCK_PIN);
+  SPI.setMOSI(MOSI_PIN);
   SPI.begin();
   mfrc522.PCD_Init();
   key = {255, 255, 255, 255, 255, 255};
   pinMode(SPK_PIN, OUTPUT);
-  if (AP_SSID == "" || AP_PASS == "")
-  {
-    AP_SSID = "K2_RFID";
-    AP_PASS = "password";
-  }
-  WiFi.softAPConfig(Server_IP, Server_IP, Subnet_Mask);
-  WiFi.softAP(AP_SSID.c_str(), AP_PASS.c_str());
-  WiFi.softAPConfig(Server_IP, Server_IP, Subnet_Mask);
-
-  if (WIFI_SSID != "" && WIFI_PASS != "")
-  {
-    WiFi.setAutoConnect(true);
-    WiFi.setAutoReconnect(true);
-    WiFi.hostname(WIFI_HOSTNAME);
-    WiFi.begin(WIFI_SSID.c_str(), WIFI_PASS.c_str());
-    if (WiFi.waitForConnectResult() == WL_CONNECTED)
-    {
-      IPAddress LAN_IP = WiFi.localIP();
-    }
-  }
-  if (WIFI_HOSTNAME != "")
-  {
-    String mdnsHost = WIFI_HOSTNAME;
-    mdnsHost.replace(".local", "");
-    MDNS.begin(mdnsHost.c_str());
-  }
 
   webServer.on("/config", HTTP_GET, handleConfig);
   webServer.on("/index.html", HTTP_GET, handleIndex);
@@ -67,12 +46,58 @@ void setup()
   webServer.on("/config", HTTP_POST, handleConfigP);
   webServer.on("/spooldata", HTTP_POST, handleSpoolData);
   webServer.onNotFound(handle404);
-  webServer.begin(80);
+  webServer.begin();
+}
+
+void setup1()
+{
+  LittleFS.begin();
+  loadConfig();
+  if (WIFI_SSID != "" && WIFI_PASS != "")
+  {
+    WiFi.hostname(WIFI_HOSTNAME.c_str());
+    WiFi.begin(WIFI_SSID.c_str(), WIFI_PASS.c_str());
+    if (WiFi.waitForConnectResult() == WL_CONNECTED)
+    {
+      IPAddress LAN_IP = WiFi.localIP();
+    }else
+    {
+      fallbackAP();
+    }
+  }else
+  {
+    fallbackAP();
+  }
+
+  if (WIFI_HOSTNAME != "")
+  {
+    String mdnsHost = WIFI_HOSTNAME;
+    mdnsHost.replace(".local", "");
+    MDNS.begin(mdnsHost.c_str());
+  }
+}
+
+void fallbackAP()
+{
+  if (AP_SSID == "" || AP_PASS == "")
+  {
+    AP_SSID = "K2_RFID";
+    AP_PASS = "password";
+  }
+  WiFi.softAPConfig(Server_IP, Server_IP, Subnet_Mask);
+  WiFi.softAP(AP_SSID.c_str(), AP_PASS.c_str());
+  WiFi.softAPConfig(Server_IP, Server_IP, Subnet_Mask);
+}
+
+void loop1()
+{
+  MDNS.update();
 }
 
 void loop()
 {
   webServer.handleClient();
+
   if (!mfrc522.PICC_IsNewCardPresent())
     return;
 
@@ -217,7 +242,7 @@ void handleConfigP()
     webServer.setContentLength(htmStr.length());
     webServer.send(200, "text/plain", htmStr);
     delay(1000);
-    ESP.restart();
+    rp2040.restart();
   }
   else
   {
@@ -232,7 +257,7 @@ void handleSpoolData()
     String materialColor = webServer.arg("materialColor");
     materialColor.replace("#", "");
     String filamentId = "1" + webServer.arg("materialType"); // material_database.json
-    String vendorId = "0276";                                               // 0276 creality
+    String vendorId = "0276"; // 0276 creality
     String color = "0" + materialColor;
     String filamentLen = GetMaterialLength(webServer.arg("materialWeight"));
     String serialNum = String(random(100000, 999999)); // 000001
