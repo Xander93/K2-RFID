@@ -462,9 +462,9 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
           .then(v => compress(v))
           .then(v => {
             var formData = new FormData();
-            const bytes = new Uint8Array(v)
-            const blob = new Blob([bytes], {type: 'application/octet-stream'})
-            formData.append('dbfile', blob, file.name)
+            const bytes = new Uint8Array(v);
+            const blob = new Blob([bytes], {type: 'application/octet-stream'});
+            formData.append('dbfile', blob, file.name);
             xhr.send(formData);
           });
       }

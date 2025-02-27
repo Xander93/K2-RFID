@@ -59,20 +59,6 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
       font-family: arial, sans-serif;
     }
 
-    .conf {
-      padding: 0;
-      position: absolute;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
-      background-color: #E0E0E0;
-      font-size: 16px;
-      font-weight: bold;
-      color: #000000;
-      font-family: arial, sans-serif;
-    }
-
     input[type="color"] {
       border: 1px solid #000000;
       background-color: #ffffff;
@@ -151,6 +137,59 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
       background-color: rgba(255, 0, 0, 0.486);
       background-blend-mode: overlay;
     }
+
+    progress {
+      border-radius: 6px;
+      width: 200px;
+      height: 16px;
+      overflow: hidden;
+    }
+
+    progress::-webkit-progress-bar {
+      background-color: #ffffff;
+      border-radius: 6px;
+    }
+
+    progress::-webkit-progress-value {
+      background-color: #3498db;
+      border-bottom-left-radius: 6px;
+      border-top-left-radius: 6px;
+      float: left;
+    }
+
+    #loader {
+      z-index: 1;
+      width: 50px;
+      height: 50px;
+      margin: 0 0 0 0;
+      border: 6px solid #f3f3f3;
+      border-radius: 50%;
+      border-top: 6px solid #3498db;
+      width: 50px;
+      height: 50px;
+      -webkit-animation: spin 2s linear infinite;
+      animation: spin 2s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+      0% {
+        -webkit-transform: rotate(0deg);
+      }
+
+      100% {
+        -webkit-transform: rotate(360deg);
+      }
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
   </style>
   <script>
     var creFils;
@@ -158,6 +197,13 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
     var dbVersion;
     var jsonDb;
     var paramStr;
+    const compress = byteArray => {
+      const cs = new CompressionStream('gzip');
+      const writer = cs.writable.getWriter();
+      writer.write(byteArray);
+      writer.close();
+      return new Response(cs.readable).arrayBuffer();
+    };
     function sendData() {
       document.getElementById("message").innerHTML = "<label class=\"msg\">Saving spool settings...</label>";
       var materialBrand = document.getElementById("materialBrand").value;
@@ -317,6 +363,63 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
       document.getElementById("pDialog").showModal();
       document.activeElement.blur();
     }
+    function loadDbUpdate() {
+      document.getElementById("dDialog").showModal();
+      document.activeElement.blur();
+    }
+    function formatBytes(bytes) {
+      if (bytes == 0) return '0 Bytes'; var k = 1024, dm = 2, sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'], i = Math.floor(Math.log(bytes) / Math.log(k)); return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+    function DbFileSelected(e) {
+      file = document.getElementById('dbfile').files[document.getElementById('dbfile').files.length - 1];
+      if (file.name.toLowerCase() == "material_database.json") {
+        document.getElementById("dselfile").innerHTML = "File: " + file.name + "<br>Size: " + formatBytes(file.size);
+        document.getElementById("dupload").style.display = "block";
+      } else {
+        document.getElementById("dselfile").innerHTML = "<font color='#df3840'>Invalid database file</font><br><br>File should be material_database.json";
+        document.getElementById("dupload").style.display = "none";
+      }
+    }
+    function uploadDb() {
+      document.getElementById("dupload").style.display = "none";
+      document.getElementById("dbtnsel").style.display = "none";
+      document.getElementById("dstatus").innerHTML = "<br><progress max='100' value='0'>0%</progress><br><br>Uploading database file";
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function () {
+        if (this.readyState === XMLHttpRequest.DONE) {
+          if (this.status === 200) {
+            document.getElementById("dstatus").innerHTML = this.responseText;
+          } else {
+            document.getElementById("dstatus").innerHTML = "<font color='#df3840'>HTTP Error</font>";
+          }
+          setTimeout(redirect, 8000);
+        }
+      };
+      xhr.upload.onprogress = function (e) {
+        var percentComplete = Math.ceil((e.loaded / e.total) * 100);
+        document.getElementById("dstatus").innerHTML = "<br><progress max='100' value='" + percentComplete + "'>" + percentComplete + "%</progress><br><br>Uploading database file";
+      };
+      xhr.upload.onloadend = function (e) {
+        document.getElementById("dstatus").innerHTML = "<div id='loader'></div><br>Updating database, Please wait.";
+      };
+      xhr.open("POST", "/updatedb.html", true);
+      let read = new FileReader();
+      read.readAsArrayBuffer(file);
+      read.onloadend = function () {
+        Promise.resolve(read.result)
+          .then(v => compress(v))
+          .then(v => {
+            var formData = new FormData();
+            const bytes = new Uint8Array(v);
+            const blob = new Blob([bytes], {type: 'application/octet-stream'});
+            formData.append('dbfile', blob, file.name);
+            xhr.send(formData);
+          });
+      }
+    }
+    function redirect() {
+      window.location.href = "/";
+    }
     window.addEventListener("DOMContentLoaded", function () {
       loadDb();
     });
@@ -426,13 +529,20 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
   </center>
   <dialog id="cDialog">
     <center>
-      <div class="conf">
+      <div class="main">
         <table>
           <tr>
             <td></td>
             <td>
               <br>
               <label style="display: block;text-align: right;">
+                <svg xmlns="http://www.w3.org/2000/svg" height="32px" viewBox="0 0 24 24" width="32px"
+                  onClick="loadDbUpdate();">
+                  <path
+                    d="M4,7v2c0,0.55-0.45,1-1,1H2v4h1c0.55,0,1,0.45,1,1v2c0,1.65,1.35,3,3,3h3v-2H7c-0.55,0-1-0.45-1-1v-2 c0-1.3-0.84-2.42-2-2.83v-0.34C5.16,11.42,6,10.3,6,9V7c0-0.55,0.45-1,1-1h3V4H7C5.35,4,4,5.35,4,7z" />
+                  <path
+                    d="M21,10c-0.55,0-1-0.45-1-1V7c0-1.65-1.35-3-3-3h-3v2h3c0.55,0,1,0.45,1,1v2c0,1.3,0.84,2.42,2,2.83v0.34 c-1.16,0.41-2,1.52-2,2.83v2c0,0.55-0.45,1-1,1h-3v2h3c1.65,0,3-1.35,3-3v-2c0-0.55,0.45-1,1-1h1v-4H21z" />
+                </svg>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <svg xmlns="http://www.w3.org/2000/svg" height="32px" viewBox="0 0 24 24" width="32px"
                   onClick="dialog.close();">
                   <path d="M0 0h24v24H0z" fill="none" />
@@ -494,9 +604,54 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
       <table id="param"></table>
     </center>
   </dialog>
+  <dialog id="dDialog">
+    <center>
+      <div class="main">
+        <table>
+          <tr>
+            <td>
+              <br>
+              <label style="display: block;text-align: right;">
+                <svg xmlns="http://www.w3.org/2000/svg" height="32px" viewBox="0 0 24 24" width="32px"
+                  onClick="dialogd.close();">
+                  <path d="M0 0h24v24H0z" fill="none" />
+                  <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                </svg>
+              </label>
+            </td>
+          </tr>
+          <tr>
+            <th colspan="1" width="300">
+              <center>Database Updater</center>
+            </th>
+          </tr>
+          <tr>
+            <td>
+              <form>
+                <center><input id="dbtnsel" type="button" class="btn"
+                    onclick="document.getElementById('dbfile').click()" value="Select file" style="display: block;">
+                </center>
+                <p id="dselfile"></p>
+                <input id="dbfile" type="file" name="dbupdate" size="0" accept=".json" onChange="DbFileSelected();"
+                  style="width:0; height:0;"></p>
+                <div>
+                  <center>
+                    <p id="dstatus"></p>
+                  </center>
+                  <center><input id="dupload" type="button" class="btn" value="Update Database" onClick="uploadDb();"
+                      style="display: none;"></center>
+                </div>
+              </form>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </center>
+  </dialog>
   <script>
     const dialog = document.getElementById("cDialog");
     const dialogp = document.getElementById("pDialog");
+    const dialogd = document.getElementById("dDialog");
   </script>
 </body>
 </html>)==";

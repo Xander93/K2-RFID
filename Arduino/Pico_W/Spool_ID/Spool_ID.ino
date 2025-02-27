@@ -17,6 +17,8 @@ MFRC522::MIFARE_Key key;
 MFRC522::MIFARE_Key ekey;
 WebServer webServer(80);
 AES aes;
+File upFile;
+String upMsg;
 
 IPAddress Server_IP(10, 1, 0, 1);
 IPAddress Subnet_Mask(255, 255, 255, 0);
@@ -45,6 +47,13 @@ void setup()
   webServer.on("/material_database.json", HTTP_GET, handleDb);
   webServer.on("/config", HTTP_POST, handleConfigP);
   webServer.on("/spooldata", HTTP_POST, handleSpoolData);
+  webServer.on("/updatedb.html", HTTP_POST, []() {
+    webServer.send(200, "text/plain", upMsg);
+    delay(1000);
+    rp2040.restart();
+  }, []() {
+    handleDbUpdate();
+  });
   webServer.onNotFound(handle404);
   webServer.begin();
 }
@@ -204,12 +213,6 @@ void handle404()
   webServer.send(404, "text/plain", "Not Found");
 }
 
-void handleDb()
-{
-  webServer.sendHeader("Content-Encoding", "gzip");
-  webServer.send_P(200, "application/json", material_database, sizeof(material_database));
-}
-
 void handleConfig()
 {
   String htmStr = AP_SSID + "|-|" + WIFI_SSID + "|-|" + WIFI_HOSTNAME;
@@ -247,6 +250,49 @@ void handleConfigP()
   else
   {
     webServer.send(417, "text/plain", "Expectation Failed");
+  }
+}
+
+void handleDb()
+{
+  File dataFile = LittleFS.open("/matdb.gz", "r");
+  if (!dataFile) {
+    webServer.sendHeader("Content-Encoding", "gzip");
+    webServer.send_P(200, "application/json", material_database, sizeof(material_database));
+  }
+  else
+  {
+    webServer.streamFile(dataFile, "application/json");
+    dataFile.close();
+  }
+}
+
+void handleDbUpdate()
+{
+  upMsg = "";
+  if (webServer.uri() != "/updatedb.html") {
+    upMsg = "Error";
+    return;
+  }
+  HTTPUpload &upload = webServer.upload();
+  if (upload.filename != "material_database.json") {
+    upMsg = "Invalid database file<br><br>" + upload.filename;
+    return;
+  }
+  if (upload.status == UPLOAD_FILE_START) {
+    if (LittleFS.exists("/matdb.gz")) {
+      LittleFS.remove("/matdb.gz");
+    }
+    upFile = LittleFS.open("/matdb.gz", "w");
+  } else if (upload.status == UPLOAD_FILE_WRITE) {
+    if (upFile) {
+      upFile.write(upload.buf, upload.currentSize);
+    }
+  } else if (upload.status == UPLOAD_FILE_END) {
+    if (upFile) {
+      upFile.close();
+      upMsg = "Database update complete, Rebooting";
+    }
   }
 }
 

@@ -21,7 +21,13 @@ A Pico <b>W</b>(wireless) variant is required for this to work
 Board:<br>
 The <a href=https://github.com/earlephilhower/arduino-pico>Arduino-Pico</a> core is required<br><br>
 <img src=https://github.com/DnG-Crafts/K2-RFID/blob/main/Arduino/Pico_W/pico.png width="40%" height="40%">
+<br><br>
 
+Set the flash size to `2MB (Sketch: 1536KB, FS: 512KB)`<br><br>
+
+<img src=https://github.com/DnG-Crafts/K2-RFID/blob/main/Arduino/Pico_W/settings.png width="80%" height="80%">
+
+<br><br>
 
 GPIO Connections:<br>
 <img src=https://github.com/DnG-Crafts/K2-RFID/blob/main/Arduino/Pico_W/pins.jpg>
