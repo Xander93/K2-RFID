@@ -58,7 +58,7 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
       color: #000000;
       font-family: arial, sans-serif;
     }
-	
+
     input[type="color"] {
       border: 1px solid #000000;
       background-color: #ffffff;
@@ -197,6 +197,13 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
     var dbVersion;
     var jsonDb;
     var paramStr;
+    const compress = byteArray => {
+      const cs = new CompressionStream('gzip');
+      const writer = cs.writable.getWriter();
+      writer.write(byteArray);
+      writer.close();
+      return new Response(cs.readable).arrayBuffer();
+    };
     function sendData() {
       document.getElementById("message").innerHTML = "<label class=\"msg\">Saving spool settings...</label>";
       var materialBrand = document.getElementById("materialBrand").value;
@@ -410,19 +417,19 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
           } else {
             document.getElementById("status").innerHTML = "<font color='#df3840'>HTTP Error</font>";
           }
-		  setTimeout(redirect, 8000);
+          setTimeout(redirect, 8000);
         }
       };
-      xhr.upload.onprogress = function(e) {
+      xhr.upload.onprogress = function (e) {
         var percentComplete = Math.ceil((e.loaded / e.total) * 100);
         document.getElementById("status").innerHTML = "<br><progress max='100' value='" + percentComplete + "'>" + percentComplete + "%</progress><br><br>Uploading firmware file";
       };
-      xhr.upload.onloadend = function(e) {
+      xhr.upload.onloadend = function (e) {
         document.getElementById("status").innerHTML = "<div id='loader'></div><br>Updating firmware, Please wait.";
       };
       xhr.open("POST", "/update.html", true);
-	  var formData = new FormData();
-	  formData.append("fwfile", file);
+      var formData = new FormData();
+      formData.append("fwfile", file);
       xhr.send(formData);
     }
     function uploadDb() {
@@ -437,22 +444,32 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
           } else {
             document.getElementById("dstatus").innerHTML = "<font color='#df3840'>HTTP Error</font>";
           }
-		  setTimeout(redirect, 8000);
+          setTimeout(redirect, 8000);
         }
       };
-      xhr.upload.onprogress = function(e) {
+      xhr.upload.onprogress = function (e) {
         var percentComplete = Math.ceil((e.loaded / e.total) * 100);
         document.getElementById("dstatus").innerHTML = "<br><progress max='100' value='" + percentComplete + "'>" + percentComplete + "%</progress><br><br>Uploading database file";
       };
-      xhr.upload.onloadend = function(e) {
+      xhr.upload.onloadend = function (e) {
         document.getElementById("dstatus").innerHTML = "<div id='loader'></div><br>Updating database, Please wait.";
       };
       xhr.open("POST", "/updatedb.html", true);
-	  var formData = new FormData();
-	  formData.append("dbfile", file);
-      xhr.send(formData);
+      let read = new FileReader();
+      read.readAsArrayBuffer(file);
+      read.onloadend = function () {
+        Promise.resolve(read.result)
+          .then(v => compress(v))
+          .then(v => {
+            var formData = new FormData();
+            const bytes = new Uint8Array(v)
+            const blob = new Blob([bytes], {type: 'application/octet-stream'})
+            formData.append('dbfile', blob, file.name)
+            xhr.send(formData);
+          });
+      }
     }
-	function redirect() {
+    function redirect() {
       window.location.href = "/";
     }
     window.addEventListener("DOMContentLoaded", function () {
@@ -573,16 +590,16 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
               <label style="display: block;text-align: right;">
                 <svg xmlns="http://www.w3.org/2000/svg" height="32px" viewBox="0 0 24 24" width="32px"
                   onClick="loadDbUpdate();">
-				  <path 
-				    d="M4,7v2c0,0.55-0.45,1-1,1H2v4h1c0.55,0,1,0.45,1,1v2c0,1.65,1.35,3,3,3h3v-2H7c-0.55,0-1-0.45-1-1v-2 c0-1.3-0.84-2.42-2-2.83v-0.34C5.16,11.42,6,10.3,6,9V7c0-0.55,0.45-1,1-1h3V4H7C5.35,4,4,5.35,4,7z"/>
-				  <path 
-				    d="M21,10c-0.55,0-1-0.45-1-1V7c0-1.65-1.35-3-3-3h-3v2h3c0.55,0,1,0.45,1,1v2c0,1.3,0.84,2.42,2,2.83v0.34 c-1.16,0.41-2,1.52-2,2.83v2c0,0.55-0.45,1-1,1h-3v2h3c1.65,0,3-1.35,3-3v-2c0-0.55,0.45-1,1-1h1v-4H21z"/>
+                  <path
+                    d="M4,7v2c0,0.55-0.45,1-1,1H2v4h1c0.55,0,1,0.45,1,1v2c0,1.65,1.35,3,3,3h3v-2H7c-0.55,0-1-0.45-1-1v-2 c0-1.3-0.84-2.42-2-2.83v-0.34C5.16,11.42,6,10.3,6,9V7c0-0.55,0.45-1,1-1h3V4H7C5.35,4,4,5.35,4,7z" />
+                  <path
+                    d="M21,10c-0.55,0-1-0.45-1-1V7c0-1.65-1.35-3-3-3h-3v2h3c0.55,0,1,0.45,1,1v2c0,1.3,0.84,2.42,2,2.83v0.34 c-1.16,0.41-2,1.52-2,2.83v2c0,0.55-0.45,1-1,1h-3v2h3c1.65,0,3-1.35,3-3v-2c0-0.55,0.45-1,1-1h1v-4H21z" />
                 </svg>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-			  
+
                 <svg xmlns="http://www.w3.org/2000/svg" height="32px" viewBox="0 0 24 24" width="32px"
                   onClick="loadUpdate();">
-				  <path 
-				    d="M14,2H6C4.9,2,4.01,2.9,4.01,4L4,20c0,1.1,0.89,2,1.99,2H18c1.1,0,2-0.9,2-2V8L14,2z M18,20H6V4h7v5h5V20z M8,15.01 l1.41,1.41L11,14.84V19h2v-4.16l1.59,1.59L16,15.01L12.01,11L8,15.01z"/>
+                  <path
+                    d="M14,2H6C4.9,2,4.01,2.9,4.01,4L4,20c0,1.1,0.89,2,1.99,2H18c1.1,0,2-0.9,2-2V8L14,2z M18,20H6V4h7v5h5V20z M8,15.01 l1.41,1.41L11,14.84V19h2v-4.16l1.59,1.59L16,15.01L12.01,11L8,15.01z" />
                 </svg>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <svg xmlns="http://www.w3.org/2000/svg" height="32px" viewBox="0 0 24 24" width="32px"
                   onClick="dialog.close();">
@@ -712,8 +729,9 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
           <tr>
             <td>
               <form>
-                <center><input id="dbtnsel" type="button" class="btn" onclick="document.getElementById('dbfile').click()"
-                    value="Select file" style="display: block;"></center>
+                <center><input id="dbtnsel" type="button" class="btn"
+                    onclick="document.getElementById('dbfile').click()" value="Select file" style="display: block;">
+                </center>
                 <p id="dselfile"></p>
                 <input id="dbfile" type="file" name="dbupdate" size="0" accept=".json" onChange="DbFileSelected();"
                   style="width:0; height:0;"></p>
@@ -735,7 +753,7 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
     const dialog = document.getElementById("cDialog");
     const dialogp = document.getElementById("pDialog");
     const dialogu = document.getElementById("uDialog");
-	const dialogd = document.getElementById("dDialog");
+    const dialogd = document.getElementById("dDialog");
   </script>
 </body>
 </html>)==";

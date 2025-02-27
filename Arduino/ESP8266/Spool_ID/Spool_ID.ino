@@ -196,20 +196,6 @@ void handle404()
   webServer.send(404, "text/plain", "Not Found");
 }
 
-void handleDb()
-{
-  File dataFile = LittleFS.open("/matdb.json", "r");
-  if (!dataFile) {
-    webServer.sendHeader("Content-Encoding", "gzip");
-    webServer.send_P(200, "application/json", material_database, sizeof(material_database));
-  }
-  else
-  {
-    webServer.streamFile(dataFile, "application/json");
-    dataFile.close();
-  }
-}
-
 void handleConfig()
 {
   String htmStr = AP_SSID + "|-|" + WIFI_SSID + "|-|" + WIFI_HOSTNAME;
@@ -250,6 +236,20 @@ void handleConfigP()
   }
 }
 
+void handleDb()
+{
+  File dataFile = LittleFS.open("/matdb.gz", "r");
+  if (!dataFile) {
+    webServer.sendHeader("Content-Encoding", "gzip");
+    webServer.send_P(200, "application/json", material_database, sizeof(material_database));
+  }
+  else
+  {
+    webServer.streamFile(dataFile, "application/json");
+    dataFile.close();
+  }
+}
+
 void handleDbUpdate()
 {
   upMsg = "";
@@ -263,10 +263,10 @@ void handleDbUpdate()
     return;
   }
   if (upload.status == UPLOAD_FILE_START) {
-    if (LittleFS.exists("/matdb.json")) {
-      LittleFS.remove("/matdb.json");
+    if (LittleFS.exists("/matdb.gz")) {
+      LittleFS.remove("/matdb.gz");
     }
-    upFile = LittleFS.open("/matdb.json", "w");
+    upFile = LittleFS.open("/matdb.gz", "w");
   } else if (upload.status == UPLOAD_FILE_WRITE) {
     if (upFile) {
       upFile.write(upload.buf, upload.currentSize);
