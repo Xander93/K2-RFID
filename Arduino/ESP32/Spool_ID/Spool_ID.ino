@@ -1,7 +1,9 @@
+#include <FS.h>
 #include <SPI.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #include <WebServer.h>
+#include <Update.h>
 #include <LittleFS.h>
 #include "src/includes.h"
 
@@ -14,6 +16,9 @@ MFRC522::MIFARE_Key key;
 MFRC522::MIFARE_Key ekey;
 WebServer webServer(80);
 AES aes;
+File upFile;
+String upMsg;
+MD5Builder md5;
 
 IPAddress Server_IP(10, 1, 0, 1);
 IPAddress Subnet_Mask(255, 255, 255, 0);
@@ -24,6 +29,7 @@ String WIFI_SSID = "";
 String WIFI_PASS = "";
 String WIFI_HOSTNAME = "k2.local";
 bool encrypted = false;
+
 
 void setup()
 {
@@ -65,6 +71,20 @@ void setup()
   webServer.on("/material_database.json", HTTP_GET, handleDb);
   webServer.on("/config", HTTP_POST, handleConfigP);
   webServer.on("/spooldata", HTTP_POST, handleSpoolData);
+  webServer.on("/update.html", HTTP_POST, []() {
+    webServer.send(200, "text/plain", upMsg);
+    delay(1000);
+    ESP.restart();
+  }, []() {
+    handleFwUpdate();
+  });
+  webServer.on("/updatedb.html", HTTP_POST, []() {
+    webServer.send(200, "text/plain", upMsg);
+    delay(1000);
+    ESP.restart();
+  }, []() {
+    handleDbUpdate();
+  });
   webServer.onNotFound(handle404);
   webServer.begin();
 }
@@ -180,8 +200,16 @@ void handle404()
 
 void handleDb()
 {
-  webServer.sendHeader("Content-Encoding", "gzip");
-  webServer.send_P(200, "application/json", material_database, sizeof(material_database));
+  File dataFile = LittleFS.open("/matdb.json", "r");
+  if (!dataFile) {
+    webServer.sendHeader("Content-Encoding", "gzip");
+    webServer.send_P(200, "application/json", material_database, sizeof(material_database));
+  }
+  else
+  {
+    webServer.streamFile(dataFile, "application/json");
+    dataFile.close();
+  }
 }
 
 void handleConfig()
@@ -221,6 +249,131 @@ void handleConfigP()
   else
   {
     webServer.send(417, "text/plain", "Expectation Failed");
+  }
+}
+
+void handleDbUpdate()
+{
+  upMsg = "";
+  if (webServer.uri() != "/updatedb.html") {
+    upMsg = "Error";
+    return;
+  }
+  HTTPUpload &upload = webServer.upload();
+  if (upload.filename != "material_database.json") {
+    upMsg = "Invalid database file<br><br>" + upload.filename;
+    return;
+  }
+  if (upload.status == UPLOAD_FILE_START) {
+    if (LittleFS.exists("/matdb.json")) {
+      LittleFS.remove("/matdb.json");
+    }
+    upFile = LittleFS.open("/matdb.json", "w");
+  } else if (upload.status == UPLOAD_FILE_WRITE) {
+    if (upFile) {
+      upFile.write(upload.buf, upload.currentSize);
+    }
+  } else if (upload.status == UPLOAD_FILE_END) {
+    if (upFile) {
+      upFile.close();
+      upMsg = "Database update complete, Rebooting";
+    }
+  }
+}
+
+void handleFwUpdate()
+{
+  upMsg = "";
+  if (webServer.uri() != "/update.html") {
+    upMsg = "Error";
+    return;
+  }
+  HTTPUpload &upload = webServer.upload();
+  if (!upload.filename.endsWith(".bin")) {
+    upMsg = "Invalid update file<br><br>" + upload.filename;
+    return;
+  }
+  if (upload.status == UPLOAD_FILE_START) {
+    if (LittleFS.exists("/update.bin")) {
+      LittleFS.remove("/update.bin");
+    }
+    upFile = LittleFS.open("/update.bin", "w");
+  } else if (upload.status == UPLOAD_FILE_WRITE) {
+    if (upFile) {
+      upFile.write(upload.buf, upload.currentSize);
+    }
+  } else if (upload.status == UPLOAD_FILE_END) {
+    if (upFile) {
+      upFile.close();
+    }
+    updateFw();
+  }
+}
+
+void updateFw()
+{
+  if (LittleFS.exists("/update.bin")) {
+    File updateFile;
+    updateFile = LittleFS.open("/update.bin", "r");
+    if (updateFile) {
+      size_t updateSize = updateFile.size();
+      if (updateSize > 0) {
+        md5.begin();
+        md5.addStream(updateFile, updateSize);
+        md5.calculate();
+        String md5Hash = md5.toString();
+        updateFile.close();
+        updateFile = LittleFS.open("/update.bin", "r");
+        if (updateFile) {
+          uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
+          if (!Update.begin(maxSketchSpace, U_FLASH)) {
+            updateFile.close();
+            upMsg = "Update failed<br><br>" + errorMsg(Update.getError());
+            return;
+          }
+          int md5BufSize = md5Hash.length() + 1;
+          char md5Buf[md5BufSize];
+          md5Hash.toCharArray(md5Buf, md5BufSize) ;
+          Update.setMD5(md5Buf);
+          long bsent = 0;
+          int cprog = 0;
+          while (updateFile.available()) {
+            uint8_t ibuffer[1];
+            updateFile.read((uint8_t *)ibuffer, 1);
+            Update.write(ibuffer, sizeof(ibuffer));
+            bsent++;
+            int progr = ((double)bsent /  updateSize) * 100;
+            if (progr >= cprog) {
+              cprog = progr + 10;
+            }
+          }
+          updateFile.close();
+          LittleFS.remove("/update.bin");
+          if (Update.end(true))
+          {
+            String uHash = md5Hash.substring(0, 10);
+            String iHash = Update.md5String().substring(0, 10);
+            iHash.toUpperCase();
+            uHash.toUpperCase();
+            upMsg = "Uploaded:&nbsp; " + uHash + "<br>Installed: " + iHash + "<br><br>Update complete, Rebooting";
+          }
+          else
+          {
+            upMsg = "Update failed";
+          }
+        }
+      }
+      else {
+        updateFile.close();
+        LittleFS.remove("/update.bin");
+        upMsg = "Error, file is invalid";
+        return;
+      }
+    }
+  }
+  else
+  {
+    upMsg = "No update file found";
   }
 }
 
@@ -276,6 +429,31 @@ String GetMaterialLength(String materialWeight)
     return "0082";
   }
   return "0330";
+}
+
+String errorMsg(int errnum)
+{
+  if (errnum == UPDATE_ERROR_OK) {
+    return "No Error";
+  } else if (errnum == UPDATE_ERROR_WRITE) {
+    return "Flash Write Failed";
+  } else if (errnum == UPDATE_ERROR_ERASE) {
+    return "Flash Erase Failed";
+  } else if (errnum == UPDATE_ERROR_READ) {
+    return "Flash Read Failed";
+  } else if (errnum == UPDATE_ERROR_SPACE) {
+    return "Not Enough Space";
+  } else if (errnum == UPDATE_ERROR_SIZE) {
+    return "Bad Size Given";
+  } else if (errnum == UPDATE_ERROR_STREAM) {
+    return "Stream Read Timeout";
+  } else if (errnum == UPDATE_ERROR_MD5) {
+    return "MD5 Check Failed";
+  } else if (errnum == UPDATE_ERROR_MAGIC_BYTE) {
+    return "Magic byte is wrong, not 0xE9";
+  } else {
+    return "UNKNOWN";
+  }
 }
 
 void loadConfig()
