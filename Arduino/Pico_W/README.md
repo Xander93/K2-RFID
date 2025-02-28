@@ -25,7 +25,7 @@ The <a href=https://github.com/earlephilhower/arduino-pico>Arduino-Pico</a> core
 
 Set the flash size to `2MB (Sketch: 1536KB, FS: 512KB)`<br><br>
 
-<img src=https://github.com/DnG-Crafts/K2-RFID/blob/main/Arduino/Pico_W/settings.png width="40%" height="40%">
+<img src=https://github.com/DnG-Crafts/K2-RFID/blob/main/Arduino/Pico_W/settings.png width="80%" height="80%">
 
 <br><br>
 

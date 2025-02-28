@@ -26,6 +26,7 @@ String AP_PASS = "password";
 String WIFI_SSID = "";
 String WIFI_PASS = "";
 String WIFI_HOSTNAME = "k2.local";
+String PRINTER_HOSTNAME = "";
 bool encrypted = false;
 
 void setup()
@@ -198,14 +199,14 @@ void handle404()
 
 void handleConfig()
 {
-  String htmStr = AP_SSID + "|-|" + WIFI_SSID + "|-|" + WIFI_HOSTNAME;
+  String htmStr = AP_SSID + "|-|" + WIFI_SSID + "|-|" + WIFI_HOSTNAME + "|-|" + PRINTER_HOSTNAME;
   webServer.setContentLength(htmStr.length());
   webServer.send(200, "text/plain", htmStr);
 }
 
 void handleConfigP()
 {
-  if (webServer.hasArg("ap_ssid") && webServer.hasArg("ap_pass") && webServer.hasArg("wifi_ssid") && webServer.hasArg("wifi_pass") && webServer.hasArg("wifi_host"))
+  if (webServer.hasArg("ap_ssid") && webServer.hasArg("ap_pass") && webServer.hasArg("wifi_ssid") && webServer.hasArg("wifi_pass") && webServer.hasArg("wifi_host") && webServer.hasArg("printer_host"))
   {
     AP_SSID = webServer.arg("ap_ssid");
     if (!webServer.arg("ap_pass").equals("********"))
@@ -218,10 +219,11 @@ void handleConfigP()
       WIFI_PASS = webServer.arg("wifi_pass");
     }
     WIFI_HOSTNAME = webServer.arg("wifi_host");
+    PRINTER_HOSTNAME = webServer.arg("printer_host");
     File file = LittleFS.open("/config.ini", "w");
     if (file)
     {
-      file.print("\r\nAP_SSID=" + AP_SSID + "\r\nAP_PASS=" + AP_PASS + "\r\nWIFI_SSID=" + WIFI_SSID + "\r\nWIFI_PASS=" + WIFI_PASS + "\r\nWIFI_HOST=" + WIFI_HOSTNAME + "\r\n");
+      file.print("\r\nAP_SSID=" + AP_SSID + "\r\nAP_PASS=" + AP_PASS + "\r\nWIFI_SSID=" + WIFI_SSID + "\r\nWIFI_PASS=" + WIFI_PASS + "\r\nWIFI_HOST=" + WIFI_HOSTNAME + "\r\nPRINTER_HOST=" + PRINTER_HOSTNAME + "\r\n");
       file.close();
     }
     String htmStr = "OK";
@@ -497,6 +499,13 @@ void loadConfig()
         WIFI_HOSTNAME = split(iniData, "WIFI_HOST=", "\r\n");
         WIFI_HOSTNAME.trim();
       }
+
+      if (instr(iniData, "PRINTER_HOST="))
+      {
+        PRINTER_HOSTNAME = split(iniData, "PRINTER_HOST=", "\r\n");
+        PRINTER_HOSTNAME.trim();
+      }
+      
     }
   }
   else
@@ -504,7 +513,7 @@ void loadConfig()
     File file = LittleFS.open("/config.ini", "w");
     if (file)
     {
-      file.print("\r\nAP_SSID=" + AP_SSID + "\r\nAP_PASS=" + AP_PASS + "\r\nWIFI_SSID=" + WIFI_SSID + "\r\nWIFI_PASS=" + WIFI_PASS + "\r\nWIFI_HOST=" + WIFI_HOSTNAME + "\r\n");
+      file.print("\r\nAP_SSID=" + AP_SSID + "\r\nAP_PASS=" + AP_PASS + "\r\nWIFI_SSID=" + WIFI_SSID + "\r\nWIFI_PASS=" + WIFI_PASS + "\r\nWIFI_HOST=" + WIFI_HOSTNAME + "\r\nPRINTER_HOST=" + PRINTER_HOSTNAME + "\r\n");
       file.close();
     }
   }

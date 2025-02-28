@@ -279,6 +279,7 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
               document.getElementById("ap_ssid").value = configData[0];
               document.getElementById("wifi_ssid").value = configData[1];
               document.getElementById("wifi_host").value = configData[2];
+              document.getElementById("printer_host").value = configData[3];
             } else {
               document.getElementById("ap_ssid").value = "K2_RFID";
               document.getElementById("wifi_ssid").value = "";
@@ -293,7 +294,7 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
       xhr.send();
     }
     function saveConf() {
-      var postdata = "ap_ssid=" + document.getElementById("ap_ssid").value + "&ap_pass=" + document.getElementById("ap_pass").value + "&wifi_ssid=" + document.getElementById("wifi_ssid").value + "&wifi_pass=" + document.getElementById("wifi_pass").value + "&wifi_host=" + document.getElementById("wifi_host").value + "&submit";
+      var postdata = "ap_ssid=" + document.getElementById("ap_ssid").value + "&ap_pass=" + document.getElementById("ap_pass").value + "&wifi_ssid=" + document.getElementById("wifi_ssid").value + "&wifi_pass=" + document.getElementById("wifi_pass").value + "&wifi_host=" + document.getElementById("wifi_host").value + "&printer_host=" + document.getElementById("printer_host").value + "&submit";
       var xhr = new XMLHttpRequest();
       xhr.onreadystatechange = function () {
         if (this.readyState == 4) {
@@ -370,6 +371,16 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
     function loadDbUpdate() {
       document.getElementById("dDialog").showModal();
       document.activeElement.blur();
+      if (document.getElementById("printer_host").value.length > 0) {
+        document.getElementById("pupload").style.display = "block";
+      }else{
+		document.getElementById("pupload").style.display = "none";
+	  }
+	  document.getElementById("dupload").style.display = "none";
+	  document.getElementById("dselfile").innerHTML = "";
+	  document.getElementById("dstatus").innerHTML = "";
+      document.getElementById("dbtnsel").style.display = "block";
+	  document.getElementById('dbfile').value = "";
     }
     function formatBytes(bytes) {
       if (bytes == 0) return '0 Bytes'; var k = 1024, dm = 2, sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'], i = Math.floor(Math.log(bytes) / Math.log(k)); return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
@@ -400,6 +411,7 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
       if (file.name.toLowerCase() == "material_database.json") {
         document.getElementById("dselfile").innerHTML = "File: " + file.name + "<br>Size: " + formatBytes(file.size);
         document.getElementById("dupload").style.display = "block";
+        document.getElementById("pupload").style.display = "none";
       } else {
         document.getElementById("dselfile").innerHTML = "<font color='#df3840'>Invalid database file</font><br><br>File should be material_database.json";
         document.getElementById("dupload").style.display = "none";
@@ -463,10 +475,68 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
           .then(v => {
             var formData = new FormData();
             const bytes = new Uint8Array(v);
-            const blob = new Blob([bytes], {type: 'application/octet-stream'});
+            const blob = new Blob([bytes], { type: 'application/octet-stream' });
             formData.append('dbfile', blob, file.name);
             xhr.send(formData);
           });
+      }
+    }
+    function downloadDb() {
+      var xhr = new XMLHttpRequest();
+      return new Promise((resolve, reject) => {
+        xhr.onreadystatechange = function () {
+          if (this.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+              resolve(xhr.responseText);
+            } else {
+              resolve("");
+            }
+          }
+        };
+        xhr.open('GET', 'http://' + document.getElementById("printer_host").value + '/downloads/defData/material_database.json');
+        xhr.timeout = 5000;
+        xhr.send();
+      });
+    }
+    const uploadDbFromPrinter = async () => {
+      const res = await downloadDb();
+      if (res.length > 0) {
+        document.getElementById("dupload").style.display = "none";
+        document.getElementById("dbtnsel").style.display = "none";
+        document.getElementById("pupload").style.display = "none";
+        document.getElementById("dstatus").innerHTML = "<br><progress max='100' value='0'>0%</progress><br><br>Uploading database file";
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+          if (this.readyState === XMLHttpRequest.DONE) {
+            if (this.status === 200) {
+              document.getElementById("dstatus").innerHTML = this.responseText;
+            } else {
+              document.getElementById("pupload").style.display = "block";
+              document.getElementById("dstatus").innerHTML = "<font color='#df3840'>HTTP Error</font>";
+            }
+            setTimeout(redirect, 8000);
+          }
+        };
+        xhr.upload.onprogress = function (e) {
+          var percentComplete = Math.ceil((e.loaded / e.total) * 100);
+          document.getElementById("dstatus").innerHTML = "<br><progress max='100' value='" + percentComplete + "'>" + percentComplete + "%</progress><br><br>Uploading database file";
+        };
+        xhr.upload.onloadend = function (e) {
+          document.getElementById("dstatus").innerHTML = "<div id='loader'></div><br>Updating database, Please wait.";
+        };
+        xhr.open("POST", "/updatedb.html", true);
+        Promise.resolve(new TextEncoder().encode(res))
+          .then(v => compress(v))
+          .then(v => {
+            var formData = new FormData();
+            const bytes = new Uint8Array(v);
+            const blob = new Blob([bytes], { type: 'application/octet-stream' });
+            formData.append('dbfile', blob, 'material_database.json');
+            xhr.send(formData);
+          });
+      }
+      else {
+        document.getElementById("dstatus").innerHTML = "<font color='#df3840'>Error downloading file from printer</font>";
       }
     }
     function redirect() {
@@ -651,6 +721,17 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
               <input size="10" maxlength="16" type="text" id="wifi_host" value="" autocomplete="off">
             </td>
           </tr>
+          <tr>
+            <th colspan="2">
+              <center>Printer</center>
+            </th>
+          </tr>
+          <tr>
+            <td>PRINTER HOST/IP:</td>
+            <td>
+              <input size="10" maxlength="64" type="text" id="printer_host" value="" autocomplete="off">
+            </td>
+          </tr>
         </table>
         <br>
         <input id="savecfg" type="submit" class="btn" onClick="saveConf();">
@@ -741,6 +822,8 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
                   </center>
                   <center><input id="dupload" type="button" class="btn" value="Update Database" onClick="uploadDb();"
                       style="display: none;"></center>
+                  <center><input id="pupload" type="button" class="btn" value="Update From Printer"
+                      onClick="uploadDbFromPrinter();" style="display: none;"></center>
                 </div>
               </form>
             </td>
