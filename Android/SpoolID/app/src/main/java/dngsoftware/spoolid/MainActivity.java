@@ -24,6 +24,7 @@ import static dngsoftware.spoolid.Utils.materialWeights;
 import static dngsoftware.spoolid.Utils.populateDatabase;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Color;
@@ -40,6 +41,7 @@ import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -483,15 +485,39 @@ public class MainActivity extends AppCompatActivity {
             pickerDialog.setCanceledOnTouchOutside(false);
             pickerDialog.setTitle(R.string.pick_color);
             final Button btnCls = pickerDialog.findViewById(R.id.btncls);
-            btnCls.setOnClickListener(v -> {
-                if (customDialog != null && customDialog.isShowing()) {
-                    txtcolor.setText(String.format("0%s", MaterialColor));
-                }
-                pickerDialog.dismiss();
-            });
+            EditText colorTxt = pickerDialog.findViewById(R.id.txtcolor);
             View dcolorView = pickerDialog.findViewById(R.id.dcolorview);
             ImageView picker = pickerDialog.findViewById(R.id.picker);
             dcolorView.setBackgroundColor(Color.parseColor("#" + MaterialColor));
+            colorTxt.setText(MaterialColor);
+            btnCls.setOnClickListener(v -> {
+                if (customDialog != null && customDialog.isShowing()) {
+                    txtcolor.setText(String.format("0%s", MaterialColor));
+                }else {
+                    if (colorTxt.getText().toString().length() == 6) {
+                        try {
+                            MaterialColor = colorTxt.getText().toString();
+                            colorView.setBackgroundColor(Color.parseColor("#" + MaterialColor));
+                            dcolorView.setBackgroundColor(Color.parseColor("#" + MaterialColor));
+                        } catch (Exception ignored) {
+                        }
+                    }
+                }
+                pickerDialog.dismiss();
+            });
+            colorTxt.setOnEditorActionListener((v, actionId, event) -> {
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(colorTxt.getWindowToken(), 0);
+                if (colorTxt.getText().toString().length() == 6) {
+                    try {
+                        MaterialColor = colorTxt.getText().toString();
+                        colorView.setBackgroundColor(Color.parseColor("#" + MaterialColor));
+                        dcolorView.setBackgroundColor(Color.parseColor("#" + MaterialColor));
+
+                    } catch (Exception ignored) {}
+                }
+                return true;
+            });
             picker.setOnTouchListener((v, event) -> {
                 final int currPixel = getPixelColor(event, picker);
                 if (currPixel != 0) {
@@ -499,7 +525,6 @@ public class MainActivity extends AppCompatActivity {
                     if (customDialog != null && customDialog.isShowing()) {
                         txtcolor.setText(String.format("0%s", MaterialColor));
                     } else {
-
                         colorView.setBackgroundColor(Color.argb(255, Color.red(currPixel), Color.green(currPixel), Color.blue(currPixel)));
                         dcolorView.setBackgroundColor(Color.argb(255, Color.red(currPixel), Color.green(currPixel), Color.blue(currPixel)));
                     }
@@ -550,6 +575,7 @@ public class MainActivity extends AppCompatActivity {
                             b = progress % 256;
                         }
                         MaterialColor = format("%02x%02x%02x", r, g, b).toUpperCase();
+                        colorTxt.setText(MaterialColor);
                         colorView.setBackgroundColor(Color.argb(255, r, g, b));
                         dcolorView.setBackgroundColor(Color.argb(255, r, g, b));
                     }
