@@ -396,6 +396,9 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), R.string.invalid_tag_type, Toast.LENGTH_SHORT).show();
             }
         }
+        else {
+            Toast.makeText(getApplicationContext(), R.string.error_writing_to_tag, Toast.LENGTH_SHORT).show();
+        }
     }
 
     void FormatTag() {
@@ -442,6 +445,9 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 Toast.makeText(getApplicationContext(), R.string.invalid_tag_type, Toast.LENGTH_SHORT).show();
             }
+        }
+        else {
+            Toast.makeText(getApplicationContext(), R.string.error_formatting_tag, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -636,7 +642,7 @@ public class MainActivity extends AppCompatActivity {
             });
             btnread.setOnClickListener(v -> {
                 String tagData = ReadTag();
-                if (tagData != null) {
+                if (tagData != null && tagData.length() >= 40) {
                     if (!tagData.startsWith("\0")) {
                         txtmonth.setText(tagData.substring(0, 1).toUpperCase());
                         txtday.setText(tagData.substring(1, 3).toUpperCase());
@@ -652,6 +658,9 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         Toast.makeText(getApplicationContext(), R.string.unknown_or_empty_tag, Toast.LENGTH_SHORT).show();
                     }
+                }
+                else {
+                    Toast.makeText(getApplicationContext(), R.string.error_reading_tag, Toast.LENGTH_SHORT).show();
                 }
             });
             btnwrite.setOnClickListener(v -> {

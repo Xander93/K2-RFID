@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">Spool RFID</string>
-    <string name="this_device_does_not_support_mifare_classic_tags">This device does not support \"Mifare Classic\" tags\'</string>
+    <string name="app_name">Cfs RFID</string>
+    <string name="this_device_does_not_support_mifare_classic_tags">This device does not support \"Mifare Classic\" tags</string>
     <string name="please_activate_nfc">Please activate NFC</string>
     <string name="tag_found">"TAG Found: "</string>
     <string name="data_read_from_tag">Data read from TAG</string>
@@ -15,7 +15,7 @@
     <string name="write">Write</string>
     <string name="_00_00_00_00">00 00 00 00</string>
     <string name="close">Close</string>
-    <string name="picker">picker</string>
+    <string name="picker">Picker</string>
     <string name="invalid_tag_type">Invalid tag type</string>
     <string name="tag_id">Tag ID:</string>
     <string name="color">Color:</string>
@@ -69,4 +69,5 @@
     <string name="format">Format</string>
     <string name="current_version">Current Version: %d</string>
     <string name="printer_version">Printer Version: %d</string>
+    <string name="hex_color_code">HEX Color Code</string>
 </resources>
