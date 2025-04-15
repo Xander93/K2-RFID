@@ -192,8 +192,7 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
     }
   </style>
   <script>
-    var creFils;
-    var genFils;
+    var filaments;
     var dbVersion;
     var jsonDb;
     var paramStr;
@@ -230,32 +229,32 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
       };
       xhr.open("POST", "/spooldata", true);
       xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-      xhr.setRequestHeader("Content-length", postdata.length);
       xhr.send(postdata);
+    }
+    function loadFilaments(vendor) {
+      if (vendor == "") { vendor = "Generic"; }
+      const objDb = JSON.parse(jsonDb);
+      filaments = "";
+      for (let i in objDb.result.list) {
+        if (objDb.result.list[i].base.brand == vendor) {
+          filaments += "<option value=\"" + objDb.result.list[i].base.id + "\">" + objDb.result.list[i].base.name + "</option>";
+        }
+      }
     }
     function change_types() {
       var selectedValue = document.getElementById("materialBrand").value;
-      if (selectedValue == "Creality") {
-        document.getElementById("types").innerHTML = "<select name=\"materialType\" id=\"materialType\">" + creFils + "</select>";
-      }
-      else {
-        document.getElementById("types").innerHTML = "<select name=\"materialType\" id=\"materialType\">" + genFils + "</select>";
-      }
+      loadFilaments(selectedValue);
+      document.getElementById("types").innerHTML = "<select name=\"materialType\" id=\"materialType\">" + filaments + "</select>";
     }
     function loadCache() {
       if (localStorage.getItem("materialBrand") == null) {
-        document.getElementById("types").innerHTML = "<select name=\"materialType\" id=\"materialType\">" + genFils + "</select>";
+        loadFilaments("");
+        document.getElementById("types").innerHTML = "<select name=\"materialType\" id=\"materialType\">" + filaments + "</select>";
         return;
       }
       document.getElementById("materialBrand").value = localStorage.getItem("materialBrand");
       var selectedValue = document.getElementById("materialBrand").value;
-      if (selectedValue == "Creality") {
-        document.getElementById("types").innerHTML = "<select name=\"materialType\" id=\"materialType\">" + creFils + "</select>";
-      }
-      else {
-        document.getElementById("types").innerHTML = "<select name=\"materialType\" id=\"materialType\">" + genFils + "</select>";
-      }
-      change_types();
+      change_types(selectedValue);
       document.getElementById("materialType").value = localStorage.getItem("materialType");
       document.getElementById("materialWeight").value = localStorage.getItem("materialWeight");
       document.getElementById("materialColor").value = localStorage.getItem("materialColor");
@@ -309,8 +308,23 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
       };
       xhr.open("POST", "/config", true);
       xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-      xhr.setRequestHeader("Content-length", postdata.length);
       xhr.send(postdata);
+    }
+    function loadVendors() {
+      try {
+        const objDb = JSON.parse(jsonDb);
+        let vendors = "";
+        const seenBrands = new Set();
+        for (const item of objDb.result.list) {
+          if (item && item.base && item.base.brand && !seenBrands.has(item.base.brand)) {
+            vendors += "<option value=\"" + item.base.brand + "\">" + item.base.brand + "</option>";
+            seenBrands.add(item.base.brand);
+          }
+        }
+        document.getElementById("brands").innerHTML = "<select name=\"materialBrand\" id=\"materialBrand\" onchange=\"change_types()\">" + vendors + "</select>";
+      } catch (error) {
+        document.getElementById("brands").innerHTML = "<select name=\"materialBrand\" id=\"materialBrand\" onchange=\"change_types()\"><option value=\"Generic\">Generic</option><option value=\"Creality\">Creality</option></select>";
+      }
     }
     function loadDb() {
       var xhr = new XMLHttpRequest();
@@ -321,16 +335,9 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
               jsonDb = this.responseText;
               const objDb = JSON.parse(jsonDb);
               dbVersion = objDb.result.version;
-              creFils = "";
-              genFils = "";
-              for (let i in objDb.result.list) {
-                if (objDb.result.list[i].base.brand == "Creality") {
-                  creFils += "<option value=\"" + objDb.result.list[i].base.id + "\">" + objDb.result.list[i].base.name + "</option>";
-                }
-                else {
-                  genFils += "<option value=\"" + objDb.result.list[i].base.id + "\">" + objDb.result.list[i].base.name.replace("Generic ", "") + "</option>";
-                }
-              }
+
+
+              loadVendors();
               loadCache();
             } else {
               document.getElementById("message").innerHTML = "<label class=\"errormsg\">Error: failed to load material_database.json</label>";
@@ -369,14 +376,14 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
       document.activeElement.blur();
       if (document.getElementById("printer_host").value.length > 0) {
         document.getElementById("pupload").style.display = "block";
-      }else{
-		document.getElementById("pupload").style.display = "none";
-	  }
-	  document.getElementById("dupload").style.display = "none";
-	  document.getElementById("dselfile").innerHTML = "";
-	  document.getElementById("dstatus").innerHTML = "";
+      } else {
+        document.getElementById("pupload").style.display = "none";
+      }
+      document.getElementById("dupload").style.display = "none";
+      document.getElementById("dselfile").innerHTML = "";
+      document.getElementById("dstatus").innerHTML = "";
       document.getElementById("dbtnsel").style.display = "block";
-	  document.getElementById('dbfile').value = "";
+      document.getElementById('dbfile').value = "";
     }
     function formatBytes(bytes) {
       if (bytes == 0) return '0 Bytes'; var k = 1024, dm = 2, sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'], i = Math.floor(Math.log(bytes) / Math.log(k)); return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
@@ -533,10 +540,9 @@ static const char indexData[] PROGMEM = R"==(<!DOCTYPE html>
             <b>Filament Brand:</b>
           </td>
           <td>
-            <select name="materialBrand" id="materialBrand" onchange="change_types()">
-              <option value="Generic">Generic</option>
-              <option value="Creality">Creality</option>
-            </select>
+            <div class="brands" id="brands">
+              <select name="materialBrand" id="materialBrand"></select>
+            </div>
           </td>
         </tr>
         <tr>
