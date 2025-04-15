@@ -29,17 +29,15 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
 @SuppressLint("GetInstance")
 public class Utils {
-
-    public static String[] materialBrands = {
-            "Generic",
-            "Creality"
-    };
 
     public static String[] materialWeights = {
             "1 KG",
@@ -110,6 +108,15 @@ public class Utils {
             materials[i] = items.get(i).filamentName;
         }
         return materials;
+    }
+
+    public static String[] getMaterialBrands(MatDB db) {
+        List<Filament> items = db.getAllItems();
+        Set<String> uniqueBrandsSet = new HashSet<>();
+        for (Filament item : items) {
+            uniqueBrandsSet.add(item.filamentVendor);
+        }
+        return uniqueBrandsSet.toArray(new String[0]);
     }
 
     public static boolean canMfc(Context context) {

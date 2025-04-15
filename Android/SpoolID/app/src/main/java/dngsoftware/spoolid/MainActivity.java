@@ -19,8 +19,8 @@ import static dngsoftware.spoolid.Utils.cipherData;
 import static dngsoftware.spoolid.Utils.dp2Px;
 import static dngsoftware.spoolid.Utils.getDBVersion;
 import static dngsoftware.spoolid.Utils.getJsonDB;
+import static dngsoftware.spoolid.Utils.getMaterialBrands;
 import static dngsoftware.spoolid.Utils.playBeep;
-import static dngsoftware.spoolid.Utils.materialBrands;
 import static dngsoftware.spoolid.Utils.bytesToHex;
 import static dngsoftware.spoolid.Utils.canMfc;
 import static dngsoftware.spoolid.Utils.getMaterials;
@@ -43,6 +43,7 @@ import android.nfc.tech.MifareClassic;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
@@ -54,6 +55,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.room.Room;
 import org.json.JSONObject;
 import java.nio.ByteBuffer;
@@ -61,6 +63,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -145,7 +148,7 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
         main.autoread.setChecked(GetSetting(this, "autoread", false));
         main.autoread.setOnCheckedChangeListener((buttonView, isChecked) -> SaveSetting(this, "autoread", isChecked));
 
-        badapter = new ArrayAdapter<>(this, R.layout.spinner_item, materialBrands);
+        badapter = new ArrayAdapter<>(this, R.layout.spinner_item,  getMaterialBrands(matDb));
         main.brand.setAdapter(badapter);
         main.brand.setSelection(SelectedBrand);
 
@@ -760,11 +763,11 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
                                 runOnUiThread(() -> {
                                     if (newVer > version) {
                                         dl.btnupd.setVisibility(View.VISIBLE);
-                                        dl.txtmsg.setTextColor(getColor(R.color.text_color));
+                                        dl.txtmsg.setTextColor(ContextCompat.getColor(this, R.color.text_color));
                                         dl.txtmsg.setText(R.string.update_available);
                                     } else {
                                         dl.btnupd.setVisibility(View.INVISIBLE);
-                                        dl.txtmsg.setTextColor(getColor(R.color.text_color));
+                                        dl.txtmsg.setTextColor(ContextCompat.getColor(this, R.color.text_color));
                                         dl.txtmsg.setText(R.string.no_update_available);
                                     }
                                 });
@@ -796,7 +799,7 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
                                 runOnUiThread(() -> {
                                     dl.txtcurver.setText(String.format(Locale.getDefault(), getString(R.string.current_version), newVer));
                                     dl.btnupd.setVisibility(View.INVISIBLE);
-                                    dl.txtmsg.setTextColor(getColor(R.color.text_color));
+                                    dl.txtmsg.setTextColor(ContextCompat.getColor(this, R.color.text_color));
                                     dl.txtmsg.setText(R.string.update_successful);
                                     setMaterial(badapter.getItem(SelectedBrand));
                                 });
