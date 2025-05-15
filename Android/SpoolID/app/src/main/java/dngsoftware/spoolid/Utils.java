@@ -1,10 +1,13 @@
 package dngsoftware.spoolid;
 
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static androidx.core.app.ActivityCompat.requestPermissions;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.FeatureInfo;
 import android.content.pm.PackageManager;
@@ -261,13 +264,13 @@ public class Utils {
         }
     }
 
-    public static String getJsonDB(final String Host)
+    public static String getJsonDB()
     {
         URL url;
         HttpURLConnection urlConnection;
         String server_response;
         try {
-            url = new URL( "http://" + Host +  "/downloads/defData/material_database.json");
+            url = new URL( "https://raw.githubusercontent.com/DnG-Crafts/K2-RFID/refs/heads/main/docs/material_database.json");
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setConnectTimeout(5000);
             urlConnection.setRequestMethod("GET");
@@ -307,6 +310,22 @@ public class Utils {
             }
         }
         return null;
+    }
+
+    public static void restartApp(Context context) {
+        try {
+            PackageManager packageManager = context.getPackageManager();
+            Intent intent = packageManager.getLaunchIntentForPackage(context.getPackageName());
+            assert intent != null;
+            ComponentName componentName = intent.getComponent();
+            Intent mainIntent = Intent.makeRestartActivityTask(componentName);
+            mainIntent.setPackage(context.getPackageName());
+            context.startActivity(mainIntent);
+            Runtime.getRuntime().exit(0);
+        }
+        catch (Exception ignored) {
+            Runtime.getRuntime().exit(0);
+        }
     }
 
     public static String GetSetting(Context context, String sKey, String sDefault) {

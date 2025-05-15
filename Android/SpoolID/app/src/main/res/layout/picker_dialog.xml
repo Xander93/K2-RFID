@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#D1D1D1"
+    android:fitsSystemWindows="true"
     android:fillViewport="true">
 
 <androidx.constraintlayout.widget.ConstraintLayout
@@ -92,7 +93,7 @@
         android:imeOptions="actionDone"
         android:singleLine="true"
         android:focusableInTouchMode="true"
-        android:inputType="textVisiblePassword|textCapCharacters"
+        android:inputType="textNoSuggestions|textCapCharacters"
         android:maxLength="6"
         android:padding="10dp"
         android:text=""

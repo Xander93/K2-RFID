@@ -27,6 +27,8 @@ import static dngsoftware.spoolid.Utils.getMaterials;
 import static dngsoftware.spoolid.Utils.getPixelColor;
 import static dngsoftware.spoolid.Utils.materialWeights;
 import static dngsoftware.spoolid.Utils.populateDatabase;
+import static dngsoftware.spoolid.Utils.restartApp;
+
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
@@ -41,6 +43,8 @@ import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.MifareClassic;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -79,10 +83,12 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
     byte[] encKey;
     private ActivityMainBinding main;
     private ManualDialogBinding manual; ;
+    private Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        context = this;
         main = ActivityMainBinding.inflate(getLayoutInflater());
         View rv = main.getRoot();
         setContentView(rv);
@@ -742,76 +748,69 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
 
             dl.btncls.setOnClickListener(v -> updateDialog.dismiss());
             dl.btnupd.setVisibility(View.INVISIBLE);
-            String hostString = GetSetting(this, "host", "");
-            dl.txtaddress.setText(hostString);
             dl.txtcurver.setText(String.format(Locale.getDefault(), getString(R.string.current_version), GetSetting(this, "version", -1L)));
 
             dl.btnchk.setOnClickListener(v -> {
-                String host = dl.txtaddress.getText().toString();
                 long version = GetSetting(this, "version", -1L);
                 dl.txtcurver.setText(String.format(Locale.getDefault(), getString(R.string.current_version), version));
-                if (!host.isEmpty()) {
-                    SaveSetting(this, "host", host);
-                    new Thread(() -> {
-                        try {
-                            String json = getJsonDB(host);
-                            if (json != null && json.contains("\"kvParam\":{")) {
-                                JSONObject materials = new JSONObject(json);
-                                JSONObject result = new JSONObject(materials.getString("result"));
-                                long newVer = result.getLong("version");
-                                runOnUiThread(() -> dl.txtnewver.setText(format(Locale.getDefault(), getString(R.string.printer_version), newVer)));
-                                runOnUiThread(() -> {
-                                    if (newVer > version) {
-                                        dl.btnupd.setVisibility(View.VISIBLE);
-                                        dl.txtmsg.setTextColor(ContextCompat.getColor(this, R.color.text_color));
-                                        dl.txtmsg.setText(R.string.update_available);
-                                    } else {
-                                        dl.btnupd.setVisibility(View.INVISIBLE);
-                                        dl.txtmsg.setTextColor(ContextCompat.getColor(this, R.color.text_color));
-                                        dl.txtmsg.setText(R.string.no_update_available);
-                                    }
-                                });
-                            }else {
-                                runOnUiThread(() -> {
-                                    dl.txtmsg.setTextColor(Color.RED);
-                                    dl.txtmsg.setText(R.string.unable_to_download_file_from_printer);
-                                });
-                            }
-                        } catch (Exception ignored) {}
-                    }).start();
-                }
+                new Thread(() -> {
+                    try {
+                        String json = getJsonDB();
+                        if (json != null && json.contains("\"kvParam\":{")) {
+                            JSONObject materials = new JSONObject(json);
+                            JSONObject result = new JSONObject(materials.getString("result"));
+                            long newVer = result.getLong("version");
+                            runOnUiThread(() -> dl.txtnewver.setText(format(Locale.getDefault(), getString(R.string.printer_version), newVer)));
+                            runOnUiThread(() -> {
+                                if (newVer > version) {
+                                    dl.btnupd.setVisibility(View.VISIBLE);
+                                    dl.txtmsg.setTextColor(ContextCompat.getColor(this, R.color.text_color));
+                                    dl.txtmsg.setText(R.string.update_available);
+                                } else {
+                                    dl.btnupd.setVisibility(View.INVISIBLE);
+                                    dl.txtmsg.setTextColor(ContextCompat.getColor(this, R.color.text_color));
+                                    dl.txtmsg.setText(R.string.no_update_available);
+                                }
+                            });
+                        } else {
+                            runOnUiThread(() -> {
+                                dl.txtmsg.setTextColor(Color.RED);
+                                dl.txtmsg.setText(R.string.unable_to_download_file_from_printer);
+                            });
+                        }
+                    } catch (Exception ignored) {
+                    }
+                }).start();
             });
 
             dl.btnupd.setOnClickListener(v -> {
-                String host = dl.txtaddress.getText().toString();
-                if (!host.isEmpty()) {
-                    SaveSetting(this, "host", host);
-                    new Thread(() -> {
-                        try {
-                            String json = getJsonDB(host);
-                            if (json != null && json.contains("\"kvParam\":{")) {
-                                JSONObject materials = new JSONObject(json);
-                                JSONObject result = new JSONObject(materials.getString("result"));
-                                long newVer = result.getLong("version");
-                                matDb.deleteAll();
-                                populateDatabase(this, matDb, json);
-                                SaveSetting(this, "version", newVer);
-                                runOnUiThread(() -> {
-                                    dl.txtcurver.setText(String.format(Locale.getDefault(), getString(R.string.current_version), newVer));
-                                    dl.btnupd.setVisibility(View.INVISIBLE);
-                                    dl.txtmsg.setTextColor(ContextCompat.getColor(this, R.color.text_color));
-                                    dl.txtmsg.setText(R.string.update_successful);
-                                    setMaterial(badapter.getItem(SelectedBrand));
-                                });
-                            }else {
-                                runOnUiThread(() -> {
-                                    dl.txtmsg.setTextColor(Color.RED);
-                                    dl.txtmsg.setText(R.string.unable_to_download_file_from_printer);
-                                });
-                            }
-                        } catch (Exception ignored) {}
-                    }).start();
-                }
+                final Handler handler = new Handler(Looper.getMainLooper());
+                new Thread(() -> {
+                    try {
+                        String json = getJsonDB();
+                        if (json != null && json.contains("\"kvParam\":{")) {
+                            JSONObject materials = new JSONObject(json);
+                            JSONObject result = new JSONObject(materials.getString("result"));
+                            long newVer = result.getLong("version");
+                            matDb.deleteAll();
+                            populateDatabase(this, matDb, json);
+                            SaveSetting(this, "version", newVer);
+                            runOnUiThread(() -> {
+                                dl.txtcurver.setText(String.format(Locale.getDefault(), getString(R.string.current_version), newVer));
+                                dl.btnupd.setVisibility(View.INVISIBLE);
+                                dl.txtmsg.setTextColor(ContextCompat.getColor(this, R.color.text_color));
+                                dl.txtmsg.setText(R.string.update_successful);
+                                handler.postDelayed(() -> restartApp(context), 2000);
+                            });
+                        } else {
+                            runOnUiThread(() -> {
+                                dl.txtmsg.setTextColor(Color.RED);
+                                dl.txtmsg.setText(R.string.unable_to_download_file_from_printer);
+                            });
+                        }
+                    } catch (Exception ignored) {
+                    }
+                }).start();
             });
             updateDialog.show();
         } catch (Exception ignored) {}

@@ -7,6 +7,7 @@
     android:layout_height="match_parent"
     android:background="#F4F4F4"
     android:fillViewport="true"
+    android:fitsSystemWindows="true"
     app:layout_constraintBottom_toBottomOf="parent"
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintStart_toStartOf="parent"
@@ -67,8 +68,9 @@
         app:layout_constraintTop_toBottomOf="@+id/updatedesc" />
 
     <EditText
+        android:visibility="invisible"
         android:autofillHints="ip_address"
-        android:inputType="text"
+        android:inputType="textNoSuggestions"
         android:id="@+id/txtaddress"
         android:layout_width="wrap_content"
         android:layout_height="48dp"
@@ -128,6 +130,7 @@
         app:layout_constraintTop_toBottomOf="@+id/txtmsg" />
 
     <TextView
+        android:visibility="invisible"
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
