@@ -59,15 +59,20 @@
     <string name="update">Update</string>
     <string name="k2_printer_ip">Printer IP:</string>
     <string name="update_desc">Tap the check button to check if there is an update for the material database on github.\n\nIf there is an update found tap the update button to download and install it.</string>
+    <string name="update_desc_printer">Enter the ip address or hostname of your %s printer to update the filament database from the printer.\n\nThis can be useful if custom filaments are added to the printer.</string>
     <string name="update_available">Update available</string>
     <string name="no_update_available">No update available</string>
-    <string name="unable_to_download_file_from_printer">Unable to download file from github</string>
+    <string name="unable_to_download_file_from_printer">Unable to download database file</string>
     <string name="update_successful">Update successful, Restarting app</string>
     <string name="filament_info">Filament Information</string>
     <string name="erase_message">This will erase the tag and set the default MIFARE key</string>
     <string name="format_tag_q">Format Tag?</string>
     <string name="format">Format</string>
     <string name="current_version">Installed Version: %d</string>
-    <string name="printer_version">Github Version: %d</string>
+    <string name="printer_version">Available Version: %d</string>
     <string name="hex_color_code">HEX Color Code</string>
+    <string name="printer">Printer</string>
+    <string name="creality_type">Creality %s</string>
+    <string name="get_update_from_printer">Get update from printer</string>
+    <string name="please_enter_printer_ip_address">Please enter printer IP address</string>
 </resources>

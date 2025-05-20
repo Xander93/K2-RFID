@@ -25,19 +25,34 @@
     android:layout_marginBottom="0dp"
     android:orientation="vertical">
 
+
+    <TextView
+        android:id="@+id/txtprinter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="44dp"
+        android:layout_marginEnd="16dp"
+        android:textColor="#1976D2"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <TextView
         android:id="@+id/txtcurver"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="44dp"
+        android:layout_marginTop="22dp"
         android:layout_marginEnd="16dp"
         android:textColor="@color/text_color"
         android:textSize="16sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/txtprinter" />
 
     <TextView
         android:id="@+id/txtnewver"
@@ -68,7 +83,6 @@
         app:layout_constraintTop_toBottomOf="@+id/updatedesc" />
 
     <EditText
-        android:visibility="invisible"
         android:autofillHints="ip_address"
         android:inputType="textNoSuggestions"
         android:id="@+id/txtaddress"
@@ -85,14 +99,14 @@
         android:padding="10dp"
         android:textColor="@color/text_color"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/textView"
+        app:layout_constraintStart_toEndOf="@+id/lblpip"
         app:layout_constraintTop_toBottomOf="@+id/txtnewver" />
 
     <Button
         android:id="@+id/btnchk"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="86dp"
+        android:layout_marginTop="66dp"
         android:layout_marginEnd="16dp"
         android:layout_marginStart="8dp"
         android:padding="14dp"
@@ -120,7 +134,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="86dp"
+        android:layout_marginTop="66dp"
         android:layout_marginEnd="70dp"
         android:padding="14dp"
         android:text="@string/close"
@@ -130,8 +144,7 @@
         app:layout_constraintTop_toBottomOf="@+id/txtmsg" />
 
     <TextView
-        android:visibility="invisible"
-        android:id="@+id/textView"
+        android:id="@+id/lblpip"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -144,6 +157,21 @@
         app:layout_constraintEnd_toStartOf="@+id/txtaddress"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/txtnewver" />
+
+
+    <com.google.android.material.materialswitch.MaterialSwitch
+        android:id="@+id/chkprnt"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/get_update_from_printer"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_color"
+        android:layout_marginTop="18dp"
+        app:layout_constraintEnd_toEndOf="@+id/txtaddress"
+        app:layout_constraintStart_toStartOf="@+id/lblpip"
+        app:layout_constraintTop_toBottomOf="@+id/txtaddress"
+        />
 
     <TextView
         android:id="@+id/updatedesc"
@@ -158,7 +186,7 @@
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/txtaddress"
+        app:layout_constraintTop_toBottomOf="@+id/chkprnt"
         tools:ignore="TextSizeCheck" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

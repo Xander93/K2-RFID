@@ -20,6 +20,7 @@ import static dngsoftware.spoolid.Utils.dp2Px;
 import static dngsoftware.spoolid.Utils.getDBVersion;
 import static dngsoftware.spoolid.Utils.getJsonDB;
 import static dngsoftware.spoolid.Utils.getMaterialBrands;
+import static dngsoftware.spoolid.Utils.getPositionByValue;
 import static dngsoftware.spoolid.Utils.playBeep;
 import static dngsoftware.spoolid.Utils.bytesToHex;
 import static dngsoftware.spoolid.Utils.canMfc;
@@ -27,8 +28,8 @@ import static dngsoftware.spoolid.Utils.getMaterials;
 import static dngsoftware.spoolid.Utils.getPixelColor;
 import static dngsoftware.spoolid.Utils.materialWeights;
 import static dngsoftware.spoolid.Utils.populateDatabase;
+import static dngsoftware.spoolid.Utils.printerTypes;
 import static dngsoftware.spoolid.Utils.restartApp;
-
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
@@ -46,8 +47,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
@@ -67,17 +70,17 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity implements NfcAdapter.ReaderCallback{
     private MatDB matDb;
-    ArrayAdapter<String> badapter, sadapter, madapter;
+    private filamentDB rdb;
+    ArrayAdapter<String> badapter, sadapter, madapter, padapter;
     private NfcAdapter nfcAdapter;
     Tag currentTag = null;
     int SelectedSize, SelectedBrand;
-    String MaterialName, MaterialWeight, MaterialColor;
+    String MaterialName, MaterialWeight, MaterialColor, PrinterType;
     Dialog pickerDialog, customDialog, infoDialog, updateDialog;
     boolean encrypted = false;
     byte[] encKey;
@@ -93,26 +96,28 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
         View rv = main.getRoot();
         setContentView(rv);
 
-        filamentDB rdb = Room.databaseBuilder(this, filamentDB.class, "filament_database")
-                .fallbackToDestructiveMigration()
-                .allowMainThreadQueries()
-                .build();
-        matDb = rdb.matDB();
-
-        if (matDb.getItemCount() == 0) {
-            populateDatabase(this, matDb,null);
-        } else {
-            long dbVersion = GetSetting(this, "version", -1L);
-            if (getDBVersion(this) > dbVersion) {
-                matDb.deleteAll();
-                populateDatabase(this, matDb,null);
-            }
-        }
-
         SetPermissions(this);
         if (!canMfc(this)) {
             Toast.makeText(getApplicationContext(), R.string.this_device_does_not_support_mifare_classic_tags, Toast.LENGTH_SHORT).show();
         }
+
+        PrinterType = GetSetting(this, "printer", "k2");
+
+        padapter = new ArrayAdapter<>(this, R.layout.spinner_item, printerTypes);
+        main.type.setAdapter(padapter);
+        main.type.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                SaveSetting(context, "printer", Objects.requireNonNull(padapter.getItem(position)).toLowerCase());
+                PrinterType = Objects.requireNonNull(padapter.getItem(position)).toLowerCase();
+                setMatDb(PrinterType);
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parentView) {
+            }
+        });
+
+        main.type.setSelection(getPositionByValue(main.type, PrinterType.toUpperCase()));
 
         try {
             nfcAdapter = NfcAdapter.getDefaultAdapter(this);
@@ -133,7 +138,6 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
         main.colorview.setOnClickListener(view -> openPicker());
         main.readbutton.setOnClickListener(view -> ReadSpoolData());
         main.cbtn.setOnClickListener(view -> openCustom());
-        main.writebutton.setOnClickListener(view -> WriteSpoolData(GetMaterialID(matDb, MaterialName), MaterialColor, GetMaterialLength(MaterialWeight)));
         main.ibtn.setOnClickListener(view -> openMaterialInfo());
         main.ubtn.setOnClickListener(view -> openUpdate());
 
@@ -154,22 +158,6 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
         main.autoread.setChecked(GetSetting(this, "autoread", false));
         main.autoread.setOnCheckedChangeListener((buttonView, isChecked) -> SaveSetting(this, "autoread", isChecked));
 
-        badapter = new ArrayAdapter<>(this, R.layout.spinner_item,  getMaterialBrands(matDb));
-        main.brand.setAdapter(badapter);
-        main.brand.setSelection(SelectedBrand);
-
-        main.brand.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-                SelectedBrand = main.brand.getSelectedItemPosition();
-                setMaterial(badapter.getItem(position));
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parentView) {
-            }
-        });
-
         sadapter = new ArrayAdapter<>(this, R.layout.spinner_item, materialWeights);
         main.spoolsize.setAdapter(sadapter);
         main.spoolsize.setSelection(SelectedSize);
@@ -185,22 +173,68 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
             }
         });
 
-        madapter = new ArrayAdapter<>(this, R.layout.spinner_item, getMaterials(matDb, badapter.getItem(main.brand.getSelectedItemPosition())));
-        main. material.setAdapter(madapter);
-        main.material.setSelection(madapter.getPosition(MaterialName));
-        main.material.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-                MaterialName = madapter.getItem(position);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parentView) {
-            }
-        });
-
         ReadTagUID(getIntent());
     }
+
+
+    void setMatDb(String pType) {
+        try {
+            if (rdb != null && rdb.isOpen()) {
+                rdb.close();
+            }
+
+            rdb = Room.databaseBuilder(this, filamentDB.class, "filament_database_" + pType)
+                    .fallbackToDestructiveMigration()
+                    .allowMainThreadQueries()
+                    .build();
+            matDb = rdb.matDB();
+
+
+            if (matDb.getItemCount() == 0) {
+                populateDatabase(this, matDb, null, pType);
+            } else {
+                long dbVersion = GetSetting(this, "version_" + pType, -1L);
+                if (getDBVersion(this, pType) > dbVersion) {
+                    matDb.deleteAll();
+                    populateDatabase(this, matDb, null, pType);
+                }
+            }
+
+            main.writebutton.setOnClickListener(view -> WriteSpoolData(GetMaterialID(matDb, MaterialName), MaterialColor, GetMaterialLength(MaterialWeight)));
+
+            badapter = new ArrayAdapter<>(this, R.layout.spinner_item, getMaterialBrands(matDb));
+            main.brand.setAdapter(badapter);
+            if (SelectedBrand < main.brand.getCount()) {
+                main.brand.setSelection(SelectedBrand);
+            }
+            main.brand.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                    SelectedBrand = main.brand.getSelectedItemPosition();
+                    setMaterial(badapter.getItem(position));
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parentView) {
+                }
+            });
+
+            madapter = new ArrayAdapter<>(this, R.layout.spinner_item, getMaterials(matDb, badapter.getItem(main.brand.getSelectedItemPosition())));
+            main.material.setAdapter(madapter);
+            main.material.setSelection(madapter.getPosition(MaterialName));
+            main.material.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                    MaterialName = madapter.getItem(position);
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parentView) {
+                }
+            });
+        } catch (Exception ignored) {}
+    }
+
 
     void setMaterial(String brand) {
         madapter = new ArrayAdapter<>(this, R.layout.spinner_item, getMaterials(matDb, brand));
@@ -746,16 +780,68 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
             View rv = dl.getRoot();
             updateDialog.setContentView(rv);
 
+            SpannableString spannableString = new SpannableString(String.format(Locale.getDefault(), getString(R.string.update_desc_printer), PrinterType.toUpperCase()));
+            spannableString.setSpan(new ForegroundColorSpan(Color.parseColor("#1976D2")), 41,43 , Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+            dl.chkprnt.setChecked(GetSetting(this, "fromprinter_" + PrinterType, false));
+            dl.chkprnt.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                SaveSetting(this, "fromprinter_" + PrinterType, isChecked);
+                if (isChecked) {
+                    dl.txtaddress.setVisibility(View.VISIBLE);
+                    dl.lblpip.setVisibility(View.VISIBLE);
+                    dl.updatedesc.setText(spannableString);
+                    dl.btnupd.setVisibility(View.INVISIBLE);
+                    dl.txtmsg.setText("");
+                    dl.txtnewver.setText("");
+                } else {
+                    dl.txtaddress.setVisibility(View.INVISIBLE);
+                    dl.lblpip.setVisibility(View.INVISIBLE);
+                    dl.updatedesc.setText(getString(R.string.update_desc));
+                    dl.btnupd.setVisibility(View.INVISIBLE);
+                    dl.txtmsg.setText("");
+                    dl.txtnewver.setText("");
+                }
+            });
+
+            if (dl.chkprnt.isChecked()) {
+                dl.txtaddress.setVisibility(View.VISIBLE);
+                dl.lblpip.setVisibility(View.VISIBLE);
+                dl.updatedesc.setText(spannableString);
+            } else {
+                dl.txtaddress.setVisibility(View.INVISIBLE);
+                dl.lblpip.setVisibility(View.INVISIBLE);
+                dl.updatedesc.setText(getString(R.string.update_desc));
+            }
+
+            dl.txtaddress.setText(GetSetting(this, "host_" + PrinterType, ""));
             dl.btncls.setOnClickListener(v -> updateDialog.dismiss());
             dl.btnupd.setVisibility(View.INVISIBLE);
-            dl.txtcurver.setText(String.format(Locale.getDefault(), getString(R.string.current_version), GetSetting(this, "version", -1L)));
+            dl.txtcurver.setText(String.format(Locale.getDefault(), getString(R.string.current_version), GetSetting(this, "version_" + PrinterType , -1L)));
+            dl.txtprinter.setText(String.format(getString(R.string.creality_type), PrinterType.toUpperCase()));
 
             dl.btnchk.setOnClickListener(v -> {
-                long version = GetSetting(this, "version", -1L);
+                String host = dl.txtaddress.getText().toString();
+                long version = GetSetting(this, "version_" + PrinterType, -1L);
                 dl.txtcurver.setText(String.format(Locale.getDefault(), getString(R.string.current_version), version));
                 new Thread(() -> {
                     try {
-                        String json = getJsonDB();
+                        String json;
+                        if (GetSetting(this, "fromprinter_" + PrinterType, false)) {
+                            SaveSetting(this, "host_" + PrinterType, host);
+                            if (host.isEmpty()) {
+                                runOnUiThread(() -> {
+                                    dl.txtmsg.setTextColor(Color.RED);
+                                    dl.txtmsg.setText(R.string.please_enter_printer_ip_address);
+                                    dl.btnupd.setVisibility(View.INVISIBLE);
+                                    dl.txtnewver.setText("");
+                                });
+                                return;
+                            }
+                            json = getJsonDB(host,true);
+                        }
+                        else {
+                            json = getJsonDB(PrinterType,false);
+                        }
                         if (json != null && json.contains("\"kvParam\":{")) {
                             JSONObject materials = new JSONObject(json);
                             JSONObject result = new JSONObject(materials.getString("result"));
@@ -784,17 +870,33 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
             });
 
             dl.btnupd.setOnClickListener(v -> {
+                String host = GetSetting(this, "host_" + PrinterType, "");
                 final Handler handler = new Handler(Looper.getMainLooper());
                 new Thread(() -> {
                     try {
-                        String json = getJsonDB();
+                        String json;
+                        if (GetSetting(this, "fromprinter_" + PrinterType, false)) {
+                            if (host.isEmpty()) {
+                                runOnUiThread(() -> {
+                                    dl.txtmsg.setTextColor(Color.RED);
+                                    dl.txtmsg.setText(R.string.please_enter_printer_ip_address);
+                                    dl.btnupd.setVisibility(View.INVISIBLE);
+                                    dl.txtnewver.setText("");
+                                });
+                                return;
+                            }
+                            json = getJsonDB(host,true);
+                        }
+                        else {
+                            json = getJsonDB(PrinterType,false);
+                        }
                         if (json != null && json.contains("\"kvParam\":{")) {
                             JSONObject materials = new JSONObject(json);
                             JSONObject result = new JSONObject(materials.getString("result"));
                             long newVer = result.getLong("version");
                             matDb.deleteAll();
-                            populateDatabase(this, matDb, json);
-                            SaveSetting(this, "version", newVer);
+                            populateDatabase(this, matDb, json, PrinterType);
+                            SaveSetting(this, "version_" + PrinterType, newVer);
                             runOnUiThread(() -> {
                                 dl.txtcurver.setText(String.format(Locale.getDefault(), getString(R.string.current_version), newVer));
                                 dl.btnupd.setVisibility(View.INVISIBLE);

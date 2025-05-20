@@ -20,7 +20,10 @@ import android.nfc.tech.MifareClassic;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.MotionEvent;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.Spinner;
+
 import androidx.core.content.ContextCompat;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -34,6 +37,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.crypto.Cipher;
@@ -48,6 +52,12 @@ public class Utils {
             "600 G",
             "500 G",
             "250 G"
+    };
+
+    public static String[] printerTypes = {
+            "K2",
+            "K1",
+            "HI",
     };
 
     public static String GetMaterialLength(String materialWeight) {
@@ -210,11 +220,11 @@ public class Utils {
         return null;
     }
 
-    private static String getAssetDB(Context context) {
+    private static String getAssetDB(Context context, String pType) {
         try {
             StringBuilder sb = new StringBuilder();
             AssetManager assetManager = context.getAssets();
-            InputStream inputStream = assetManager.open("material_database.json");
+            InputStream inputStream = assetManager.open(pType +".json");
             BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
             String line;
             while ((line = br.readLine()) != null) {
@@ -227,9 +237,9 @@ public class Utils {
         }
     }
 
-    public static long getDBVersion(Context context) {
+    public static long getDBVersion(Context context, String pType) {
         try {
-            JSONObject materials = new JSONObject(getAssetDB(context));
+            JSONObject materials = new JSONObject(getAssetDB(context, pType));
             JSONObject result = new JSONObject(materials.getString("result"));
             return result.getLong("version");
         } catch (Exception ignored) {
@@ -237,16 +247,16 @@ public class Utils {
         }
     }
 
-    public static void populateDatabase(Context context, MatDB db, String json) {
+    public static void populateDatabase(Context context, MatDB db, String json, String pType) {
         try {
             JSONObject materials;
             if (json != null && !json.isEmpty()) {
                 materials = new JSONObject(json);
             }else {
-                materials = new JSONObject(getAssetDB(context));
+                materials = new JSONObject(getAssetDB(context, pType));
             }
             JSONObject result = new JSONObject(materials.getString("result"));
-            SaveSetting(context, "version", result.getLong("version"));
+            SaveSetting(context, "version_" + pType, result.getLong("version"));
             JSONArray list = result.getJSONArray("list");
             for (int i = 0; i < list.length(); i++) {
                 JSONObject item = list.getJSONObject(i);
@@ -264,13 +274,20 @@ public class Utils {
         }
     }
 
-    public static String getJsonDB()
+    public static String getJsonDB(String pType, boolean fromPrinter)
     {
         URL url;
         HttpURLConnection urlConnection;
         String server_response;
         try {
-            url = new URL( "https://raw.githubusercontent.com/DnG-Crafts/K2-RFID/refs/heads/main/docs/material_database.json");
+            if (fromPrinter)
+            {
+                url = new URL( "http://" + pType +  "/downloads/defData/material_database.json");
+            }
+            else
+            {
+                url = new URL( "https://raw.githubusercontent.com/DnG-Crafts/K2-RFID/refs/heads/main/db/" + pType + ".json");
+            }
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setConnectTimeout(5000);
             urlConnection.setRequestMethod("GET");
@@ -326,6 +343,18 @@ public class Utils {
         catch (Exception ignored) {
             Runtime.getRuntime().exit(0);
         }
+    }
+
+    public static int getPositionByValue(Spinner spinner, String value) {
+        ArrayAdapter<?> adapter = (ArrayAdapter<?>) spinner.getAdapter();
+        if (adapter != null) {
+            for (int i = 0; i < adapter.getCount(); i++) {
+                if (Objects.requireNonNull(adapter.getItem(i)).toString().equals(value)) {
+                    return i;
+                }
+            }
+        }
+        return 0;
     }
 
     public static String GetSetting(Context context, String sKey, String sDefault) {
