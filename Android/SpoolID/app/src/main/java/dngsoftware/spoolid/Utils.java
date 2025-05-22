@@ -1,6 +1,5 @@
 package dngsoftware.spoolid;
 
-import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static androidx.core.app.ActivityCompat.requestPermissions;
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -23,8 +22,10 @@ import android.view.MotionEvent;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.Spinner;
-
 import androidx.core.content.ContextCompat;
+import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.Session;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.BufferedReader;
@@ -38,8 +39,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.Set;
-
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -304,6 +305,36 @@ public class Utils {
             server_response = null;
         }
         return server_response;
+    }
+
+    public static String getJsonDB(String psw, String host, String pType) {
+        try {
+            JSch jsch = new JSch();
+            Session session = jsch.getSession("root", host, 22);
+            session.setPassword(psw);
+            Properties prop = new Properties();
+            prop.put("StrictHostKeyChecking", "no");
+            session.setConfig(prop);
+            session.connect();
+            ChannelExec channel = (ChannelExec) session.openChannel("exec");
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            channel.setOutputStream(baos);
+            if (pType.equalsIgnoreCase("k1")) {
+                channel.setCommand("cat /usr/data/creality/userdata/box/material_database.json");
+            }else {
+                channel.setCommand("cat /mnt/UDISK/creality/userdata/box/material_database.json");
+            }
+            channel.connect(5000);
+            while (true) {
+                if (channel.isClosed()) {
+                    channel.disconnect();
+                    session.disconnect();
+                    return baos.toString();
+                }
+            }
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     private static String readStream(InputStream in)

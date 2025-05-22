@@ -31,7 +31,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="44dp"
+        android:layout_marginTop="34dp"
         android:layout_marginEnd="16dp"
         android:textColor="#1976D2"
         android:textSize="22sp"
@@ -73,7 +73,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="61dp"
+        android:layout_marginTop="21dp"
         android:layout_marginEnd="16dp"
         android:textColor="@color/text_color"
         android:textSize="16sp"
@@ -102,11 +102,32 @@
         app:layout_constraintStart_toEndOf="@+id/lblpip"
         app:layout_constraintTop_toBottomOf="@+id/txtnewver" />
 
+    <EditText
+        android:autofillHints="psw"
+        android:inputType="textNoSuggestions"
+        android:id="@+id/txtpsw"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_marginTop="18dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/edittext"
+        android:ems="8"
+        android:imeOptions="actionDone"
+        android:singleLine="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:padding="10dp"
+        android:textColor="@color/text_color"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/lblpip"
+        app:layout_constraintTop_toBottomOf="@+id/txtaddress" />
+
+
     <Button
         android:id="@+id/btnchk"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="66dp"
+        android:layout_marginTop="26dp"
         android:layout_marginEnd="16dp"
         android:layout_marginStart="8dp"
         android:padding="14dp"
@@ -134,7 +155,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="66dp"
+        android:layout_marginTop="26dp"
         android:layout_marginEnd="70dp"
         android:padding="14dp"
         android:text="@string/close"
@@ -158,6 +179,21 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/txtnewver" />
 
+    <TextView
+        android:id="@+id/lblpsw"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="40dp"
+        android:labelFor="@+id/txtaddress"
+        android:text="@string/password"
+        android:textColor="@color/text_color"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@+id/txtaddress"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/lblpip" />
+
 
     <com.google.android.material.materialswitch.MaterialSwitch
         android:id="@+id/chkprnt"
@@ -170,7 +206,7 @@
         android:layout_marginTop="18dp"
         app:layout_constraintEnd_toEndOf="@+id/txtaddress"
         app:layout_constraintStart_toStartOf="@+id/lblpip"
-        app:layout_constraintTop_toBottomOf="@+id/txtaddress"
+        app:layout_constraintTop_toBottomOf="@+id/txtpsw"
         />
 
     <TextView

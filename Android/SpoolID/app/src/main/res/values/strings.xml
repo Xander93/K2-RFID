@@ -59,7 +59,7 @@
     <string name="update">Update</string>
     <string name="k2_printer_ip">Printer IP:</string>
     <string name="update_desc">Tap the check button to check if there is an update for the material database on github.\n\nIf there is an update found tap the update button to download and install it.</string>
-    <string name="update_desc_printer">Enter the ip address or hostname of your %s printer to update the filament database from the printer.\n\nThis can be useful if custom filaments are added to the printer.</string>
+    <string name="update_desc_printer">Enter the ip address or hostname of your %s printer and SSH password to update the filament database from the printer.\n\nThis requires root access to be enabled on the printer to work.</string>
     <string name="update_available">Update available</string>
     <string name="no_update_available">No update available</string>
     <string name="unable_to_download_file_from_printer">Unable to download database file</string>
@@ -75,4 +75,6 @@
     <string name="creality_type">Creality %s</string>
     <string name="get_update_from_printer">Get update from printer</string>
     <string name="please_enter_printer_ip_address">Please enter printer IP address</string>
+    <string name="password">Password:</string>
+    <string name="please_enter_ssh_password">Please enter SSH password</string>
 </resources>

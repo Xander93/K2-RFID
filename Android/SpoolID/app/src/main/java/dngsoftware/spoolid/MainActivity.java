@@ -65,6 +65,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.room.Room;
 import org.json.JSONObject;
+import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
@@ -72,6 +73,10 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Properties;
+import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.Session;
 
 public class MainActivity extends AppCompatActivity implements NfcAdapter.ReaderCallback{
     private MatDB matDb;
@@ -788,14 +793,18 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
                 SaveSetting(this, "fromprinter_" + PrinterType, isChecked);
                 if (isChecked) {
                     dl.txtaddress.setVisibility(View.VISIBLE);
+                    dl.txtpsw.setVisibility(View.VISIBLE);
                     dl.lblpip.setVisibility(View.VISIBLE);
+                    dl.lblpsw.setVisibility(View.VISIBLE);
                     dl.updatedesc.setText(spannableString);
                     dl.btnupd.setVisibility(View.INVISIBLE);
                     dl.txtmsg.setText("");
                     dl.txtnewver.setText("");
                 } else {
                     dl.txtaddress.setVisibility(View.INVISIBLE);
+                    dl.txtpsw.setVisibility(View.INVISIBLE);
                     dl.lblpip.setVisibility(View.INVISIBLE);
+                    dl.lblpsw.setVisibility(View.INVISIBLE);
                     dl.updatedesc.setText(getString(R.string.update_desc));
                     dl.btnupd.setVisibility(View.INVISIBLE);
                     dl.txtmsg.setText("");
@@ -805,14 +814,28 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
 
             if (dl.chkprnt.isChecked()) {
                 dl.txtaddress.setVisibility(View.VISIBLE);
+                dl.txtpsw.setVisibility(View.VISIBLE);
                 dl.lblpip.setVisibility(View.VISIBLE);
+                dl.lblpsw.setVisibility(View.VISIBLE);
                 dl.updatedesc.setText(spannableString);
             } else {
                 dl.txtaddress.setVisibility(View.INVISIBLE);
+                dl.txtpsw.setVisibility(View.INVISIBLE);
                 dl.lblpip.setVisibility(View.INVISIBLE);
+                dl.lblpsw.setVisibility(View.INVISIBLE);
                 dl.updatedesc.setText(getString(R.string.update_desc));
             }
 
+            String sshDefault;
+            if (PrinterType.equalsIgnoreCase( "hi")) {
+                sshDefault = "Creality2024";
+            }else if (PrinterType.equalsIgnoreCase( "k1")) {
+                sshDefault = "creality_2023";
+            } else {
+                sshDefault = "creality_2024";
+            }
+
+            dl.txtpsw.setText(GetSetting(this, "psw_" + PrinterType, sshDefault));
             dl.txtaddress.setText(GetSetting(this, "host_" + PrinterType, ""));
             dl.btncls.setOnClickListener(v -> updateDialog.dismiss());
             dl.btnupd.setVisibility(View.INVISIBLE);
@@ -821,6 +844,7 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
 
             dl.btnchk.setOnClickListener(v -> {
                 String host = dl.txtaddress.getText().toString();
+                String psw = dl.txtpsw.getText().toString();
                 long version = GetSetting(this, "version_" + PrinterType, -1L);
                 dl.txtcurver.setText(String.format(Locale.getDefault(), getString(R.string.current_version), version));
                 new Thread(() -> {
@@ -828,6 +852,8 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
                         String json;
                         if (GetSetting(this, "fromprinter_" + PrinterType, false)) {
                             SaveSetting(this, "host_" + PrinterType, host);
+                            SaveSetting(this, "psw_" + PrinterType, psw);
+
                             if (host.isEmpty()) {
                                 runOnUiThread(() -> {
                                     dl.txtmsg.setTextColor(Color.RED);
@@ -837,7 +863,16 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
                                 });
                                 return;
                             }
-                            json = getJsonDB(host,true);
+                            if (psw.isEmpty()) {
+                                runOnUiThread(() -> {
+                                    dl.txtmsg.setTextColor(Color.RED);
+                                    dl.txtmsg.setText(R.string.please_enter_ssh_password);
+                                    dl.btnupd.setVisibility(View.INVISIBLE);
+                                    dl.txtnewver.setText("");
+                                });
+                                return;
+                            }
+                            json = getJsonDB(psw, host, PrinterType);
                         }
                         else {
                             json = getJsonDB(PrinterType,false);
@@ -846,8 +881,8 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
                             JSONObject materials = new JSONObject(json);
                             JSONObject result = new JSONObject(materials.getString("result"));
                             long newVer = result.getLong("version");
-                            runOnUiThread(() -> dl.txtnewver.setText(format(Locale.getDefault(), getString(R.string.printer_version), newVer)));
                             runOnUiThread(() -> {
+                                dl.txtnewver.setText(format(Locale.getDefault(), getString(R.string.printer_version), newVer));
                                 if (newVer > version) {
                                     dl.btnupd.setVisibility(View.VISIBLE);
                                     dl.txtmsg.setTextColor(ContextCompat.getColor(this, R.color.text_color));
@@ -871,6 +906,7 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
 
             dl.btnupd.setOnClickListener(v -> {
                 String host = GetSetting(this, "host_" + PrinterType, "");
+                String psw = GetSetting(this, "psw_" + PrinterType, sshDefault);
                 final Handler handler = new Handler(Looper.getMainLooper());
                 new Thread(() -> {
                     try {
@@ -885,7 +921,16 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
                                 });
                                 return;
                             }
-                            json = getJsonDB(host,true);
+                            if (psw.isEmpty()) {
+                                runOnUiThread(() -> {
+                                    dl.txtmsg.setTextColor(Color.RED);
+                                    dl.txtmsg.setText(R.string.please_enter_ssh_password);
+                                    dl.btnupd.setVisibility(View.INVISIBLE);
+                                    dl.txtnewver.setText("");
+                                });
+                                return;
+                            }
+                            json = getJsonDB(psw, host, PrinterType);
                         }
                         else {
                             json = getJsonDB(PrinterType,false);
@@ -898,7 +943,7 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
                             populateDatabase(this, matDb, json, PrinterType);
                             SaveSetting(this, "version_" + PrinterType, newVer);
                             runOnUiThread(() -> {
-                                dl.txtcurver.setText(String.format(Locale.getDefault(), getString(R.string.current_version), newVer));
+                                dl.txtcurver.setText(format(Locale.getDefault(), getString(R.string.current_version), newVer));
                                 dl.btnupd.setVisibility(View.INVISIBLE);
                                 dl.txtmsg.setTextColor(ContextCompat.getColor(this, R.color.text_color));
                                 dl.txtmsg.setText(R.string.update_successful);
@@ -917,5 +962,4 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
             updateDialog.show();
         } catch (Exception ignored) {}
     }
-
 }
