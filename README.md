@@ -1,5 +1,5 @@
-# K2-RFID
-K2/CFS RFID Programming.<br>
+# CFS-RFID
+K2/K1/HI/CFS RFID Programming.<br>
 
 The tags required are <a href=https://en.wikipedia.org/wiki/MIFARE>MIFARE</a> Classic 1k tags.<br>
 
@@ -10,6 +10,10 @@ The tags required are <a href=https://en.wikipedia.org/wiki/MIFARE>MIFARE</a> Cl
 <br>
 
 <a href=https://github.com/DnG-Crafts/K2-RFID/tree/main/Arduino>Arduino Code</a>
+<br>
+<br>
+
+<a href=https://github.com/DnG-Crafts/K2-RFID/tree/main/Windows>Windows Code</a>
 <br>
 <br>
 
