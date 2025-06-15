@@ -17,42 +17,95 @@
     android:layout_gravity="center|fill_vertical"
     tools:context=".MainActivity">
 
+    <ImageView
+        android:id="@+id/addbutton"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="4dp"
+        android:layout_marginEnd="-6dp"
+        android:contentDescription="add"
+        app:layout_constraintEnd_toEndOf="@+id/type"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/twotone_add_24"
+        app:tint="#1976D2" />
+
+    <ImageView
+        android:id="@+id/editbutton"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="4dp"
+        android:layout_marginEnd="44dp"
+        android:contentDescription="edit"
+        app:layout_constraintEnd_toStartOf="@+id/addbutton"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/twotone_edit_24"
+        app:tint="#1976D2" />
+
+    <ImageView
+        android:id="@+id/deletebutton"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="4dp"
+        android:layout_marginEnd="44dp"
+        android:contentDescription="delete"
+        app:srcCompat="@drawable/twotone_delete_24"
+        app:tint="#1976D2"
+        app:layout_constraintEnd_toStartOf="@+id/editbutton"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/uploadbutton"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="4dp"
+        android:layout_marginEnd="44dp"
+        android:contentDescription="upload"
+        app:srcCompat="@drawable/twotone_file_upload_24"
+        app:tint="#1976D2"
+        app:layout_constraintEnd_toStartOf="@+id/deletebutton"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
     <Spinner
         android:id="@+id/type"
         android:layout_width="200dp"
         android:layout_height="48dp"
-        android:layout_marginTop="44dp"
+        android:layout_marginTop="34dp"
         android:layout_marginEnd="16dp"
         android:spinnerMode="dialog"
         app:backgroundTint="@color/text_color"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/lbltype"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/editbutton" />
 
     <View
         android:id="@+id/typeborder"
         android:layout_width="200dp"
         android:layout_height="48dp"
-        android:layout_marginTop="44dp"
+        android:layout_marginTop="34dp"
         android:layout_marginEnd="16dp"
         android:background="@drawable/border"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/lbltype"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/editbutton" />
 
     <TextView
         android:id="@+id/lbltype"
         android:layout_width="60dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="56dp"
+        android:layout_marginTop="46dp"
         android:textStyle="bold"
         android:text="@string/printer"
         android:textSize="18sp"
         android:textColor="@color/text_color"
         app:layout_constraintEnd_toStartOf="@+id/type"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/editbutton" />
 
     <Spinner
         android:id="@+id/brand"
@@ -253,7 +306,7 @@
         android:textSize="16sp"
         app:layout_constraintEnd_toStartOf="@+id/writebutton"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/lbltagid" />
+        app:layout_constraintTop_toBottomOf="@+id/ubtn" />
 
     <Button
         android:id="@+id/writebutton"
@@ -267,7 +320,7 @@
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/readbutton"
-        app:layout_constraintTop_toBottomOf="@+id/tagid" />
+        app:layout_constraintTop_toBottomOf="@+id/ubtn" />
 
     <com.google.android.material.materialswitch.MaterialSwitch
         android:id="@+id/autoread"
@@ -296,18 +349,6 @@
         app:tint="#1976D2" />
 
     <ImageView
-        android:id="@+id/ibtn"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:layout_marginEnd="10dp"
-        android:layout_marginTop="10dp"
-        android:contentDescription="@string/filament_info"
-        app:layout_constraintEnd_toEndOf="@+id/lblbrand"
-        app:layout_constraintTop_toBottomOf="@+id/lblbrand"
-        app:srcCompat="@drawable/twotone_info_24"
-        app:tint="#1976D2" />
-
-    <ImageView
         android:id="@+id/ubtn"
         android:layout_width="42dp"
         android:layout_height="42dp"
@@ -320,6 +361,20 @@
         app:tint="#1976D2"
         tools:layout_editor_absoluteX="232dp"
         tools:layout_editor_absoluteY="437dp" />
+
+    <TextView
+        android:id="@+id/txtmsg"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:visibility="invisible"
+        android:gravity="center"
+        android:textColor="#FA6F6F"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/readbutton" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

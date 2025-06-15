@@ -17,6 +17,7 @@ import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.nfc.tech.MifareClassic;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.widget.ArrayAdapter;
@@ -32,9 +33,11 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -93,14 +96,150 @@ public class Utils {
         return "1 KG";
     }
 
-    public static String GetMaterialID(MatDB db, String materialName) {
-        Filament item = db.getFilamentByName(materialName);
-        return item.filamentID;
+    public static String[] filamentVendors = {
+            "3Dgenius",
+            "3DJake",
+            "3DXTECH",
+            "3D BEST-Q",
+            "3D Hero",
+            "3D-Fuel",
+            "Aceaddity",
+            "AddNorth",
+            "Amazon Basics",
+            "AMOLEN",
+            "Ankermake",
+            "Anycubic",
+            "Atomic",
+            "AzureFilm",
+            "BASF",
+            "Bblife",
+            "BCN3D",
+            "Beyond Plastic",
+            "California Filament",
+            "Capricorn",
+            "CC3D",
+            "Colour Dream",
+            "colorFabb",
+            "Comgrow",
+            "Cookiecad",
+            "Creality",
+            "CERPRiSE",
+            "Das Filament",
+            "DO3D",
+            "DOW",
+            "DSM",
+            "Duramic",
+            "ELEGOO",
+            "Eryone",
+            "Essentium",
+            "eSUN",
+            "Extrudr",
+            "Fiberforce",
+            "Fiberlogy",
+            "FilaCube",
+            "Filamentive",
+            "Fillamentum",
+            "FLASHFORGE",
+            "Formfutura",
+            "Francofil",
+            "FilamentOne",
+            "Fil X",
+            "GEEETECH",
+            "Generic",
+            "Giantarm",
+            "Gizmo Dorks",
+            "GreenGate3D",
+            "HATCHBOX",
+            "Hello3D",
+            "IC3D",
+            "IEMAI",
+            "IIID Max",
+            "INLAND",
+            "iProspect",
+            "iSANMATE",
+            "Justmaker",
+            "Keene Village Plastics",
+            "Kexcelled",
+            "LDO",
+            "MakerBot",
+            "MatterHackers",
+            "MIKA3D",
+            "NinjaTek",
+            "Nobufil",
+            "Novamaker",
+            "OVERTURE",
+            "OVVNYXE",
+            "Polymaker",
+            "Priline",
+            "Printed Solid",
+            "Protopasta",
+            "Prusament",
+            "Push Plastic",
+            "R3D",
+            "Re-pet3D",
+            "Recreus",
+            "Regen",
+            "Sain SMART",
+            "SliceWorx",
+            "Snapmaker",
+            "SnoLabs",
+            "Spectrum",
+            "SUNLU",
+            "TTYT3D",
+            "Tianse",
+            "UltiMaker",
+            "Valment",
+            "Verbatim",
+            "VO3D",
+            "Voxelab",
+            "VOXELPLA",
+            "YOOPAI",
+            "Yousu",
+            "Ziro",
+            "Zyltech"};
+
+    public static String[] filamentTypes = {
+            "ABS",
+            "ASA",
+            "HIPS",
+            "PA",
+            "PA-CF",
+            "PC",
+            "PLA",
+            "PLA-CF",
+            "PVA",
+            "PP",
+            "TPU",
+            "PETG",
+            "BVOH",
+            "PET-CF",
+            "PETG-CF",
+            "PA6-CF",
+            "PAHT-CF",
+            "PPS",
+            "PPS-CF",
+            "PET",
+            "ASA-CF",
+            "PA-GF",
+            "PETG-GF",
+            "PP-CF",
+            "PCTG"
+    };
+
+    public static String GetMaterialInfo(MatDB db, String materialId) {
+        Filament item = db.getFilamentById(materialId);
+        return item.filamentParam;
     }
 
-    public static String GetMaterialInfo(MatDB db, String materialName) {
-        Filament item = db.getFilamentByName(materialName);
-        return item.filamentParam;
+    public static void setMaterialInfo(MatDB db, String materialId, String materialParam) {
+        Filament item = db.getFilamentById(materialId);
+        item.filamentParam = materialParam;
+        db.updateItem(item);
+    }
+
+    public static String GetMaterialBrand(MatDB db, String materialId) {
+        Filament item = db.getFilamentById(materialId);
+        return item.filamentVendor;
     }
 
     public static String[] GetMaterialName(MatDB db, String materialId) {
@@ -115,13 +254,23 @@ public class Utils {
         }
     }
 
-    public static String[] getMaterials(MatDB db, String brandName) {
+    public static List<MaterialItem> getMaterials(MatDB db, String brandName) {
         List<Filament> items = db.getFilamentsByVendor(brandName);
-        String[] materials = new String[items.size()];
+        List<MaterialItem> materialItems = new ArrayList<>();
         for (int i = 0; i < items.size(); i++) {
-            materials[i] = items.get(i).filamentName;
+            materialItems.add(new MaterialItem(items.get(i).filamentName, items.get(i).filamentID));
         }
-        return materials;
+        return materialItems;
+    }
+
+    public static int getMaterialPos(ArrayAdapter<MaterialItem> adapter, String materialID) {
+        for (int i = 0; i < adapter.getCount(); i++) {
+            MaterialItem item = adapter.getItem(i);
+            if (item != null && item.getMaterialID().equals(materialID)) {
+                return i;
+            }
+        }
+        return 0;
     }
 
     public static String[] getMaterialBrands(MatDB db) {
@@ -221,7 +370,7 @@ public class Utils {
         return null;
     }
 
-    private static String getAssetDB(Context context, String pType) {
+    public static String getAssetDB(Context context, String pType) {
         try {
             StringBuilder sb = new StringBuilder();
             AssetManager assetManager = context.getAssets();
@@ -261,19 +410,41 @@ public class Utils {
             JSONArray list = result.getJSONArray("list");
             for (int i = 0; i < list.length(); i++) {
                 JSONObject item = list.getJSONObject(i);
-                JSONObject base = new JSONObject(item.getString("base"));
-                JSONObject kvParam = new JSONObject(item.getString("kvParam"));
+                JSONObject base = item.getJSONObject("base");
                 Filament filament = new Filament();
                 filament.position = i;
-                filament.filamentID = base.getString("id");
-                filament.filamentName = base.getString("name");
-                filament.filamentVendor = base.getString("brand");
-                filament.filamentParam = kvParam.toString();
+                filament.filamentID = base.getString("id").trim();
+                filament.filamentName = base.getString("name").trim();
+                filament.filamentVendor = base.getString("brand").trim();
+                filament.filamentParam = item.toString();
                 db.addItem(filament);
             }
         } catch (Exception ignored) {
         }
     }
+
+    public static void addFilament(MatDB db, JSONObject item ) {
+        try {
+            JSONObject base = item.getJSONObject("base");
+            Filament filament = new Filament();
+            filament.position = db.getItemCount();
+            filament.filamentID = base.getString("id").trim();
+            filament.filamentName = base.getString("name").trim();
+            filament.filamentVendor = base.getString("brand").trim();
+            filament.filamentParam = item.toString();
+            db.addItem(filament);
+        } catch (Exception ignored) {
+        }
+    }
+
+    public static void removeFilament(MatDB db, String materialId) {
+        try {
+            Filament item = db.getFilamentById(materialId);
+            db.deleteItem(item);
+        } catch (Exception ignored) {
+        }
+    }
+
 
     public static String getJsonDB(String pType, boolean fromPrinter)
     {
@@ -307,6 +478,7 @@ public class Utils {
         return server_response;
     }
 
+/*
     public static String getJsonDB(String psw, String host, String pType) {
         try {
             JSch jsch = new JSch();
@@ -336,9 +508,203 @@ public class Utils {
             return null;
         }
     }
+ */
 
-    private static String readStream(InputStream in)
-    {
+
+
+    public static void restorePrinterDB(Context context, String psw, String host, String pType) throws Exception {
+        JSONObject jsonDb = new JSONObject(getAssetDB(context, pType));
+        setJsonDB(jsonDb.toString(2), psw, host, pType, "material_database.json");
+        if (pType.equalsIgnoreCase("k1")) {
+            JSONObject jsonDbo = new JSONObject(getAssetDB(context,"k1o"));
+            setJsonDB(jsonDbo.toString(2), psw, host, pType, "material_option.json");
+        }
+        sendSShCommand(psw, host, "reboot");
+    }
+
+    public static void saveDBToPrinter(MatDB db, String psw, String host, String pType, String version, boolean reboot) throws Exception {
+        JSONObject materials = new JSONObject(getJsonDB(psw, host, pType, "material_database.json"));
+        JSONObject result = new JSONObject(materials.getString("result"));
+        JSONArray list = new JSONArray();
+        String ver = version;
+        if (ver == null || ver.isEmpty() || ver.equals("0")) {
+            ver = result.getString("version");
+        }
+        List<Filament> items = db.getAllItems();
+        for (Filament item : items) {
+            JSONObject jo = new JSONObject(item.filamentParam);
+            list.put(jo);
+        }
+        materials.remove("result");
+        result.remove("list");
+        result.remove("count");
+        result.remove("version");
+        result.put("list", list);
+        result.put("count", list.length());
+        result.put("version", ver);
+        materials.put("result", result);
+        setJsonDB(materials.toString(2), psw, host, pType, "material_database.json");
+
+        if (pType.equalsIgnoreCase("k1")) {
+            saveMatOption(psw, host, pType, materials, reboot);
+        } else {
+            if (reboot) {
+                sendSShCommand(psw, host, "reboot");
+            }
+        }
+    }
+
+
+    public static void saveMatOption(String psw, String host, String pType, JSONObject materials, boolean reboot) throws Exception {
+        JSONObject options = new JSONObject();
+        JSONObject json = new JSONObject(materials.toString());
+        JSONObject result = new JSONObject(json.getString("result"));
+        JSONArray list = result.getJSONArray("list");
+        Set<String> uniqueBrandsSet = new HashSet<>();
+        for (int i = 0; i < list.length(); i++) {
+            JSONObject items = new JSONObject(list.get(i).toString());
+            JSONObject base = new JSONObject(items.getString("base"));
+            uniqueBrandsSet.add(base.getString("brand"));
+        }
+        for (String brand : uniqueBrandsSet) {
+            options.put(brand, new JSONObject());
+            JSONObject vendor = new JSONObject(options.getString(brand));
+            for (int i = 0; i < list.length(); i++) {
+                JSONObject items = new JSONObject(list.get(i).toString());
+                JSONObject base = new JSONObject(items.getString("base"));
+                if (base.getString("brand").equals(brand)) {
+                    String tmpType = base.getString("meterialType");
+                    if (vendor.has(tmpType)) {
+                        vendor.put(tmpType, vendor.getString(tmpType) + "\n" + base.getString("name"));
+                    } else {
+                        vendor.put(tmpType, base.getString("name"));
+                    }
+                }
+            }
+            options.put(brand, vendor);
+        }
+        setJsonDB(options.toString(2), psw, host, pType, "material_option.json");
+
+        if (reboot) {
+            sendSShCommand(psw, host, "reboot");
+        }
+    }
+
+    public static String sendSShCommand(String psw, String host, String command) throws Exception {
+        JSch jsch = new JSch();
+        Session session = jsch.getSession("root", host, 22);
+        session.setPassword(psw);
+        Properties prop = new Properties();
+        prop.put("StrictHostKeyChecking", "no");
+        session.setConfig(prop);
+        session.connect();
+        ChannelExec channel = (ChannelExec) session.openChannel("exec");
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        channel.setOutputStream(baos);
+        channel.setCommand(command);
+        channel.connect(5000);
+        while (true) {
+            if (channel.isClosed()) {
+                channel.disconnect();
+                session.disconnect();
+                return baos.toString();
+            }
+        }
+    }
+
+    public static String getJsonDB(String psw, String host, String pType, String fileName) {
+        try {
+            JSch jsch = new JSch();
+            Session session = jsch.getSession("root", host, 22);
+            session.setPassword(psw);
+            Properties prop = new Properties();
+            prop.put("StrictHostKeyChecking", "no");
+            session.setConfig(prop);
+            session.connect();
+            ChannelExec channel = (ChannelExec) session.openChannel("exec");
+            InputStream in = channel.getInputStream();
+            OutputStream out = channel.getOutputStream();
+            if (pType.equalsIgnoreCase("k1")) {
+                channel.setCommand("scp -f /usr/data/creality/userdata/box/" + fileName);
+            } else {
+                channel.setCommand("scp -f /mnt/UDISK/creality/userdata/box/" + fileName);
+            }
+            channel.connect(5000);
+            StringBuilder jsonDb = new StringBuilder();
+            byte[] buf = new byte[1024];
+            buf[0] = 0;
+            out.write(buf, 0, 1);
+            out.flush();
+            while (true) {
+                try {
+                    long filesize;
+                    for (int i = 0; ; i++) {
+                        int ret = in.read(buf, i, 1);
+                        if (buf[i] == (byte) 0x0a) {
+                            String hdr = new String(buf, 0, i);
+                            filesize = Long.parseLong(hdr.split(" ")[1]);
+                            break;
+                        }
+                    }
+                    buf[0] = 0;
+                    out.write(buf, 0, 1);
+                    out.flush();
+                    int i;
+                    while (true) {
+                        if (buf.length < filesize)
+                            i = buf.length;
+                        else
+                            i = (int) filesize;
+                        i = in.read(buf, 0, i);
+                        if (i < 0) {
+                            break;
+                        }
+                        jsonDb.append(new String(buf, 0, i));
+                        filesize -= i;
+                        if (filesize == 0L)
+                            break;
+                    }
+                    buf[0] = 0;
+                    out.write(buf, 0, 1);
+                    out.flush();
+                }catch (Exception ignored){
+                    break;
+                }
+            }
+            channel.disconnect();
+            session.disconnect();
+            return jsonDb.toString();
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    public static void setJsonDB(String dbData, String psw, String host, String pType, String fileName) throws Exception {
+        JSch jsch = new JSch();
+        Session session = jsch.getSession("root", host, 22);
+        session.setPassword(psw);
+        Properties prop = new Properties();
+        prop.put("StrictHostKeyChecking", "no");
+        session.setConfig(prop);
+        session.connect();
+        ChannelExec channel = (ChannelExec) session.openChannel("exec");
+        InputStream in = channel.getInputStream();
+        OutputStream out = channel.getOutputStream();
+        if (pType.equalsIgnoreCase("k1")) {
+            channel.setCommand("scp -p -t /usr/data/creality/userdata/box/" + fileName);
+        } else {
+            channel.setCommand("scp -p -t /mnt/UDISK/creality/userdata/box/" + fileName);
+        }
+        channel.connect(5000);
+        out.write(("C0644 " + dbData.length() + " " + fileName + "\n").getBytes());
+        out.flush();
+        out.write(dbData.getBytes());
+        out.flush();
+        channel.disconnect();
+        session.disconnect();
+    }
+
+    private static String readStream(InputStream in) {
         try {
             int len;
             byte[] buf = new byte[ 1024 ];

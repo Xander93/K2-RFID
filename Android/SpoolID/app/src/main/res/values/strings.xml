@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Cfs RFID</string>
-    <string name="this_device_does_not_support_mifare_classic_tags">This device does not support \"Mifare Classic\" tags</string>
+    <string name="this_device_does_not_support_mifare_classic_tags">This device does not support \"Mifare Classic\" tags, RFID functions disabled</string>
     <string name="please_activate_nfc">Please activate NFC</string>
     <string name="tag_found">"TAG Found: "</string>
     <string name="data_read_from_tag">Data read from TAG</string>
@@ -60,6 +60,7 @@
     <string name="k2_printer_ip">Printer IP:</string>
     <string name="update_desc">Tap the check button to check if there is an update for the material database on github.\n\nIf there is an update found tap the update button to download and install it.</string>
     <string name="update_desc_printer">Enter the ip address or hostname of your %s printer and SSH password to update the filament database from the printer.\n\nThis requires root access to be enabled on the printer to work.</string>
+    <string name="upload_desc_printer">Enter the ip address or hostname of your %s printer and SSH password to update the filament database on the printer.\n\nThis requires root access to be enabled on the printer to work.</string>
     <string name="update_available">Update available</string>
     <string name="no_update_available">No update available</string>
     <string name="unable_to_download_file_from_printer">Unable to download database file</string>
@@ -77,4 +78,24 @@
     <string name="please_enter_printer_ip_address">Please enter printer IP address</string>
     <string name="password">Password:</string>
     <string name="please_enter_ssh_password">Please enter SSH password</string>
+    <string name="error_uploading_to_printer">Error uploading to printer</string>
+    <string name="upload_successful">Upload successful</string>
+    <string name="error_resetting_database">Error resetting database</string>
+    <string name="printer_database_has_been_reset">Printer database has been reset</string>
+    <string name="upload">Upload</string>
+    <string name="reset">Reset</string>
+    <string name="reset_printer_database">Reset printer database?</string>
+    <string name="reboot_printer">Reboot printer?</string>
+    <string name="reset_app_database">Reset app database?</string>
+    <string name="prevent_db_updates">Prevent DB updates?</string>
+    <string name="update_printer_database">Update Printer Database</string>
+    <string name="save">Save</string>
+    <string name="add">Add</string>
+    <string name="uploading">Uploading...</string>
+    <string name="resetting">Resetting...</string>
+    <string name="checking_for_updates">Checking for updates...</string>
+    <string name="printer_and_app_databases_have_been_reset">Printer and app databases have been reset</string>
+    <string name="downloading_update">Downloading update...</string>
+    <string name="rfid_disabled_tap_here_to_enable_nfc">NFC Disabled\nTap here to enable NFC</string>
+    <string name="rfid_functions_disabled">RFID functions disabled</string>
 </resources>
