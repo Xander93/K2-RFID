@@ -71,6 +71,20 @@ namespace CFS_RFID.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add a new filament using the following filament as a base template.
+        ///
+        ///{0}
+        ///{1} 
+        ///
+        ///Set the Brand, Name and Type then adjust the settings on the param tab and save..
+        /// </summary>
+        internal static string addDesc {
+            get {
+                return ResourceManager.GetString("addDesc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap delete {
@@ -101,6 +115,15 @@ namespace CFS_RFID.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Creality2024.
+        /// </summary>
+        internal static string hiPsw {
+            get {
+                return ResourceManager.GetString("hiPsw", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
         internal static byte[] k1 {
@@ -113,10 +136,68 @@ namespace CFS_RFID.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] k1o {
+            get {
+                object obj = ResourceManager.GetObject("k1o", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to creality_2023.
+        /// </summary>
+        internal static string k1Psw {
+            get {
+                return ResourceManager.GetString("k1Psw", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] k2 {
             get {
                 object obj = ResourceManager.GetObject("k2", resourceCulture);
                 return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to creality_2024.
+        /// </summary>
+        internal static string k2Psw {
+            get {
+                return ResourceManager.GetString("k2Psw", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter the ip address or hostname of your {0} printer and SSH password to Reset the filament database on the printer.
+        ///This requires root access to be enabled on the printer to work..
+        /// </summary>
+        internal static string resetDesc {
+            get {
+                return ResourceManager.GetString("resetDesc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter the ip address or hostname of your {0} printer and SSH password to Update the filament database on the printer.
+        ///This requires root access to be enabled on the printer to work..
+        /// </summary>
+        internal static string updateDesc {
+            get {
+                return ResourceManager.GetString("updateDesc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap upload {
+            get {
+                object obj = ResourceManager.GetObject("upload", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
     }

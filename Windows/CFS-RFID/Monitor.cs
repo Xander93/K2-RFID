@@ -6,7 +6,7 @@ namespace CFS_RFID
 {
     public class Monitor
     {
-        private ISCardMonitor monitor;
+        private readonly ISCardMonitor monitor;
         public event CardInsertedHandler CardInserted;
         public delegate void CardInsertedHandler(CardStatusEventArgs args);
         public event CardRemovedHandler CardRemoved;
@@ -49,10 +49,7 @@ namespace CFS_RFID
 
         public void Dispose()
         {
-            if (monitor != null)
-            {
-                monitor.Dispose();
-            }
+            monitor?.Dispose();
         }
     }
 }

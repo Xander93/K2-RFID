@@ -12,10 +12,7 @@ namespace CFS_RFID
             {
                 using (RegistryKey key = Registry.CurrentUser.CreateSubKey("CFS RFID\\Settings"))
                 {
-                    if (key != null)
-                    {
-                        key.SetValue(keyName, value ? 1 : 0, RegistryValueKind.DWord);
-                    }
+                    key?.SetValue(keyName, value ? 1 : 0, RegistryValueKind.DWord);
                 }
             }
             catch (Exception){}
@@ -54,10 +51,7 @@ namespace CFS_RFID
             {
                 using (RegistryKey key = Registry.CurrentUser.CreateSubKey("CFS RFID\\Settings"))
                 {
-                    if (key != null)
-                    {
-                        key.SetValue(keyName, value, RegistryValueKind.DWord);
-                    }
+                    key?.SetValue(keyName, value, RegistryValueKind.DWord);
                 }
             }
             catch (Exception){}
@@ -100,10 +94,7 @@ namespace CFS_RFID
             {
                 using (RegistryKey key = Registry.CurrentUser.CreateSubKey("CFS RFID\\Settings"))
                 {
-                    if (key != null)
-                    {
-                        key.SetValue(keyName, value, RegistryValueKind.QWord);
-                    }
+                    key?.SetValue(keyName, value, RegistryValueKind.QWord);
                 }
             }
             catch (Exception){}
@@ -146,10 +137,7 @@ namespace CFS_RFID
             {
                 using (RegistryKey key = Registry.CurrentUser.CreateSubKey("CFS RFID\\Settings"))
                 {
-                    if (key != null)
-                    {
-                        key.SetValue(keyName, value, RegistryValueKind.String);
-                    }
+                    key?.SetValue(keyName, value, RegistryValueKind.String);
                 }
             }
             catch (Exception )

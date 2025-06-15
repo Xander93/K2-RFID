@@ -1,0 +1,195 @@
+﻿using CFS_RFID.Properties;
+using System;
+using System.Drawing;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using static CFS_RFID.Utils;
+
+namespace CFS_RFID
+{
+    public partial class UploadForm : Form
+    {
+        public string SelectedPrinter { get; set; }
+        private string sshDefault;
+
+        public UploadForm()
+        {
+            InitializeComponent();
+        }
+
+        private void UploadForm_Load(object sender, EventArgs e)
+        {
+            btnCancel.BackColor = ColorTranslator.FromHtml("#1976D2");
+            btnUpload.BackColor = ColorTranslator.FromHtml("#1976D2");
+            BackColor = ColorTranslator.FromHtml("#F4F4F4");
+            lblPrinter.ForeColor = ColorTranslator.FromHtml("#1976D2");
+       
+            lblPrinter.Text = "Update " + SelectedPrinter.ToUpper() + " Database";
+
+            if (SelectedPrinter.Equals("hi",StringComparison.OrdinalIgnoreCase))
+            {
+                sshDefault = Resources.hiPsw;
+            }
+            else if (SelectedPrinter.Equals("k1", StringComparison.OrdinalIgnoreCase))
+            {
+                sshDefault = Resources.k1Psw;
+            }
+            else
+            {
+                sshDefault = Resources.k2Psw;
+            }
+
+            txtIP.Text = Settings.GetSetting("host_" + SelectedPrinter, string.Empty);
+            txtPass.Text = Settings.GetSetting("psw_" + SelectedPrinter, sshDefault);
+            chkPrevent.Checked = Settings.GetSetting("prevent_" + SelectedPrinter, false);
+            chkReboot.Checked = Settings.GetSetting("reboot_" + SelectedPrinter, true);
+            SetDescMessage(string.Format(Resources.updateDesc, SelectedPrinter.ToUpper()));
+        }
+
+        private void SetDescMessage(string msg)
+        {
+            rtbDesc.Text = msg;
+            rtbDesc.BackColor = BackColor;
+            if (rtbDesc.Find(" " + SelectedPrinter.ToUpper() + " ") != -1)
+            {
+                rtbDesc.Select(rtbDesc.Find(" " + SelectedPrinter.ToUpper() + " "), 4);
+                rtbDesc.SelectionColor = ColorTranslator.FromHtml("#1976D2");
+            }
+            if (rtbDesc.Find(" Update ") != -1)
+            {
+                rtbDesc.Select(rtbDesc.Find(" Update "), 8);
+                rtbDesc.SelectionColor = ColorTranslator.FromHtml("#CD5C5C");
+            }
+            if (rtbDesc.Find(" Reset ") != -1)
+            {
+                rtbDesc.Select(rtbDesc.Find(" Reset "), 7);
+                rtbDesc.SelectionColor = ColorTranslator.FromHtml("#CD5C5C");
+            }
+            rtbDesc.DeselectAll();
+            rtbDesc.SelectionChanged += (sender, e) =>{
+                lblPrinter.Focus();
+            };
+            rtbDesc.MouseDown += (sender, e) =>{
+                if (e.Button == MouseButtons.Right)
+                {
+                    rtbDesc.ContextMenuStrip = null;
+                }
+                else
+                {
+                    lblPrinter.Focus();
+                }
+            };
+        }
+
+        private void ChkPrevent_CheckStateChanged(object sender, EventArgs e)
+        {
+           Settings.SaveSetting("prevent_" + SelectedPrinter, chkPrevent.Checked);
+        }
+
+        private void ChkReboot_CheckStateChanged(object sender, EventArgs e)
+        {
+            Settings.SaveSetting("reboot_" + SelectedPrinter, chkReboot.Checked);
+        }
+
+        private void ChkReset_CheckStateChanged(object sender, EventArgs e)
+        {
+            if (chkReset.Checked)
+            {
+                lblPrevent.Visible = false;
+                lblReboot.Text = "Reset app database?";
+                chkReboot.Visible = false;
+                chkResetApp.Visible = true;
+                chkPrevent.Visible = false;
+                lblPrinter.Text = "Reset " + SelectedPrinter.ToUpper() + " Database";
+                SetDescMessage(string.Format(Resources.resetDesc, SelectedPrinter.ToUpper()));
+            }
+            else
+            {
+                lblPrevent.Visible = true;
+                lblReboot.Text = "Reboot printer?";
+                chkReboot.Visible = true;
+                chkResetApp.Visible = false;
+                chkPrevent.Visible = true;
+                lblPrinter.Text = "Update " + SelectedPrinter.ToUpper() + " Database";
+                SetDescMessage(string.Format(Resources.updateDesc, SelectedPrinter.ToUpper()));
+            }
+        }
+
+        private void BtnCancel_Click(object sender, EventArgs e)
+        {
+            this.DialogResult = DialogResult.Cancel;
+            this.Close();
+        }
+
+        private void BtnUpload_Click(object sender, EventArgs e)
+        {
+            Settings.SaveSetting("host_" + SelectedPrinter, txtIP.Text);
+            Settings.SaveSetting("psw_" + SelectedPrinter, txtPass.Text);
+            if (!txtIP.Text.Equals(string.Empty) && !txtPass.Text.Equals(string.Empty))
+            {
+                try
+                {
+                    if (chkReset.Checked)
+                    {
+                        lblMsg.Text = "Resetting...";
+                        ResetJsonDB(txtPass.Text, txtIP.Text, SelectedPrinter, chkResetApp.Checked);
+                    }
+                    else
+                    {
+                        lblMsg.Text = "Uploading...";
+                        if (chkPrevent.Checked)
+                        {
+                            SetDatabaseVersion(SelectedPrinter, "9876543210");
+                        }
+                        SetJsonDB(txtPass.Text, txtIP.Text, SelectedPrinter);
+                        if (SelectedPrinter.Equals("k1", StringComparison.OrdinalIgnoreCase))
+                        {
+                            SaveMatOption(txtPass.Text, txtIP.Text, SelectedPrinter, chkReboot.Checked);
+                        }
+                        else if (chkReboot.Checked)
+                        {
+                            SendSShCommand(txtPass.Text, txtIP.Text, "reboot");
+                        }
+                    }
+
+                    string endMsg;
+                    if (chkReset.Checked)
+                    {
+                        endMsg = "Reset complete\nRebooting printer";
+                    }
+                    else
+                    {
+                        if (chkReboot.Checked)
+                        {
+                            endMsg = "Upload complete\nRebooting printer";
+                        }
+                        else {
+                            endMsg = "Upload complete";
+                        }
+                    }
+                    Task task = Task.Run(() =>
+                    {
+                        lblMsg.Invoke((MethodInvoker)delegate ()
+                        {
+                            lblMsg.Text = endMsg;
+                        });
+                        Thread.Sleep(2000);
+                    }).ContinueWith(t =>
+                    {
+                        this.DialogResult = DialogResult.OK;
+                        this.Close();
+                    }, TaskScheduler.Default);
+                }
+                catch (Exception ex) {
+                    lblMsg.Text = string.Empty;
+                    MessageBox.Show(this, ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            else
+            {
+                MessageBox.Show(this, "Printer IP and Password cannot be blank", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+    }
+}
