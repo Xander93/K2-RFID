@@ -200,5 +200,14 @@ namespace CFS_RFID.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 9876543210.
+        /// </summary>
+        internal static string verPrevent {
+            get {
+                return ResourceManager.GetString("verPrevent", resourceCulture);
+            }
+        }
     }
 }

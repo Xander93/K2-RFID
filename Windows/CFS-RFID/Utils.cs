@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml.Linq;
 
 namespace CFS_RFID
 {
@@ -550,6 +551,42 @@ namespace CFS_RFID
                 catch (Exception e)
                 {
                     throw new Exception(e.Message);
+                }
+                finally
+                {
+                    if (client.IsConnected)
+                    {
+                        client.Disconnect();
+                    }
+                }
+            }
+        }
+
+        public static string GetPrinterVersion(string psw, string host, string pType)
+        {
+            using (var client = new ScpClient(host, 22, "root", psw))
+            {
+                try
+                {
+                    client.Connect();
+                    string filepath = "/mnt/UDISK/creality/userdata/box/material_database.json";
+                    if (pType.Equals("k1", StringComparison.OrdinalIgnoreCase))
+                    {
+                        filepath = "/usr/data/creality/userdata/box/material_database.json";
+                    }
+                    byte[] dbData;
+                    using (var stream = new MemoryStream())
+                    {
+                        client.Download(filepath, stream);
+                        dbData = stream.ToArray();
+                    }
+                    JObject materials = JObject.Parse(Encoding.ASCII.GetString(dbData));
+                    JObject result = (JObject)materials["result"];
+                    return result["version"].ToString();
+                }
+                catch
+                {
+                    return "0";
                 }
                 finally
                 {

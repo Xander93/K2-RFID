@@ -42,7 +42,7 @@ namespace CFS_RFID
 
             txtIP.Text = Settings.GetSetting("host_" + SelectedPrinter, string.Empty);
             txtPass.Text = Settings.GetSetting("psw_" + SelectedPrinter, sshDefault);
-            chkPrevent.Checked = Settings.GetSetting("prevent_" + SelectedPrinter, false);
+            chkPrevent.Checked = Settings.GetSetting("prevent_" + SelectedPrinter, true);
             chkReboot.Checked = Settings.GetSetting("reboot_" + SelectedPrinter, true);
             SetDescMessage(string.Format(Resources.updateDesc, SelectedPrinter.ToUpper()));
         }
@@ -140,7 +140,12 @@ namespace CFS_RFID
                         lblMsg.Text = "Uploading...";
                         if (chkPrevent.Checked)
                         {
-                            SetDatabaseVersion(SelectedPrinter, "9876543210");
+                            SetDatabaseVersion(SelectedPrinter, Resources.verPrevent);
+                        }
+                        else
+                        {
+                            string version = GetPrinterVersion(txtPass.Text, txtIP.Text, SelectedPrinter);
+                            SetDatabaseVersion(SelectedPrinter, version);
                         }
                         SetJsonDB(txtPass.Text, txtIP.Text, SelectedPrinter);
                         if (SelectedPrinter.Equals("k1", StringComparison.OrdinalIgnoreCase))
