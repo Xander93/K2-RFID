@@ -277,6 +277,10 @@ namespace CFS_RFID
                             {
                                 jsonParam.Add(item.SubItems[0].Text, cboBrand.Text.Trim());
                             }
+                            else if(item.SubItems[0].Text.Equals("filament_type", StringComparison.OrdinalIgnoreCase))
+                            {
+                                jsonParam.Add(item.SubItems[0].Text, cboType.Text.Trim());
+                            }
                             else
                             {
                                 jsonParam.Add(item.SubItems[0].Text, item.SubItems[1].Text.Trim());
