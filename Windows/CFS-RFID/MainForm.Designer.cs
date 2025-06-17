@@ -45,6 +45,7 @@
             this.btnEdit = new System.Windows.Forms.Button();
             this.btnAdd = new System.Windows.Forms.Button();
             this.lblAutoRead = new System.Windows.Forms.Label();
+            this.btnUpdate = new System.Windows.Forms.Button();
             this.chkAutoRead = new SwitchCheckBox();
             this.SuspendLayout();
             // 
@@ -183,55 +184,63 @@
             // 
             // btnUpload
             // 
+            this.btnUpload.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(244)))), ((int)(((byte)(244)))), ((int)(((byte)(244)))));
             this.btnUpload.FlatAppearance.BorderSize = 0;
             this.btnUpload.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnUpload.ForeColor = System.Drawing.SystemColors.Control;
+            this.btnUpload.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(244)))), ((int)(((byte)(244)))), ((int)(((byte)(244)))));
             this.btnUpload.Image = global::CFS_RFID.Properties.Resources.upload;
-            this.btnUpload.Location = new System.Drawing.Point(33, 17);
+            this.btnUpload.Location = new System.Drawing.Point(92, 17);
             this.btnUpload.Name = "btnUpload";
             this.btnUpload.Size = new System.Drawing.Size(48, 48);
             this.btnUpload.TabIndex = 37;
-            this.btnUpload.UseVisualStyleBackColor = true;
+            this.btnUpload.UseVisualStyleBackColor = false;
             this.btnUpload.Click += new System.EventHandler(this.BtnUpload_Click);
+            this.btnUpload.MouseLeave += new System.EventHandler(this.BtnUpload_MouseLeave);
             // 
             // btnDel
             // 
+            this.btnDel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(244)))), ((int)(((byte)(244)))), ((int)(((byte)(244)))));
             this.btnDel.FlatAppearance.BorderSize = 0;
             this.btnDel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnDel.ForeColor = System.Drawing.SystemColors.Control;
+            this.btnDel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(244)))), ((int)(((byte)(244)))), ((int)(((byte)(244)))));
             this.btnDel.Image = global::CFS_RFID.Properties.Resources.delete;
-            this.btnDel.Location = new System.Drawing.Point(128, 17);
+            this.btnDel.Location = new System.Drawing.Point(171, 17);
             this.btnDel.Name = "btnDel";
             this.btnDel.Size = new System.Drawing.Size(48, 48);
             this.btnDel.TabIndex = 33;
-            this.btnDel.UseVisualStyleBackColor = true;
+            this.btnDel.UseVisualStyleBackColor = false;
             this.btnDel.Click += new System.EventHandler(this.BtnDel_Click);
+            this.btnDel.MouseLeave += new System.EventHandler(this.BtnDel_MouseLeave);
             // 
             // btnEdit
             // 
+            this.btnEdit.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(244)))), ((int)(((byte)(244)))), ((int)(((byte)(244)))));
             this.btnEdit.FlatAppearance.BorderSize = 0;
             this.btnEdit.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnEdit.ForeColor = System.Drawing.SystemColors.Control;
+            this.btnEdit.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(244)))), ((int)(((byte)(244)))), ((int)(((byte)(244)))));
             this.btnEdit.Image = global::CFS_RFID.Properties.Resources.edit;
-            this.btnEdit.Location = new System.Drawing.Point(218, 17);
+            this.btnEdit.Location = new System.Drawing.Point(248, 17);
             this.btnEdit.Name = "btnEdit";
             this.btnEdit.Size = new System.Drawing.Size(48, 48);
             this.btnEdit.TabIndex = 32;
-            this.btnEdit.UseVisualStyleBackColor = true;
+            this.btnEdit.UseVisualStyleBackColor = false;
             this.btnEdit.Click += new System.EventHandler(this.BtnEdit_Click);
+            this.btnEdit.MouseLeave += new System.EventHandler(this.BtnEdit_MouseLeave);
             // 
             // btnAdd
             // 
+            this.btnAdd.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(244)))), ((int)(((byte)(244)))), ((int)(((byte)(244)))));
             this.btnAdd.FlatAppearance.BorderSize = 0;
             this.btnAdd.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnAdd.ForeColor = System.Drawing.SystemColors.Control;
+            this.btnAdd.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(244)))), ((int)(((byte)(244)))), ((int)(((byte)(244)))));
             this.btnAdd.Image = global::CFS_RFID.Properties.Resources.add;
-            this.btnAdd.Location = new System.Drawing.Point(308, 17);
+            this.btnAdd.Location = new System.Drawing.Point(325, 17);
             this.btnAdd.Name = "btnAdd";
             this.btnAdd.Size = new System.Drawing.Size(48, 48);
             this.btnAdd.TabIndex = 31;
-            this.btnAdd.UseVisualStyleBackColor = true;
+            this.btnAdd.UseVisualStyleBackColor = false;
             this.btnAdd.Click += new System.EventHandler(this.BtnAdd_Click);
+            this.btnAdd.MouseLeave += new System.EventHandler(this.BtnAdd_MouseLeave);
             // 
             // lblAutoRead
             // 
@@ -242,6 +251,21 @@
             this.lblAutoRead.Size = new System.Drawing.Size(197, 20);
             this.lblAutoRead.TabIndex = 40;
             this.lblAutoRead.Text = "Auto read tag on scan?";
+            // 
+            // btnUpdate
+            // 
+            this.btnUpdate.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(244)))), ((int)(((byte)(244)))), ((int)(((byte)(244)))));
+            this.btnUpdate.FlatAppearance.BorderSize = 0;
+            this.btnUpdate.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnUpdate.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(244)))), ((int)(((byte)(244)))), ((int)(((byte)(244)))));
+            this.btnUpdate.Image = global::CFS_RFID.Properties.Resources.download;
+            this.btnUpdate.Location = new System.Drawing.Point(15, 17);
+            this.btnUpdate.Name = "btnUpdate";
+            this.btnUpdate.Size = new System.Drawing.Size(48, 48);
+            this.btnUpdate.TabIndex = 41;
+            this.btnUpdate.UseVisualStyleBackColor = false;
+            this.btnUpdate.Click += new System.EventHandler(this.BtnUpdate_Click);
+            this.btnUpdate.MouseLeave += new System.EventHandler(this.BtnUpdate_MouseLeave);
             // 
             // chkAutoRead
             // 
@@ -263,7 +287,9 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(387, 632);
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(244)))), ((int)(((byte)(244)))), ((int)(((byte)(244)))));
+            this.ClientSize = new System.Drawing.Size(389, 632);
+            this.Controls.Add(this.btnUpdate);
             this.Controls.Add(this.lblAutoRead);
             this.Controls.Add(this.chkAutoRead);
             this.Controls.Add(this.btnUpload);
@@ -312,6 +338,7 @@
         private System.Windows.Forms.Button btnUpload;
         private SwitchCheckBox chkAutoRead;
         private System.Windows.Forms.Label lblAutoRead;
+        private System.Windows.Forms.Button btnUpdate;
     }
 }
 

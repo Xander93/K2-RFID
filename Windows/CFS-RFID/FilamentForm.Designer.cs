@@ -49,10 +49,10 @@
             this.rtbDesc = new System.Windows.Forms.RichTextBox();
             this.label8 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
-            this.paramPage = new System.Windows.Forms.TabPage();
-            this.lblFilament = new System.Windows.Forms.Label();
             this.chkSupport = new SwitchCheckBox();
             this.chkSoluble = new SwitchCheckBox();
+            this.paramPage = new System.Windows.Forms.TabPage();
+            this.lblFilament = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.basePage.SuspendLayout();
             this.paramPage.SuspendLayout();
@@ -298,25 +298,6 @@
             this.label7.TabIndex = 19;
             this.label7.Text = "Filament is soluble?";
             // 
-            // paramPage
-            // 
-            this.paramPage.Controls.Add(this.paramList);
-            this.paramPage.Location = new System.Drawing.Point(4, 34);
-            this.paramPage.Name = "paramPage";
-            this.paramPage.Padding = new System.Windows.Forms.Padding(3);
-            this.paramPage.Size = new System.Drawing.Size(1124, 719);
-            this.paramPage.TabIndex = 1;
-            this.paramPage.Text = "Param";
-            this.paramPage.UseVisualStyleBackColor = true;
-            // 
-            // lblFilament
-            // 
-            this.lblFilament.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblFilament.Location = new System.Drawing.Point(23, 790);
-            this.lblFilament.Name = "lblFilament";
-            this.lblFilament.Size = new System.Drawing.Size(782, 42);
-            this.lblFilament.TabIndex = 6;
-            // 
             // chkSupport
             // 
             this.chkSupport.BorderThickness = 1;
@@ -344,6 +325,25 @@
             this.chkSoluble.Text = "switchCheckBox1";
             this.chkSoluble.ThumbColor = System.Drawing.Color.White;
             this.chkSoluble.UseVisualStyleBackColor = true;
+            // 
+            // paramPage
+            // 
+            this.paramPage.BackColor = System.Drawing.SystemColors.Control;
+            this.paramPage.Controls.Add(this.paramList);
+            this.paramPage.Location = new System.Drawing.Point(4, 34);
+            this.paramPage.Name = "paramPage";
+            this.paramPage.Padding = new System.Windows.Forms.Padding(3);
+            this.paramPage.Size = new System.Drawing.Size(1124, 719);
+            this.paramPage.TabIndex = 1;
+            this.paramPage.Text = "Param";
+            // 
+            // lblFilament
+            // 
+            this.lblFilament.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblFilament.Location = new System.Drawing.Point(23, 790);
+            this.lblFilament.Name = "lblFilament";
+            this.lblFilament.Size = new System.Drawing.Size(782, 42);
+            this.lblFilament.TabIndex = 6;
             // 
             // FilamentForm
             // 

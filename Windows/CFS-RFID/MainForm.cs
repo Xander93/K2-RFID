@@ -20,6 +20,7 @@ namespace CFS_RFID
         private Reader reader;
         private string DbVersion = "0";
         private string MaterialColor, PrinterType, MaterialName, MaterialID, MaterialWeight;
+        System.Windows.Forms.ToolTip upTip, delTip, edtTip, addTip, updTip;
 
         private void CardInserted(CardStatusEventArgs args)
         {
@@ -154,7 +155,6 @@ namespace CFS_RFID
             InitializeComponent();
         }
 
-
         private void MainForm_Load(object sender, EventArgs e)
         {
 
@@ -176,14 +176,16 @@ namespace CFS_RFID
             btnDel.ForeColor = BackColor;
             btnAdd.ForeColor = BackColor;
 
-            System.Windows.Forms.ToolTip upTip = new System.Windows.Forms.ToolTip();
+            upTip = new System.Windows.Forms.ToolTip();
             upTip.SetToolTip(btnUpload, "Upload database to printer");
-            System.Windows.Forms.ToolTip delTip = new System.Windows.Forms.ToolTip();
+            delTip = new System.Windows.Forms.ToolTip();
             delTip.SetToolTip(btnDel, "Delete selected filament");
-            System.Windows.Forms.ToolTip EdtTip = new System.Windows.Forms.ToolTip();
-            EdtTip.SetToolTip(btnEdit, "Edit selected filament");
-            System.Windows.Forms.ToolTip addTip = new System.Windows.Forms.ToolTip();
+            edtTip = new System.Windows.Forms.ToolTip();
+            edtTip.SetToolTip(btnEdit, "Edit selected filament");
+            addTip = new System.Windows.Forms.ToolTip();
             addTip.SetToolTip(btnAdd, "Add a new filament");
+            updTip = new System.Windows.Forms.ToolTip();
+            updTip.SetToolTip(btnUpdate, "Download database from printer");
 
             printerModel.Items.AddRange(printerTypes);
             printerModel.SelectedIndex = Settings.GetSetting("printerType", 0);
@@ -476,17 +478,64 @@ namespace CFS_RFID
             catch { }
         }
 
-        private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
+        private void BtnUpdate_Click(object sender, EventArgs e)
         {
-            Environment.Exit(0);
+            try
+            {
+                UpdateForm updateForm = new UpdateForm
+                {
+                    SelectedPrinter = PrinterType,
+                    StartPosition = FormStartPosition.CenterParent
+                };
+                DialogResult result = updateForm.ShowDialog();
+                if (result == DialogResult.OK)
+                {
+                    vendorName.Items.Clear();
+                    materialName.Items.Clear();
+                    LoadMaterials(PrinterType);
+                    DbVersion = GetDatabaseVersion(PrinterType);
+                    vendorName.Items.AddRange(GetMaterialBrands());
+                    vendorName.SelectedIndex = 0;
+                }
+                updateForm.Dispose();
+            }
+            catch { }
         }
 
+        private void BtnUpload_MouseLeave(object sender, EventArgs e)
+        {
+            upTip.Hide(btnUpload);
+        }
+
+        private void BtnUpdate_MouseLeave(object sender, EventArgs e)
+        {
+            updTip.Hide(btnUpdate);
+        }
+
+        private void BtnDel_MouseLeave(object sender, EventArgs e)
+        {
+            delTip.Hide(btnDel);
+        }
+
+        private void BtnEdit_MouseLeave(object sender, EventArgs e)
+        {
+            edtTip.Hide(btnEdit);
+        }
+
+        private void BtnAdd_MouseLeave(object sender, EventArgs e)
+        {
+            addTip.Hide(btnAdd);
+        }
+
+        private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            try{Environment.Exit(0);}catch{}
+        }
 
         private void PrinterModel_SelectionChangeCommitted(object sender, EventArgs e)
         {
             Settings.SaveSetting("printerType", printerModel.SelectedIndex);
         }
-
 
         private void VendorName_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -498,7 +547,6 @@ namespace CFS_RFID
             }
             catch { }
         }
-
 
         private void MaterialName_SelectedIndexChanged(object sender, EventArgs e)
         {

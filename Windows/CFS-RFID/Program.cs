@@ -19,7 +19,7 @@ namespace CFS_RFID
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new MainForm());
         }
-
+        
         private static Assembly OnResolveAssembly(object sender, ResolveEventArgs args)
         {
             Assembly executingAssembly = Assembly.GetExecutingAssembly();
@@ -37,5 +37,6 @@ namespace CFS_RFID
                 return Assembly.Load(assemblyRawBytes);
             }
         }
+        
     }
 }

@@ -97,6 +97,26 @@ namespace CFS_RFID.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap download {
+            get {
+                object obj = ResourceManager.GetObject("download", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter the ip address or hostname of your {0} printer and SSH password to download the filament database from the printer.
+        ///This requires root access to be enabled on the printer to work..
+        /// </summary>
+        internal static string downloadDesc {
+            get {
+                return ResourceManager.GetString("downloadDesc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap edit {
             get {
                 object obj = ResourceManager.GetObject("edit", resourceCulture);

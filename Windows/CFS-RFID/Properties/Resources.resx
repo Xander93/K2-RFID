@@ -170,4 +170,11 @@ Set the Brand, Name and Type then adjust the settings on the param tab and save.
   <data name="verPrevent" xml:space="preserve">
     <value>9876543210</value>
   </data>
+  <data name="download" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\download.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="downloadDesc" xml:space="preserve">
+    <value>Enter the ip address or hostname of your {0} printer and SSH password to download the filament database from the printer.
+This requires root access to be enabled on the printer to work.</value>
+  </data>
 </root>

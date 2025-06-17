@@ -359,6 +359,7 @@ namespace CFS_RFID
             {
                 try
                 {
+                    client.ConnectionInfo.Timeout = TimeSpan.FromSeconds(5);
                     client.Connect();
                     using (var cmd = client.CreateCommand(command))
                     {
@@ -431,6 +432,7 @@ namespace CFS_RFID
             {
                 try
                 {
+                    client.ConnectionInfo.Timeout = TimeSpan.FromSeconds(5);
                     client.Connect();
                     string filepath = "/mnt/UDISK/creality/userdata/box/material_database.json";
                     if (pType.Equals("k1", StringComparison.OrdinalIgnoreCase))
@@ -462,6 +464,7 @@ namespace CFS_RFID
             {
                 try
                 {
+                    client.ConnectionInfo.Timeout = TimeSpan.FromSeconds(5);
                     client.Connect();
                     string filepath = "/mnt/UDISK/creality/userdata/box/" + fileName;
                     if (pType.Equals("k1", StringComparison.OrdinalIgnoreCase))
@@ -493,6 +496,7 @@ namespace CFS_RFID
             {
                 try
                 {
+                    client.ConnectionInfo.Timeout = TimeSpan.FromSeconds(5);
                     client.Connect();
                     string filepath = "/mnt/UDISK/creality/userdata/box/" + fileName;
                     if (pType.Equals("k1", StringComparison.OrdinalIgnoreCase))
@@ -537,6 +541,7 @@ namespace CFS_RFID
             {
                 try
                 {
+                    client.ConnectionInfo.Timeout = TimeSpan.FromSeconds(5);
                     client.Connect();
                     string filepath = "/mnt/UDISK/creality/userdata/box/" + fileName;
                     if (pType.Equals("k1", StringComparison.OrdinalIgnoreCase))
@@ -562,12 +567,48 @@ namespace CFS_RFID
             }
         }
 
+        public static string GetJsonDB(string psw, string host, string pType)
+        {
+            using (var client = new ScpClient(host, 22, "root", psw))
+            {
+                try
+                {
+                    client.ConnectionInfo.Timeout = TimeSpan.FromSeconds(5);
+                    client.Connect();
+                    string filepath = "/mnt/UDISK/creality/userdata/box/material_database.json";
+                    if (pType.Equals("k1", StringComparison.OrdinalIgnoreCase))
+                    {
+                        filepath = "/usr/data/creality/userdata/box/material_database.json";
+                    }
+                    byte[] dbData;
+                    using (var stream = new MemoryStream())
+                    {
+                        client.Download(filepath, stream);
+                        dbData = stream.ToArray();
+                    }
+                    return Encoding.ASCII.GetString(dbData);
+                }
+                catch (Exception e)
+                {
+                    throw new Exception(e.Message);
+                }
+                finally
+                {
+                    if (client.IsConnected)
+                    {
+                        client.Disconnect();
+                    }
+                }
+            }
+        }
+
         public static string GetPrinterVersion(string psw, string host, string pType)
         {
             using (var client = new ScpClient(host, 22, "root", psw))
             {
                 try
                 {
+                    client.ConnectionInfo.Timeout = TimeSpan.FromSeconds(5);
                     client.Connect();
                     string filepath = "/mnt/UDISK/creality/userdata/box/material_database.json";
                     if (pType.Equals("k1", StringComparison.OrdinalIgnoreCase))
