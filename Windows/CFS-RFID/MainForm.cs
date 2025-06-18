@@ -4,8 +4,6 @@ using PCSC.Monitoring;
 using System;
 using System.Drawing;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using static CFS_RFID.Utils;
 
@@ -65,7 +63,7 @@ namespace CFS_RFID
         private void ConnectReader()
         {
             lblConnect.Visible = true;
-            lblConnect.ForeColor = Color.MediumSeaGreen; 
+            lblConnect.ForeColor = Color.MediumSeaGreen;
             lblConnect.Text = "Connecting...";
             btnRead.Visible = false;
             btnWrite.Visible = false;
@@ -77,76 +75,70 @@ namespace CFS_RFID
             lblAutoRead.Visible = false;
             ActiveControl = lblConnect;
 
-            Task task = Task.Run(() =>
+            try
             {
-                Thread.Sleep(500);
-                try
+                if (context == null)
                 {
-                    if (context == null)
-                    {
-                        context = ContextFactory.Instance.Establish(SCardScope.System);
-                    }
-                    var readers = context.GetReaders();
-                    if (readers.Length > 0)
-                    {
-                        monitor?.Dispose();
-                        monitor = new Monitor(readers);
-                        monitor.CardInserted += CardInserted;
-                        monitor.CardRemoved += CardRemoved;
-                        BeginInvoke((MethodInvoker)delegate
-                        {
-                            lblConnect.Visible = false;
-                            lblConnect.Text = string.Empty;
-                            btnRead.Visible = true;
-                            btnWrite.Visible = true;
-                            chkAutoRead.Visible = true;
-                            btnColor.Visible = true;
-                            materialWeight.Visible = true;
-                            lblUid.Visible = true;
-                            lblTagId.Visible = true;
-                            ActiveControl = lblMsg;
-                            lblAutoRead.Visible = true;
-                        });
-                    }
-                    else
-                    {
-                        BeginInvoke((MethodInvoker)delegate
-                        {
-                            Crumpet(lblMsg, "Connect Failed", 2000);
-                            lblConnect.Visible = true;
-                            lblConnect.ForeColor = Color.IndianRed;
-                            lblConnect.Text = "No Reader Found\nClick here to connect";
-                            btnRead.Visible = false;
-                            btnWrite.Visible = false;
-                            chkAutoRead.Visible = false;
-                            btnColor.Visible = false;
-                            materialWeight.Visible = false;
-                            lblUid.Visible = false;
-                            lblTagId.Visible = false;
-                            ActiveControl = lblConnect;
-                            lblAutoRead.Visible = false;
-                        });
-                    }
+                    context = ContextFactory.Instance.Establish(SCardScope.System);
                 }
-                catch
+                var readers = context.GetReaders();
+
+
+                if (readers.Length > 0)
                 {
-                    BeginInvoke((MethodInvoker)delegate
-                    {
-                        lblConnect.Visible = true;
-                        lblConnect.ForeColor = Color.IndianRed;
-                        lblConnect.Text = "NFC reader failed";
-                        btnRead.Visible = false;
-                        btnWrite.Visible = false;
-                        chkAutoRead.Visible = false;
-                        btnColor.Visible = false;
-                        materialWeight.Visible = false;
-                        lblUid.Visible = false;
-                        lblTagId.Visible = false;
-                        ActiveControl = lblConnect;
-                        lblAutoRead.Visible = false;
-                    });
+                    monitor?.Dispose();
+                    monitor = new Monitor(readers);
+                    monitor.CardInserted += CardInserted;
+                    monitor.CardRemoved += CardRemoved;
+
+                    lblConnect.Visible = false;
+                    lblConnect.Text = string.Empty;
+                    btnRead.Visible = true;
+                    btnWrite.Visible = true;
+                    chkAutoRead.Visible = true;
+                    btnColor.Visible = true;
+                    materialWeight.Visible = true;
+                    lblUid.Visible = true;
+                    lblTagId.Visible = true;
+                    ActiveControl = lblMsg;
+                    lblAutoRead.Visible = true;
+
                 }
-            });
+                else
+                {
+
+                    Crumpet(lblMsg, "Connect Failed", 2000);
+                    lblConnect.Visible = true;
+                    lblConnect.ForeColor = Color.IndianRed;
+                    lblConnect.Text = "No Reader Found\nClick here to connect";
+                    btnRead.Visible = false;
+                    btnWrite.Visible = false;
+                    chkAutoRead.Visible = false;
+                    btnColor.Visible = false;
+                    materialWeight.Visible = false;
+                    lblUid.Visible = false;
+                    lblTagId.Visible = false;
+                    ActiveControl = lblConnect;
+                    lblAutoRead.Visible = false;
+
+                }
+            }
+            catch (Exception e)
+            {
+                lblConnect.Visible = true;
+                lblConnect.ForeColor = Color.IndianRed;
+                lblConnect.Text = "NFC reader failed";
+                btnRead.Visible = false;
+                btnWrite.Visible = false;
+                chkAutoRead.Visible = false;
+                btnColor.Visible = false;
+                materialWeight.Visible = false;
+                lblUid.Visible = false;
+                lblTagId.Visible = false;
+                ActiveControl = lblConnect;
+                lblAutoRead.Visible = false;
+                MessageBox.Show(this, e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
 
@@ -247,9 +239,10 @@ namespace CFS_RFID
                     }
                 }
             }
-            catch
+            catch(Exception e)
             {
                 Crumpet(lblMsg, "Error with reader or no tag", 2000);
+                MessageBox.Show(this, e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -285,9 +278,10 @@ namespace CFS_RFID
                     Crumpet(lblMsg, "Data written to tag", 2000);
                 }
             }
-            catch
+            catch(Exception e)
             {
                 Crumpet(lblMsg, "Error with reader or no tag", 2000);
+                MessageBox.Show(this, e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
