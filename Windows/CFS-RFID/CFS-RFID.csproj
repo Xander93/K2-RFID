@@ -22,7 +22,13 @@
     <UpdateIntervalUnits>Days</UpdateIntervalUnits>
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
+    <MapFileExtensions>false</MapFileExtensions>
+    <SupportUrl>https://github.com/DnG-Crafts/K2-RFID</SupportUrl>
+    <ErrorReportUrl>https://github.com/DnG-Crafts/K2-RFID</ErrorReportUrl>
+    <TargetCulture>en</TargetCulture>
+    <ProductName>CFS-RFID</ProductName>
+    <PublisherName>DnG-Crafts</PublisherName>
+    <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.0</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
@@ -41,7 +47,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
+    <DebugType>none</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
@@ -50,15 +56,6 @@
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>app.ico</ApplicationIcon>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ManifestCertificateThumbprint>32ADC023A70354909969621BACF348193C9B7944</ManifestCertificateThumbprint>
-  </PropertyGroup>
-  <PropertyGroup>
-    <GenerateManifests>true</GenerateManifests>
-  </PropertyGroup>
-  <PropertyGroup>
-    <SignManifests>true</SignManifests>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="BouncyCastle.Cryptography, Version=2.0.0.0, Culture=neutral, PublicKeyToken=072edcf4a5328938, processorArchitecture=MSIL">
@@ -211,6 +208,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="app.ico" />
+    <None Include="Resources\format.png" />
     <None Include="Resources\upload.png" />
   </ItemGroup>
   <ItemGroup>

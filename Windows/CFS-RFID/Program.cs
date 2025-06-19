@@ -37,6 +37,5 @@ namespace CFS_RFID
                 return Assembly.Load(assemblyRawBytes);
             }
         }
-        
     }
 }

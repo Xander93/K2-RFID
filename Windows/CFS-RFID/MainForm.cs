@@ -9,7 +9,6 @@ using static CFS_RFID.Utils;
 
 namespace CFS_RFID
 {
-
     public partial class MainForm : Form
     {
         private ISCardContext context = null;
@@ -18,27 +17,31 @@ namespace CFS_RFID
         private Reader reader;
         private string DbVersion = "0";
         private string MaterialColor, PrinterType, MaterialName, MaterialID, MaterialWeight;
-        System.Windows.Forms.ToolTip upTip, delTip, edtTip, addTip, updTip;
+        System.Windows.Forms.ToolTip upTip, delTip, edtTip, addTip, updTip, fmtTip;
 
         private void CardInserted(CardStatusEventArgs args)
         {
             try
             {
-                isoReader = new IsoReader(context: context, readerName: args.ReaderName, 
+                isoReader = new IsoReader(context: context, readerName: args.ReaderName,
                     mode: SCardShareMode.Shared, protocol: SCardProtocol.Any, releaseContextOnDispose: false);
                 reader = new Reader(isoReader);
                 Invoke((MethodInvoker)delegate ()
                 {
                     lblUid.Text = BitConverter.ToString(reader.GetData()).Replace("-", " ");
+                    lblTagId.Visible = true;
                     if (chkAutoRead.Checked)
                     {
                         ReadSpoolData();
+                    }
+                    else if (chkAutoWrite.Checked)
+                    {
+                        WriteSpoolData(MaterialID, MaterialColor, GetMaterialLength(MaterialWeight));
                     }
                 });
             }
             catch { }
         }
-
 
         private void CardRemoved(CardStatusEventArgs args)
         {
@@ -54,11 +57,11 @@ namespace CFS_RFID
                 Invoke((MethodInvoker)delegate ()
                 {
                     lblUid.Text = string.Empty;
+                    lblTagId.Visible = false;
                 });
             }
             catch { }
         }
-
 
         private void ConnectReader()
         {
@@ -71,7 +74,6 @@ namespace CFS_RFID
             btnColor.Visible = false;
             materialWeight.Visible = false;
             lblUid.Visible = false;
-            lblTagId.Visible = false;
             lblAutoRead.Visible = false;
             ActiveControl = lblConnect;
 
@@ -99,7 +101,6 @@ namespace CFS_RFID
                     btnColor.Visible = true;
                     materialWeight.Visible = true;
                     lblUid.Visible = true;
-                    lblTagId.Visible = true;
                     ActiveControl = lblMsg;
                     lblAutoRead.Visible = true;
 
@@ -117,7 +118,6 @@ namespace CFS_RFID
                     btnColor.Visible = false;
                     materialWeight.Visible = false;
                     lblUid.Visible = false;
-                    lblTagId.Visible = false;
                     ActiveControl = lblConnect;
                     lblAutoRead.Visible = false;
 
@@ -134,13 +134,11 @@ namespace CFS_RFID
                 btnColor.Visible = false;
                 materialWeight.Visible = false;
                 lblUid.Visible = false;
-                lblTagId.Visible = false;
                 ActiveControl = lblConnect;
                 lblAutoRead.Visible = false;
                 MessageBox.Show(this, e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
 
         public MainForm()
         {
@@ -178,6 +176,8 @@ namespace CFS_RFID
             addTip.SetToolTip(btnAdd, "Add a new filament");
             updTip = new System.Windows.Forms.ToolTip();
             updTip.SetToolTip(btnUpdate, "Download database from printer");
+            fmtTip = new System.Windows.Forms.ToolTip();
+            fmtTip.SetToolTip(btnFormat, "Format tag");
 
             printerModel.Items.AddRange(printerTypes);
             printerModel.SelectedIndex = Settings.GetSetting("printerType", 0);
@@ -185,7 +185,6 @@ namespace CFS_RFID
             ConnectReader();
 
         }
-
 
         public void ReadSpoolData()
         {
@@ -197,11 +196,21 @@ namespace CFS_RFID
                 }
                 else
                 {
-                    reader.LoadKey(0, 0, new byte[] { 255, 255, 255, 255, 255, 255 });
+                    if (!reader.LoadKey(0, 0, KEY_DEFAULT))
+                    {
+                        reader.LoadKey(32, 0, KEY_DEFAULT);
+                    }
                     var uid = reader.GetData();
                     lblUid.Text = BitConverter.ToString(uid).Replace("-", " ");
                     byte[] encKey = CreateKey(uid);
-                    var loadKeySuccessful = reader.LoadKey(0, 1, encKey);
+                    if (!reader.LoadKey(0, 1, encKey))
+                    {
+                        if (!reader.LoadKey(32, 1, encKey))
+                        {
+                            Crumpet(lblMsg, "Failed to load key", 2000);
+                            return;
+                        }
+                    }
                     if (reader.Authenticate(0, 7, 96, 0))
                     {
                         Crumpet(lblMsg, "Empty tag", 2000);
@@ -239,13 +248,12 @@ namespace CFS_RFID
                     }
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Crumpet(lblMsg, "Error with reader or no tag", 2000);
                 MessageBox.Show(this, e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
 
         void WriteSpoolData(string MaterialID, string Color, string Length)
         {
@@ -257,17 +265,28 @@ namespace CFS_RFID
                 }
                 else
                 {
-                    reader.LoadKey(0, 0, new byte[] { 255, 255, 255, 255, 255, 255 });
+                    if (!reader.LoadKey(0, 0, KEY_DEFAULT))
+                    {
+                        reader.LoadKey(32, 0, KEY_DEFAULT);
+                    }
                     var uid = reader.GetData();
                     lblUid.Text = BitConverter.ToString(uid).Replace("-", " ");
                     byte[] encKey = CreateKey(uid);
-                    var loadKeySuccessful = reader.LoadKey(0, 1, encKey);
+                    if (!reader.LoadKey(0, 1, encKey))
+                    {
+                        if (!reader.LoadKey(32, 1, encKey))
+                        {
+                            Crumpet(lblMsg, "Failed to load key", 2000);
+                            return;
+                        }
+                    }
                     string filamentId = "1" + MaterialID;
                     string vendorId = "0276";
                     string color = "0" + Color;
                     string serialNum = "000001"; // RandomSerial();
                     string reserve = "000000";
-                    WriteTag(reader, "AB124" + vendorId + "A2" + filamentId + color + Length + serialNum + reserve);
+                    string endblock = "00000000";
+                    WriteTag(reader, "AB124" + vendorId + "A2" + filamentId + color + Length + serialNum + reserve + endblock);
                     if (reader.Authenticate(0, 7, 96, 0))
                     {
                         byte[] data = reader.ReadBinary(0, 7, 16);
@@ -278,25 +297,22 @@ namespace CFS_RFID
                     Crumpet(lblMsg, "Data written to tag", 2000);
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Crumpet(lblMsg, "Error with reader or no tag", 2000);
                 MessageBox.Show(this, e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-
         private void BtnRead_Click(object sender, EventArgs e)
         {
             ReadSpoolData();
         }
 
-
         private void BtnWrite_Click(object sender, EventArgs e)
         {
             WriteSpoolData(MaterialID, MaterialColor, GetMaterialLength(MaterialWeight));
         }
-
 
         private void BtnColor_Click(object sender, EventArgs e)
         {
@@ -314,7 +330,6 @@ namespace CFS_RFID
             }
         }
 
-
         private void MaterialWeight_SelectedIndexChanged(object sender, EventArgs e)
         {
             try
@@ -323,7 +338,6 @@ namespace CFS_RFID
             }
             catch { }
         }
-
 
         private void PrinterModel_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -339,7 +353,6 @@ namespace CFS_RFID
             }
             catch { }
         }
-
 
         void AddFilament()
         {
@@ -368,7 +381,6 @@ namespace CFS_RFID
             catch { }
         }
 
-
         void EditFilament()
         {
             try
@@ -396,18 +408,17 @@ namespace CFS_RFID
             catch { }
         }
 
-
         void DeleteFilament()
         {
             try
             {
-                DialogResult result = MessageBox.Show(
+                DialogResult result = MessageBox.Show(this,
                     "Do you want to Delete?\n\n    "
                     + vendorName.Text + "\n    "
                     + materialName.Text,
                     "Delete Filament",
                     MessageBoxButtons.OKCancel,
-                    MessageBoxIcon.Question);
+                    MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
                 if (result == DialogResult.OK)
                 {
                     RemoveMaterial(MaterialID);
@@ -423,37 +434,32 @@ namespace CFS_RFID
             catch { }
         }
 
-
         private void BtnDel_Click(object sender, EventArgs e)
         {
             DeleteFilament();
         }
-
 
         private void BtnAdd_Click(object sender, EventArgs e)
         {
             AddFilament();
         }
 
-
         private void BtnEdit_Click(object sender, EventArgs e)
         {
             EditFilament();
         }
-
 
         private void LblConnect_Click(object sender, EventArgs e)
         {
             ConnectReader();
         }
 
-
         private void BtnUpload_Click(object sender, EventArgs e)
         {
             try
             {
-               UploadForm uploadForm = new UploadForm
-               {
+                UploadForm uploadForm = new UploadForm
+                {
                     SelectedPrinter = PrinterType,
                     StartPosition = FormStartPosition.CenterParent
                 };
@@ -496,9 +502,59 @@ namespace CFS_RFID
             catch { }
         }
 
+        private void BtnFormat_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                DialogResult result = MessageBox.Show(this,
+                    "This will erase the tag and set the default MIFARE key",
+                    "Format tag",
+                    MessageBoxButtons.OKCancel,
+                    MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+                if (result == DialogResult.OK)
+                {
+                    if (reader == null)
+                    {
+                        Crumpet(lblMsg, "Error formatting tag", 2000);
+                    }
+                    else
+                    {
+                        FormatTag(reader);
+                        Crumpet(lblMsg, "Tag formatted", 2000);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Crumpet(lblMsg, "Error with reader or no tag", 2000);
+                MessageBox.Show(this, ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
         private void BtnUpload_MouseLeave(object sender, EventArgs e)
         {
             upTip.Hide(btnUpload);
+        }
+
+        private void ChkAutoRead_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkAutoRead.Checked)
+            {
+                chkAutoWrite.Checked = false;
+            }
+        }
+
+        private void ChkAutoWrite_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkAutoWrite.Checked)
+            {
+                chkAutoRead.Checked = false;
+            }
+        }
+
+        private void BtnFormat_MouseLeave(object sender, EventArgs e)
+        {
+            fmtTip.Hide(btnFormat);
         }
 
         private void BtnUpdate_MouseLeave(object sender, EventArgs e)
@@ -523,7 +579,7 @@ namespace CFS_RFID
 
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-            try{Environment.Exit(0);}catch{}
+            try { Environment.Exit(0); } catch { }
         }
 
         private void PrinterModel_SelectionChangeCommitted(object sender, EventArgs e)
@@ -550,7 +606,6 @@ namespace CFS_RFID
             }
             catch { }
         }
-
 
     }
 }

@@ -18,6 +18,8 @@ namespace CFS_RFID
     internal class Utils
     {
 
+        public static byte[] KEY_DEFAULT = new byte[] { 255, 255, 255, 255, 255, 255 };
+
         public static void SaveMaterials(string pType, string version)
         {
             MatDB.SaveFilaments(pType.ToLower(), version);
@@ -227,7 +229,10 @@ namespace CFS_RFID
 
         public static string ReadTag(Reader reader)
         {
-            reader.Authenticate(0, 4, 96, 1);
+            if (!reader.Authenticate(0, 4, 96, 1))
+            {
+                throw new Exception("Failed to authenticate");
+            }
             MemoryStream buff = new MemoryStream(48);
             buff.Write(reader.ReadBinary(0, 4, 16), 0, 16);
             buff.Write(reader.ReadBinary(0, 5, 16), 0, 16);
@@ -241,12 +246,34 @@ namespace CFS_RFID
             {
                 reader.Authenticate(0, 4, 96, 0);
             }
-            byte[] sectorData = Encoding.UTF8.GetBytes(tagData + "00000000");
+            byte[] sectorData = Encoding.UTF8.GetBytes(tagData);
             int blockIndex = 4;
             for (int i = 0; i < 48; i += 16)
             {
                 reader.UpdateBinary(0, (byte)blockIndex, Utils.CipherData(1, sectorData.Skip(i).Take(16).ToArray()));
                 blockIndex++;
+            }
+        }
+
+        public static void FormatTag(Reader reader)
+        {
+            if (reader.Authenticate(0, 7, 96, 1))
+            {
+                byte[] sectorData = new byte[48];
+                for (int i = 0; i < sectorData.Length; i++)
+                {
+                    sectorData[i] = (byte)0;
+                }
+                int blockIndex = 4;
+                for (int i = 0; i < 48; i += 16)
+                {
+                    reader.UpdateBinary(0, (byte)blockIndex, Utils.CipherData(1, sectorData.Skip(i).Take(16).ToArray()));
+                    blockIndex++;
+                }
+                byte[] data = reader.ReadBinary(0, 7, 16);
+                Array.Copy(KEY_DEFAULT, 0, data, 0, KEY_DEFAULT.Length);
+                Array.Copy(KEY_DEFAULT, 0, data, 10, KEY_DEFAULT.Length);
+                reader.UpdateBinary(0, 7, data.Take(16).ToArray());
             }
         }
 

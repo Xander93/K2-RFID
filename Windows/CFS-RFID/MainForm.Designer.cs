@@ -46,6 +46,9 @@
             this.btnAdd = new System.Windows.Forms.Button();
             this.lblAutoRead = new System.Windows.Forms.Label();
             this.btnUpdate = new System.Windows.Forms.Button();
+            this.btnFormat = new System.Windows.Forms.Button();
+            this.lblAutoWrite = new System.Windows.Forms.Label();
+            this.chkAutoWrite = new SwitchCheckBox();
             this.chkAutoRead = new SwitchCheckBox();
             this.SuspendLayout();
             // 
@@ -55,7 +58,7 @@
             this.btnWrite.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnWrite.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnWrite.ForeColor = System.Drawing.Color.White;
-            this.btnWrite.Location = new System.Drawing.Point(216, 552);
+            this.btnWrite.Location = new System.Drawing.Point(216, 616);
             this.btnWrite.Name = "btnWrite";
             this.btnWrite.Size = new System.Drawing.Size(140, 47);
             this.btnWrite.TabIndex = 23;
@@ -69,7 +72,7 @@
             this.btnRead.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnRead.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnRead.ForeColor = System.Drawing.Color.White;
-            this.btnRead.Location = new System.Drawing.Point(33, 552);
+            this.btnRead.Location = new System.Drawing.Point(33, 616);
             this.btnRead.Name = "btnRead";
             this.btnRead.Size = new System.Drawing.Size(140, 47);
             this.btnRead.TabIndex = 22;
@@ -80,7 +83,7 @@
             // lblMsg
             // 
             this.lblMsg.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblMsg.Location = new System.Drawing.Point(36, 483);
+            this.lblMsg.Location = new System.Drawing.Point(36, 547);
             this.lblMsg.Name = "lblMsg";
             this.lblMsg.Size = new System.Drawing.Size(317, 48);
             this.lblMsg.TabIndex = 29;
@@ -102,11 +105,13 @@
             // 
             this.lblTagId.AutoSize = true;
             this.lblTagId.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblTagId.Location = new System.Drawing.Point(46, 443);
+            this.lblTagId.Location = new System.Drawing.Point(46, 510);
             this.lblTagId.Name = "lblTagId";
             this.lblTagId.Size = new System.Drawing.Size(68, 20);
             this.lblTagId.TabIndex = 28;
             this.lblTagId.Text = "Tag ID:";
+            this.lblTagId.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.lblTagId.Visible = false;
             // 
             // materialWeight
             // 
@@ -141,10 +146,11 @@
             // lblUid
             // 
             this.lblUid.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblUid.Location = new System.Drawing.Point(120, 443);
+            this.lblUid.Location = new System.Drawing.Point(120, 506);
             this.lblUid.Name = "lblUid";
-            this.lblUid.Size = new System.Drawing.Size(208, 25);
+            this.lblUid.Size = new System.Drawing.Size(154, 29);
             this.lblUid.TabIndex = 21;
+            this.lblUid.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // printerModel
             // 
@@ -267,6 +273,48 @@
             this.btnUpdate.Click += new System.EventHandler(this.BtnUpdate_Click);
             this.btnUpdate.MouseLeave += new System.EventHandler(this.BtnUpdate_MouseLeave);
             // 
+            // btnFormat
+            // 
+            this.btnFormat.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(244)))), ((int)(((byte)(244)))), ((int)(((byte)(244)))));
+            this.btnFormat.FlatAppearance.BorderSize = 0;
+            this.btnFormat.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnFormat.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(244)))), ((int)(((byte)(244)))), ((int)(((byte)(244)))));
+            this.btnFormat.Image = global::CFS_RFID.Properties.Resources.format;
+            this.btnFormat.Location = new System.Drawing.Point(283, 495);
+            this.btnFormat.Name = "btnFormat";
+            this.btnFormat.Size = new System.Drawing.Size(48, 48);
+            this.btnFormat.TabIndex = 42;
+            this.btnFormat.UseVisualStyleBackColor = false;
+            this.btnFormat.Click += new System.EventHandler(this.BtnFormat_Click);
+            this.btnFormat.MouseLeave += new System.EventHandler(this.BtnFormat_MouseLeave);
+            // 
+            // lblAutoWrite
+            // 
+            this.lblAutoWrite.AutoSize = true;
+            this.lblAutoWrite.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblAutoWrite.Location = new System.Drawing.Point(46, 442);
+            this.lblAutoWrite.Name = "lblAutoWrite";
+            this.lblAutoWrite.Size = new System.Drawing.Size(199, 20);
+            this.lblAutoWrite.TabIndex = 44;
+            this.lblAutoWrite.Text = "Auto write tag on scan?";
+            // 
+            // chkAutoWrite
+            // 
+            this.chkAutoWrite.BorderThickness = 1;
+            this.chkAutoWrite.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.chkAutoWrite.Location = new System.Drawing.Point(278, 437);
+            this.chkAutoWrite.MaximumSize = new System.Drawing.Size(100, 50);
+            this.chkAutoWrite.MinimumSize = new System.Drawing.Size(30, 15);
+            this.chkAutoWrite.Name = "chkAutoWrite";
+            this.chkAutoWrite.Size = new System.Drawing.Size(60, 31);
+            this.chkAutoWrite.SwitchOffColor = System.Drawing.Color.LightGray;
+            this.chkAutoWrite.SwitchOnColor = System.Drawing.Color.FromArgb(((int)(((byte)(25)))), ((int)(((byte)(118)))), ((int)(((byte)(210)))));
+            this.chkAutoWrite.TabIndex = 43;
+            this.chkAutoWrite.Text = "Auto read on tag scan?";
+            this.chkAutoWrite.ThumbColor = System.Drawing.Color.White;
+            this.chkAutoWrite.UseVisualStyleBackColor = true;
+            this.chkAutoWrite.CheckedChanged += new System.EventHandler(this.ChkAutoWrite_CheckedChanged);
+            // 
             // chkAutoRead
             // 
             this.chkAutoRead.BorderThickness = 1;
@@ -282,13 +330,17 @@
             this.chkAutoRead.Text = "Auto read on tag scan?";
             this.chkAutoRead.ThumbColor = System.Drawing.Color.White;
             this.chkAutoRead.UseVisualStyleBackColor = true;
+            this.chkAutoRead.CheckedChanged += new System.EventHandler(this.ChkAutoRead_CheckedChanged);
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(244)))), ((int)(((byte)(244)))), ((int)(((byte)(244)))));
-            this.ClientSize = new System.Drawing.Size(389, 632);
+            this.ClientSize = new System.Drawing.Size(389, 693);
+            this.Controls.Add(this.lblAutoWrite);
+            this.Controls.Add(this.chkAutoWrite);
+            this.Controls.Add(this.btnFormat);
             this.Controls.Add(this.btnUpdate);
             this.Controls.Add(this.lblAutoRead);
             this.Controls.Add(this.chkAutoRead);
@@ -339,6 +391,9 @@
         private SwitchCheckBox chkAutoRead;
         private System.Windows.Forms.Label lblAutoRead;
         private System.Windows.Forms.Button btnUpdate;
+        private System.Windows.Forms.Button btnFormat;
+        private System.Windows.Forms.Label lblAutoWrite;
+        private SwitchCheckBox chkAutoWrite;
     }
 }
 
