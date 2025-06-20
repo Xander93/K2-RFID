@@ -48,8 +48,10 @@
             this.btnUpdate = new System.Windows.Forms.Button();
             this.btnFormat = new System.Windows.Forms.Button();
             this.lblAutoWrite = new System.Windows.Forms.Label();
+            this.imgEnc = new System.Windows.Forms.PictureBox();
             this.chkAutoWrite = new SwitchCheckBox();
             this.chkAutoRead = new SwitchCheckBox();
+            ((System.ComponentModel.ISupportInitialize)(this.imgEnc)).BeginInit();
             this.SuspendLayout();
             // 
             // btnWrite
@@ -105,7 +107,7 @@
             // 
             this.lblTagId.AutoSize = true;
             this.lblTagId.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblTagId.Location = new System.Drawing.Point(46, 510);
+            this.lblTagId.Location = new System.Drawing.Point(46, 509);
             this.lblTagId.Name = "lblTagId";
             this.lblTagId.Size = new System.Drawing.Size(68, 20);
             this.lblTagId.TabIndex = 28;
@@ -146,9 +148,9 @@
             // lblUid
             // 
             this.lblUid.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblUid.Location = new System.Drawing.Point(120, 506);
+            this.lblUid.Location = new System.Drawing.Point(154, 510);
             this.lblUid.Name = "lblUid";
-            this.lblUid.Size = new System.Drawing.Size(154, 29);
+            this.lblUid.Size = new System.Drawing.Size(154, 20);
             this.lblUid.TabIndex = 21;
             this.lblUid.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -298,6 +300,18 @@
             this.lblAutoWrite.TabIndex = 44;
             this.lblAutoWrite.Text = "Auto write tag on scan?";
             // 
+            // imgEnc
+            // 
+            this.imgEnc.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
+            this.imgEnc.Image = global::CFS_RFID.Properties.Resources._lock;
+            this.imgEnc.Location = new System.Drawing.Point(120, 505);
+            this.imgEnc.Name = "imgEnc";
+            this.imgEnc.Size = new System.Drawing.Size(24, 24);
+            this.imgEnc.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.imgEnc.TabIndex = 45;
+            this.imgEnc.TabStop = false;
+            this.imgEnc.Visible = false;
+            // 
             // chkAutoWrite
             // 
             this.chkAutoWrite.BorderThickness = 1;
@@ -337,10 +351,11 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(244)))), ((int)(((byte)(244)))), ((int)(((byte)(244)))));
-            this.ClientSize = new System.Drawing.Size(389, 693);
+            this.ClientSize = new System.Drawing.Size(388, 693);
+            this.Controls.Add(this.imgEnc);
+            this.Controls.Add(this.btnFormat);
             this.Controls.Add(this.lblAutoWrite);
             this.Controls.Add(this.chkAutoWrite);
-            this.Controls.Add(this.btnFormat);
             this.Controls.Add(this.btnUpdate);
             this.Controls.Add(this.lblAutoRead);
             this.Controls.Add(this.chkAutoRead);
@@ -367,6 +382,7 @@
             this.Text = "CFS RFID";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainForm_FormClosed);
             this.Load += new System.EventHandler(this.MainForm_Load);
+            ((System.ComponentModel.ISupportInitialize)(this.imgEnc)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -394,6 +410,7 @@
         private System.Windows.Forms.Button btnFormat;
         private System.Windows.Forms.Label lblAutoWrite;
         private SwitchCheckBox chkAutoWrite;
+        private System.Windows.Forms.PictureBox imgEnc;
     }
 }
 

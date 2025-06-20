@@ -7,6 +7,7 @@ using System.Linq;
 using System.Windows.Forms;
 using static CFS_RFID.Utils;
 
+
 namespace CFS_RFID
 {
     public partial class MainForm : Form
@@ -15,6 +16,7 @@ namespace CFS_RFID
         private IsoReader isoReader;
         private Monitor monitor;
         private Reader reader;
+        byte[] encKey;
         private string DbVersion = "0";
         private string MaterialColor, PrinterType, MaterialName, MaterialID, MaterialWeight;
         System.Windows.Forms.ToolTip upTip, delTip, edtTip, addTip, updTip, fmtTip;
@@ -26,10 +28,35 @@ namespace CFS_RFID
                 isoReader = new IsoReader(context: context, readerName: args.ReaderName,
                     mode: SCardShareMode.Shared, protocol: SCardProtocol.Any, releaseContextOnDispose: false);
                 reader = new Reader(isoReader);
+                var uid = reader.GetData();
+                if (!reader.LoadKey(0, 0, KEY_DEFAULT))
+                {
+                    reader.LoadKey(32, 0, KEY_DEFAULT);
+                }
+                encKey = CreateKey(uid);
+                if (!reader.LoadKey(0, 1, encKey))
+                {
+                    if (!reader.LoadKey(32, 1, encKey))
+                    {
+                        Crumpet.Show(lblMsg, "Failed to load encKey", 2000);
+                    }
+                }
+
                 Invoke((MethodInvoker)delegate ()
                 {
-                    lblUid.Text = BitConverter.ToString(reader.GetData()).Replace("-", " ");
+                    lblUid.Text = BitConverter.ToString(uid).Replace("-", " ");
                     lblTagId.Visible = true;
+                    if (reader.Authenticate(0, 7, 96, 0))
+                    {
+                        imgEnc.Visible = false;
+                        lblUid.Left = lblTagId.Right;
+                    }
+                    else {
+
+                        imgEnc.Visible = true;
+                        lblUid.Left = imgEnc.Right;
+                    }
+
                     if (chkAutoRead.Checked)
                     {
                         ReadSpoolData();
@@ -56,6 +83,7 @@ namespace CFS_RFID
 
                 Invoke((MethodInvoker)delegate ()
                 {
+                    imgEnc.Visible = false;
                     lblUid.Text = string.Empty;
                     lblTagId.Visible = false;
                 });
@@ -70,11 +98,14 @@ namespace CFS_RFID
             lblConnect.Text = "Connecting...";
             btnRead.Visible = false;
             btnWrite.Visible = false;
+            btnFormat.Visible = false;
             chkAutoRead.Visible = false;
+            chkAutoWrite.Visible = false;
             btnColor.Visible = false;
             materialWeight.Visible = false;
             lblUid.Visible = false;
             lblAutoRead.Visible = false;
+            lblAutoWrite.Visible = false;
             ActiveControl = lblConnect;
 
             try
@@ -97,29 +128,35 @@ namespace CFS_RFID
                     lblConnect.Text = string.Empty;
                     btnRead.Visible = true;
                     btnWrite.Visible = true;
+                    btnFormat.Visible = true;
                     chkAutoRead.Visible = true;
+                    chkAutoWrite.Visible = true;
                     btnColor.Visible = true;
                     materialWeight.Visible = true;
                     lblUid.Visible = true;
                     ActiveControl = lblMsg;
                     lblAutoRead.Visible = true;
+                    lblAutoWrite.Visible = true;
 
                 }
                 else
                 {
 
-                    Crumpet(lblMsg, "Connect Failed", 2000);
+                    Crumpet.Show(lblMsg, "Connect Failed", 2000);
                     lblConnect.Visible = true;
                     lblConnect.ForeColor = Color.IndianRed;
                     lblConnect.Text = "No Reader Found\nClick here to connect";
                     btnRead.Visible = false;
                     btnWrite.Visible = false;
+                    btnFormat.Visible = false;
                     chkAutoRead.Visible = false;
+                    chkAutoWrite.Visible = false;
                     btnColor.Visible = false;
                     materialWeight.Visible = false;
                     lblUid.Visible = false;
                     ActiveControl = lblConnect;
                     lblAutoRead.Visible = false;
+                    lblAutoWrite.Visible = false;
 
                 }
             }
@@ -192,28 +229,13 @@ namespace CFS_RFID
             {
                 if (reader == null)
                 {
-                    Crumpet(lblMsg, "Error reading tag", 2000);
+                    Crumpet.Show(lblMsg, "Error reading tag", 2000);
                 }
                 else
                 {
-                    if (!reader.LoadKey(0, 0, KEY_DEFAULT))
-                    {
-                        reader.LoadKey(32, 0, KEY_DEFAULT);
-                    }
-                    var uid = reader.GetData();
-                    lblUid.Text = BitConverter.ToString(uid).Replace("-", " ");
-                    byte[] encKey = CreateKey(uid);
-                    if (!reader.LoadKey(0, 1, encKey))
-                    {
-                        if (!reader.LoadKey(32, 1, encKey))
-                        {
-                            Crumpet(lblMsg, "Failed to load key", 2000);
-                            return;
-                        }
-                    }
                     if (reader.Authenticate(0, 7, 96, 0))
                     {
-                        Crumpet(lblMsg, "Empty tag", 2000);
+                        Crumpet.Show(lblMsg, "Empty tag", 2000);
                     }
                     else
                     {
@@ -233,16 +255,16 @@ namespace CFS_RFID
                                     vendorName.SelectedIndex = vendorName.FindStringExact(materialInfo[1]);
                                     materialName.SelectedIndex = materialName.FindStringExact(MaterialName);
                                     materialWeight.SelectedIndex = materialWeight.FindStringExact(GetMaterialWeight(length));
-                                    Crumpet(lblMsg, "Data read from tag", 2000);
+                                    Crumpet.Show(lblMsg, "Data read from tag", 2000);
                                 }
                                 else
                                 {
-                                    Crumpet(lblMsg, "Unknown or empty tag", 2000);
+                                    Crumpet.Show(lblMsg, "Unknown or empty tag", 2000);
                                 }
                             }
                             catch
                             {
-                                Crumpet(lblMsg, "Error reading tag", 2000);
+                                Crumpet.Show(lblMsg, "Error reading tag", 2000);
                             }
                         }
                     }
@@ -250,7 +272,7 @@ namespace CFS_RFID
             }
             catch (Exception e)
             {
-                Crumpet(lblMsg, "Error with reader or no tag", 2000);
+                Crumpet.Show(lblMsg, "Error with reader or no tag", 2000);
                 MessageBox.Show(this, e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -261,25 +283,10 @@ namespace CFS_RFID
             {
                 if (reader == null)
                 {
-                    Crumpet(lblMsg, "Error writing tag", 2000);
+                    Crumpet.Show(lblMsg, "Error writing tag", 2000);
                 }
                 else
                 {
-                    if (!reader.LoadKey(0, 0, KEY_DEFAULT))
-                    {
-                        reader.LoadKey(32, 0, KEY_DEFAULT);
-                    }
-                    var uid = reader.GetData();
-                    lblUid.Text = BitConverter.ToString(uid).Replace("-", " ");
-                    byte[] encKey = CreateKey(uid);
-                    if (!reader.LoadKey(0, 1, encKey))
-                    {
-                        if (!reader.LoadKey(32, 1, encKey))
-                        {
-                            Crumpet(lblMsg, "Failed to load key", 2000);
-                            return;
-                        }
-                    }
                     string filamentId = "1" + MaterialID;
                     string vendorId = "0276";
                     string color = "0" + Color;
@@ -293,13 +300,15 @@ namespace CFS_RFID
                         Array.Copy(encKey, 0, data, 0, encKey.Length);
                         Array.Copy(encKey, 0, data, 10, encKey.Length);
                         reader.UpdateBinary(0, 7, data.Take(16).ToArray());
+                        imgEnc.Visible = true;
+                        lblUid.Left = imgEnc.Right;
                     }
-                    Crumpet(lblMsg, "Data written to tag", 2000);
+                    Crumpet.Show(lblMsg, "Data written to tag", 2000);
                 }
             }
             catch (Exception e)
             {
-                Crumpet(lblMsg, "Error with reader or no tag", 2000);
+                Crumpet.Show(lblMsg, "Error with reader or no tag", 2000);
                 MessageBox.Show(this, e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -515,18 +524,20 @@ namespace CFS_RFID
                 {
                     if (reader == null)
                     {
-                        Crumpet(lblMsg, "Error formatting tag", 2000);
+                        Crumpet.Show(lblMsg, "Error formatting tag", 2000);
                     }
                     else
                     {
                         FormatTag(reader);
-                        Crumpet(lblMsg, "Tag formatted", 2000);
+                        imgEnc.Visible = false;
+                        lblUid.Left = lblTagId.Right;
+                        Crumpet.Show(lblMsg, "Tag formatted", 2000);
                     }
                 }
             }
             catch (Exception ex)
             {
-                Crumpet(lblMsg, "Error with reader or no tag", 2000);
+                Crumpet.Show(lblMsg, "Error with reader or no tag", 2000);
                 MessageBox.Show(this, ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }

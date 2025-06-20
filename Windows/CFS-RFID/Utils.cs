@@ -288,7 +288,7 @@ namespace CFS_RFID
                 return randomNumberInRange.ToString("D6");
             }
         }
-
+        /*
         public static void Crumpet(Label label, string message, int duration)
         {
             Task task = Task.Run(() =>
@@ -306,7 +306,7 @@ namespace CFS_RFID
                 });
             }, TaskScheduler.Default);
         }
-
+        */
 
 
         public static bool CheckDBfile(string pType)

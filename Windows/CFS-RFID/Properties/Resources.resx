@@ -117,6 +117,10 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="format" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\format.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="addDesc" xml:space="preserve">
     <value>Add a new filament using the following filament as a base template.
 
@@ -125,12 +129,12 @@
 
 Set the Brand, Name and Type then adjust the settings on the param tab and save.</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="resetDesc" xml:space="preserve">
+    <value>Enter the ip address or hostname of your {0} printer and SSH password to Reset the filament database on the printer.
+This requires root access to be enabled on the printer to work.</value>
+  </data>
   <data name="k2" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\k2.json;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="hi" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\hi.json;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="updateDesc" xml:space="preserve">
     <value>Enter the ip address or hostname of your {0} printer and SSH password to Update the filament database on the printer.
@@ -142,11 +146,11 @@ This requires root access to be enabled on the printer to work.</value>
   <data name="upload" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\upload.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="download" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\download.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="delete" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\delete.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="k1Psw" xml:space="preserve">
+    <value>creality_2023</value>
   </data>
   <data name="hiPsw" xml:space="preserve">
     <value>Creality2024</value>
@@ -157,12 +161,11 @@ This requires root access to be enabled on the printer to work.</value>
   <data name="add" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\add.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="k1Psw" xml:space="preserve">
-    <value>creality_2023</value>
+  <data name="hi" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\hi.json;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="resetDesc" xml:space="preserve">
-    <value>Enter the ip address or hostname of your {0} printer and SSH password to Reset the filament database on the printer.
-This requires root access to be enabled on the printer to work.</value>
+  <data name="download" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\download.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="k2Psw" xml:space="preserve">
     <value>creality_2024</value>
@@ -177,7 +180,7 @@ This requires root access to be enabled on the printer to work.</value>
   <data name="verPrevent" xml:space="preserve">
     <value>9876543210</value>
   </data>
-  <data name="format" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\format.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="lock" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\lock.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

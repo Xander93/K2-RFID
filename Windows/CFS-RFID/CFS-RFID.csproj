@@ -124,6 +124,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Auth.cs" />
+    <Compile Include="Crumpet.cs" />
     <Compile Include="Filament.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
@@ -208,6 +209,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="app.ico" />
+    <None Include="Resources\lock.png" />
     <None Include="Resources\format.png" />
     <None Include="Resources\upload.png" />
   </ItemGroup>
