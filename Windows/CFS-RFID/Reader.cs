@@ -1,105 +1,84 @@
-﻿using System;
-using PCSC;
-using PCSC.Iso7816;
+﻿using PCSC;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace CFS_RFID
 {
     public class Reader
     {
-        private readonly IIsoReader iisoReader;
+        private readonly ICardReader reader;
 
-        public Reader(IIsoReader isoReader)
+        public Reader(ICardReader icReader)
         {
-            iisoReader = isoReader ?? throw new ArgumentNullException(nameof(isoReader));
+            reader = icReader ?? throw new ArgumentNullException(nameof(icReader));
         }
 
         public byte[] GetData()
         {
-            var getDataCmd = new CommandApdu(IsoCase.Case2Short, SCardProtocol.Any)
-            {
-                CLA = (byte)0xFF,
-                Instruction = InstructionCode.GetData,
-                P1 = 0x00,
-                P2 = 0x00
-            };
-
-            var response = iisoReader.Transmit(getDataCmd);
-            return IsSuccess(response)
-                    ? response.GetData() ?? new byte[0]
-                    : null;
+            byte[] response = new byte[6];
+            reader.Transmit(new byte[] { 0xFF, 0xCA, 0x00, 0x00, 0x00 }, response);
+            Array.Resize(ref response, 4);
+            return response;
         }
 
-        public bool LoadKey(byte keyStructure, byte keyNumber, byte[] key)
+        public bool LoadAuthenticationKeys(byte keyStructure, byte keyNumber, byte[] key)
         {
-            var loadKeyCmd = new CommandApdu(IsoCase.Case3Short, SCardProtocol.Any)
-            {
-                CLA = (byte)0xFF,
-                Instruction = InstructionCode.ExternalAuthenticate,
-                P1 = (byte)keyStructure,
-                P2 = keyNumber,
-                Data = key
-            };
-            var response = iisoReader.Transmit(loadKeyCmd);
-            return IsSuccess(response);
+            byte[] response = new byte[2];
+            List<byte> command = new byte[] { 0xFF, 0x82, keyStructure, keyNumber, 0x06 }.ToList();
+            command.AddRange(key);
+            reader.Transmit(command.ToArray(), response);
+            return (response[0] == 0x90) && (response[1] == 0x00);
         }
 
-        public bool Authenticate(byte msb, byte lsb, byte keyType, byte keyNumber)
+        public bool Authentication10byte(byte block, byte keyType, byte keyNumber)
         {
-            var authBlock = new Auth
-            {
-                Msb = msb,
-                Lsb = lsb,
-                KeyNumber = keyNumber,
-                KeyType = keyType
-            };
-            var authKeyCmd = new CommandApdu(IsoCase.Case3Short, SCardProtocol.Any)
-            {
-                CLA = (byte)0xFF,
-                Instruction = InstructionCode.InternalAuthenticate,
-                P1 = 0x00,
-                P2 = 0x00,
-                Data = authBlock.ToArray()
-            };
-            var response = iisoReader.Transmit(authKeyCmd);
-            return (response.SW1 == 0x90) && (response.SW2 == 0x00);
+            byte[] response = new byte[2];
+            List<byte> command = new byte[] { 0xFF, 0x86, 0x00, 0x00, 0x05 }.ToList();
+            command.AddRange(new byte[] { 0x01, 0x00, block, keyType, keyNumber });
+            reader.Transmit(command.ToArray(), response);
+            return (response[0] == 0x90) && (response[1] == 0x00);
         }
 
-        public byte[] ReadBinary(byte msb, byte lsb, int size)
+        public bool Authentication6byte(byte block, byte keyType, byte keyNumber)
         {
-            unchecked
-            {
-                var readBinaryCmd = new CommandApdu(IsoCase.Case2Short, SCardProtocol.Any)
-                {
-                    CLA = (byte)0xFF,
-                    Instruction = InstructionCode.ReadBinary,
-                    P1 = msb,
-                    P2 = lsb,
-                    Le = size
-                };
-                var response = iisoReader.Transmit(readBinaryCmd);
-                return IsSuccess(response)
-                    ? response.GetData() ?? new byte[0]
-                    : null;
-            }
+            byte[] response = new byte[2];
+            List<byte> command = new byte[] { 0xFF, 0x88, 0x00, block, keyType }.ToList();
+            command.AddRange(new byte[] { keyNumber });
+            reader.Transmit(command.ToArray(), response);
+            return (response[0] == 0x90) && (response[1] == 0x00);
         }
 
-        public bool UpdateBinary(byte msb, byte lsb, byte[] data)
+        public byte[] ReadBinaryBlocks(int block, int len)
         {
-            var updateBinaryCmd = new CommandApdu(IsoCase.Case3Short, SCardProtocol.Any)
-            {
-                CLA = (byte)0xFF,
-                Instruction = InstructionCode.UpdateBinary,
-                P1 = msb,
-                P2 = lsb,
-                Data = data
-            };
-            var response = iisoReader.Transmit(updateBinaryCmd);
-            return IsSuccess(response);
+            byte[] response = new byte[len + 2];
+            reader.Transmit(new byte[] { 0xFF, 0xB0, 0x00, (byte)block, (byte)len }, response);
+            Array.Resize(ref response, len);
+            return response;
         }
 
-        private static bool IsSuccess(Response response) =>
-            (response.SW1 == (byte)SW1Code.Normal) &&
-            (response.SW2 == 0x00);
+        public bool UpdateBinaryBlocks(int block, int len, byte[] blockData)
+        {
+            byte[] response = new byte[2];
+            List<byte> command = new byte[] { 0xFF, 0xD6, 0x00, (byte)block, (byte)len }.ToList();
+            command.AddRange(blockData);
+            reader.Transmit(command.ToArray(), response);
+            return (response[0] == 0x90) && (response[1] == 0x00);
+        }
+
+        public byte[] GetFirmwareVersion()
+        {
+            byte[] response = new byte[12];
+            reader.Transmit(new byte[] { 0xFF, 0x00, 0x48, 0x00, 0x00 }, response);
+            Array.Resize(ref response, 10);
+            return response;
+        }
+
+        public bool SetBuzzerOutputduringCardDetection(bool on)
+        {
+            byte[] response = new byte[2];
+            reader.Transmit(new byte[] { 0xFF, 0x00, 0x52, (byte)(on ? 0xff : 0x00), 0x00 }, response);
+            return (response[0] == 0x90) && (response[1] == 0x00);
+        }
     }
-
 }

@@ -1,7 +1,6 @@
 ﻿using PCSC.Monitoring;
 using PCSC;
 
-
 namespace CFS_RFID
 {
     public class Monitor

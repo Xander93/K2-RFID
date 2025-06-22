@@ -1,42 +1,41 @@
 ﻿using PCSC;
-using PCSC.Iso7816;
 using PCSC.Monitoring;
 using System;
 using System.Drawing;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using static CFS_RFID.Utils;
-
 
 namespace CFS_RFID
 {
     public partial class MainForm : Form
     {
         private ISCardContext context = null;
-        private IsoReader isoReader;
         private Monitor monitor;
+        private ICardReader icReader;
         private Reader reader;
         byte[] encKey;
-        private string DbVersion = "0";
+        private string DbVersion = "0", FwVersion;
         private string MaterialColor, PrinterType, MaterialName, MaterialID, MaterialWeight;
-        System.Windows.Forms.ToolTip upTip, delTip, edtTip, addTip, updTip, fmtTip;
+        private readonly System.Windows.Forms.ToolTip toolTip = new System.Windows.Forms.ToolTip(), balloonTip = new System.Windows.Forms.ToolTip();
 
         private void CardInserted(CardStatusEventArgs args)
         {
             try
             {
-                isoReader = new IsoReader(context: context, readerName: args.ReaderName,
-                    mode: SCardShareMode.Shared, protocol: SCardProtocol.Any, releaseContextOnDispose: false);
-                reader = new Reader(isoReader);
-                var uid = reader.GetData();
-                if (!reader.LoadKey(0, 0, KEY_DEFAULT))
+                icReader = context.ConnectReader(args.ReaderName, SCardShareMode.Shared, SCardProtocol.Any);
+                reader = new Reader(icReader);
+
+                byte[] uid = reader.GetData();
+                if (!reader.LoadAuthenticationKeys(0, 0, KEY_DEFAULT))
                 {
-                    reader.LoadKey(32, 0, KEY_DEFAULT);
+                    reader.LoadAuthenticationKeys(32, 0, KEY_DEFAULT);
                 }
                 encKey = CreateKey(uid);
-                if (!reader.LoadKey(0, 1, encKey))
+                if (!reader.LoadAuthenticationKeys(0, 1, encKey))
                 {
-                    if (!reader.LoadKey(32, 1, encKey))
+                    if (!reader.LoadAuthenticationKeys(32, 1, encKey))
                     {
                         Crumpet.Show(lblMsg, "Failed to load encKey", 2000);
                     }
@@ -46,17 +45,22 @@ namespace CFS_RFID
                 {
                     lblUid.Text = BitConverter.ToString(uid).Replace("-", " ");
                     lblTagId.Visible = true;
-                    if (reader.Authenticate(0, 7, 96, 0))
+                    if (string.IsNullOrEmpty(FwVersion))
                     {
+                        FwVersion = ReaderVersion(reader);
+                        Text = string.IsNullOrEmpty(FwVersion) ? "CFS RFID" : FwVersion;
+                    }
+                    if ((reader.Authentication10byte(7, 96, 0) || reader.Authentication6byte(7, 96, 0)))
+                    {
+                        balloonTip.Hide(imgEnc);
                         imgEnc.Visible = false;
                         lblUid.Left = lblTagId.Right;
                     }
                     else {
-
                         imgEnc.Visible = true;
+                        balloonTip.SetToolTip(imgEnc, "Key: " + BitConverter.ToString(encKey).Replace("-", ""));
                         lblUid.Left = imgEnc.Right;
                     }
-
                     if (chkAutoRead.Checked)
                     {
                         ReadSpoolData();
@@ -74,13 +78,11 @@ namespace CFS_RFID
         {
             try
             {
-                if (isoReader != null)
+                if (icReader != null)
                 {
-                    isoReader.Disconnect(SCardReaderDisposition.Leave);
-                    isoReader = null;
+                    icReader.Dispose();
                     reader = null;
                 }
-
                 Invoke((MethodInvoker)delegate ()
                 {
                     imgEnc.Visible = false;
@@ -90,6 +92,7 @@ namespace CFS_RFID
             }
             catch { }
         }
+
 
         private void ConnectReader()
         {
@@ -203,24 +206,18 @@ namespace CFS_RFID
             btnDel.ForeColor = BackColor;
             btnAdd.ForeColor = BackColor;
 
-            upTip = new System.Windows.Forms.ToolTip();
-            upTip.SetToolTip(btnUpload, "Upload database to printer");
-            delTip = new System.Windows.Forms.ToolTip();
-            delTip.SetToolTip(btnDel, "Delete selected filament");
-            edtTip = new System.Windows.Forms.ToolTip();
-            edtTip.SetToolTip(btnEdit, "Edit selected filament");
-            addTip = new System.Windows.Forms.ToolTip();
-            addTip.SetToolTip(btnAdd, "Add a new filament");
-            updTip = new System.Windows.Forms.ToolTip();
-            updTip.SetToolTip(btnUpdate, "Download database from printer");
-            fmtTip = new System.Windows.Forms.ToolTip();
-            fmtTip.SetToolTip(btnFormat, "Format tag");
+            toolTip.SetToolTip(btnUpload, "Upload database to printer");
+            toolTip.SetToolTip(btnDel, "Delete selected filament");
+            toolTip.SetToolTip(btnEdit, "Edit selected filament");
+            toolTip.SetToolTip(btnAdd, "Add a new filament");
+            toolTip.SetToolTip(btnUpdate, "Download database from printer");
+            toolTip.SetToolTip(btnFormat, "Format tag");
+            balloonTip.IsBalloon = true;
 
             printerModel.Items.AddRange(printerTypes);
             printerModel.SelectedIndex = Settings.GetSetting("printerType", 0);
 
             ConnectReader();
-
         }
 
         public void ReadSpoolData()
@@ -233,7 +230,7 @@ namespace CFS_RFID
                 }
                 else
                 {
-                    if (reader.Authenticate(0, 7, 96, 0))
+                    if ((reader.Authentication10byte(7, 96, 0) || reader.Authentication6byte(7, 96, 0)))
                     {
                         Crumpet.Show(lblMsg, "Empty tag", 2000);
                     }
@@ -294,12 +291,13 @@ namespace CFS_RFID
                     string reserve = "000000";
                     string endblock = "00000000";
                     WriteTag(reader, "AB124" + vendorId + "A2" + filamentId + color + Length + serialNum + reserve + endblock);
-                    if (reader.Authenticate(0, 7, 96, 0))
+                    if ((reader.Authentication10byte(7, 96, 0) || reader.Authentication6byte(7, 96, 0)))
                     {
-                        byte[] data = reader.ReadBinary(0, 7, 16);
+                        byte[] data = reader.ReadBinaryBlocks(7, 16);
                         Array.Copy(encKey, 0, data, 0, encKey.Length);
                         Array.Copy(encKey, 0, data, 10, encKey.Length);
-                        reader.UpdateBinary(0, 7, data.Take(16).ToArray());
+                        reader.UpdateBinaryBlocks(7, 16, data.Take(16).ToArray());
+                        balloonTip.SetToolTip(imgEnc, "Key: " + BitConverter.ToString(encKey).Replace("-", ""));
                         imgEnc.Visible = true;
                         lblUid.Left = imgEnc.Right;
                     }
@@ -544,7 +542,7 @@ namespace CFS_RFID
 
         private void BtnUpload_MouseLeave(object sender, EventArgs e)
         {
-            upTip.Hide(btnUpload);
+            toolTip.Hide(btnUpload);
         }
 
         private void ChkAutoRead_CheckedChanged(object sender, EventArgs e)
@@ -565,27 +563,43 @@ namespace CFS_RFID
 
         private void BtnFormat_MouseLeave(object sender, EventArgs e)
         {
-            fmtTip.Hide(btnFormat);
+            toolTip.Hide(btnFormat);
         }
 
         private void BtnUpdate_MouseLeave(object sender, EventArgs e)
         {
-            updTip.Hide(btnUpdate);
+            toolTip.Hide(btnUpdate);
         }
 
         private void BtnDel_MouseLeave(object sender, EventArgs e)
         {
-            delTip.Hide(btnDel);
+            toolTip.Hide(btnDel);
         }
 
         private void BtnEdit_MouseLeave(object sender, EventArgs e)
         {
-            edtTip.Hide(btnEdit);
+            toolTip.Hide(btnEdit);
+        }
+
+        private void ImgEnc_MouseLeave(object sender, EventArgs e)
+        {
+            balloonTip.Hide(imgEnc);
+        }
+
+        private void ImgEnc_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                Clipboard.Clear();
+                Clipboard.SetText("UID: " + lblUid.Text + "\r\nKey: " + BitConverter.ToString(encKey).Replace("-", ""));
+                Crumpet.Show(lblMsg, "Key copied to clipboard", 2000);
+            }
+            catch { }
         }
 
         private void BtnAdd_MouseLeave(object sender, EventArgs e)
         {
-            addTip.Hide(btnAdd);
+            toolTip.Hide(btnAdd);
         }
 
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
@@ -617,6 +631,5 @@ namespace CFS_RFID
             }
             catch { }
         }
-
     }
 }

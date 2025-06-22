@@ -8,10 +8,6 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.Xml.Linq;
 
 namespace CFS_RFID
 {
@@ -196,7 +192,7 @@ namespace CFS_RFID
             }
             catch (Exception)
             {
-                return new byte[] { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+                return KEY_DEFAULT;
             }
         }
 
@@ -227,37 +223,40 @@ namespace CFS_RFID
             return null;
         }
 
-        public static string ReadTag(Reader reader)
-        {
-            if (!reader.Authenticate(0, 4, 96, 1))
-            {
-                throw new Exception("Failed to authenticate");
-            }
-            MemoryStream buff = new MemoryStream(48);
-            buff.Write(reader.ReadBinary(0, 4, 16), 0, 16);
-            buff.Write(reader.ReadBinary(0, 5, 16), 0, 16);
-            buff.Write(reader.ReadBinary(0, 6, 16), 0, 16);
-            return Encoding.UTF8.GetString(Utils.CipherData(0, buff.ToArray()));
-        }
-
         public static void WriteTag(Reader reader, String tagData)
         {
-            if (!reader.Authenticate(0, 7, 96, 1))
+            if (!(reader.Authentication10byte(4, 96, 1) ||
+                  reader.Authentication6byte(4, 96, 1) ||
+                  reader.Authentication10byte(4, 96, 0) ||
+                  reader.Authentication6byte(4, 96, 0)))
             {
-                reader.Authenticate(0, 4, 96, 0);
+                throw new Exception("Failed to authenticate");
             }
             byte[] sectorData = Encoding.UTF8.GetBytes(tagData);
             int blockIndex = 4;
             for (int i = 0; i < 48; i += 16)
             {
-                reader.UpdateBinary(0, (byte)blockIndex, Utils.CipherData(1, sectorData.Skip(i).Take(16).ToArray()));
+                reader.UpdateBinaryBlocks((byte)blockIndex, 16, Utils.CipherData(1, sectorData.Skip(i).Take(16).ToArray()));
                 blockIndex++;
             }
         }
 
+        public static string ReadTag(Reader reader)
+        {
+            if (!(reader.Authentication10byte(4, 96, 1) || reader.Authentication6byte(4, 96, 1)))
+            {
+                throw new Exception("Failed to authenticate");
+            }
+            MemoryStream buff = new MemoryStream(48);
+            buff.Write(reader.ReadBinaryBlocks(4, 16), 0, 16);
+            buff.Write(reader.ReadBinaryBlocks(5, 16), 0, 16);
+            buff.Write(reader.ReadBinaryBlocks(6, 16), 0, 16);
+            return Encoding.UTF8.GetString(Utils.CipherData(0, buff.ToArray()));
+        }
+
         public static void FormatTag(Reader reader)
         {
-            if (reader.Authenticate(0, 7, 96, 1))
+            if ((reader.Authentication10byte(7, 96, 1) || reader.Authentication6byte(7, 96, 1)))
             {
                 byte[] sectorData = new byte[48];
                 for (int i = 0; i < sectorData.Length; i++)
@@ -267,14 +266,23 @@ namespace CFS_RFID
                 int blockIndex = 4;
                 for (int i = 0; i < 48; i += 16)
                 {
-                    reader.UpdateBinary(0, (byte)blockIndex, Utils.CipherData(1, sectorData.Skip(i).Take(16).ToArray()));
+                    reader.UpdateBinaryBlocks((byte)blockIndex, 16, Utils.CipherData(1, sectorData.Skip(i).Take(16).ToArray()));
                     blockIndex++;
                 }
-                byte[] data = reader.ReadBinary(0, 7, 16);
+                byte[] data = reader.ReadBinaryBlocks(7, 16);
                 Array.Copy(KEY_DEFAULT, 0, data, 0, KEY_DEFAULT.Length);
                 Array.Copy(KEY_DEFAULT, 0, data, 10, KEY_DEFAULT.Length);
-                reader.UpdateBinary(0, 7, data.Take(16).ToArray());
+                reader.UpdateBinaryBlocks(7, 16, data.Take(16).ToArray());
             }
+        }
+
+        public static string ReaderVersion(Reader reader)
+        {
+            try
+            {
+                return Encoding.ASCII.GetString(reader.GetFirmwareVersion());
+            }
+            catch { return string.Empty; }
         }
 
         public static string RandomSerial()
@@ -288,26 +296,6 @@ namespace CFS_RFID
                 return randomNumberInRange.ToString("D6");
             }
         }
-        /*
-        public static void Crumpet(Label label, string message, int duration)
-        {
-            Task task = Task.Run(() =>
-            {
-                label.Invoke((MethodInvoker)delegate ()
-                {
-                    label.Text = message;
-                });
-                Thread.Sleep(duration);
-            }).ContinueWith(t =>
-            {
-                label.Invoke((MethodInvoker)delegate ()
-                {
-                    label.Text = string.Empty;
-                });
-            }, TaskScheduler.Default);
-        }
-        */
-
 
         public static bool CheckDBfile(string pType)
         {
@@ -391,8 +379,7 @@ namespace CFS_RFID
                     using (var cmd = client.CreateCommand(command))
                     {
                         cmd.CommandTimeout = TimeSpan.FromSeconds(5);
-                        string result = cmd.Execute();
-                        return result;
+                        return cmd.Execute();
                     }
                 }
                 catch (Exception e)

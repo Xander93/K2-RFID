@@ -76,9 +76,6 @@
     <Reference Include="PCSC, Version=7.0.0.0, Culture=neutral, PublicKeyToken=13b76e54a2ee80a7, processorArchitecture=MSIL">
       <HintPath>..\packages\PCSC.7.0.0\lib\netstandard2.0\PCSC.dll</HintPath>
     </Reference>
-    <Reference Include="PCSC.Iso7816, Version=7.0.0.0, Culture=neutral, PublicKeyToken=13b76e54a2ee80a7, processorArchitecture=MSIL">
-      <HintPath>..\packages\PCSC.Iso7816.7.0.0\lib\netstandard2.0\PCSC.Iso7816.dll</HintPath>
-    </Reference>
     <Reference Include="Renci.SshNet, Version=2025.0.0.1, Culture=neutral, PublicKeyToken=1cee9f8bde3db106, processorArchitecture=MSIL">
       <HintPath>..\packages\SSH.NET.2025.0.0\lib\net462\Renci.SshNet.dll</HintPath>
     </Reference>
@@ -123,7 +120,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Auth.cs" />
     <Compile Include="Crumpet.cs" />
     <Compile Include="Filament.cs" />
     <Compile Include="MainForm.cs">

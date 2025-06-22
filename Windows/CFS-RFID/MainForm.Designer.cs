@@ -311,6 +311,8 @@
             this.imgEnc.TabIndex = 45;
             this.imgEnc.TabStop = false;
             this.imgEnc.Visible = false;
+            this.imgEnc.Click += new System.EventHandler(this.ImgEnc_Click);
+            this.imgEnc.MouseLeave += new System.EventHandler(this.ImgEnc_MouseLeave);
             // 
             // chkAutoWrite
             // 
@@ -351,7 +353,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(244)))), ((int)(((byte)(244)))), ((int)(((byte)(244)))));
-            this.ClientSize = new System.Drawing.Size(388, 693);
+            this.ClientSize = new System.Drawing.Size(390, 694);
             this.Controls.Add(this.imgEnc);
             this.Controls.Add(this.btnFormat);
             this.Controls.Add(this.lblAutoWrite);
