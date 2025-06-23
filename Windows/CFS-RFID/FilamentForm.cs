@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Reflection;
 using System.Windows.Forms;
 using static CFS_RFID.Utils;
 using static System.Windows.Forms.ListViewItem;
@@ -32,7 +33,9 @@ namespace CFS_RFID
             btnCancel.BackColor = ColorTranslator.FromHtml("#1976D2");
             btnSave.BackColor = ColorTranslator.FromHtml("#1976D2");
             lblFilament.ForeColor = ColorTranslator.FromHtml("#1976D2");
-
+            btnSave.FlatAppearance.BorderSize = 0;
+            btnCancel.FlatAppearance.BorderSize = 0;
+    
             paramList.View = View.Details;
             paramList.GridLines = true;
             paramList.FullRowSelect = true;

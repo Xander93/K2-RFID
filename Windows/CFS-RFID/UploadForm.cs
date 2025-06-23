@@ -24,7 +24,9 @@ namespace CFS_RFID
             btnUpload.BackColor = ColorTranslator.FromHtml("#1976D2");
             BackColor = ColorTranslator.FromHtml("#F4F4F4");
             lblPrinter.ForeColor = ColorTranslator.FromHtml("#1976D2");
-       
+            btnUpload.FlatAppearance.BorderSize = 0;
+            btnCancel.FlatAppearance.BorderSize = 0;
+
             lblPrinter.Text = "Update " + SelectedPrinter.ToUpper() + " Database";
 
             if (SelectedPrinter.Equals("hi",StringComparison.OrdinalIgnoreCase))

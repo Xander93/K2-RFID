@@ -30,6 +30,9 @@ namespace CFS_RFID
             btnCheck.BackColor = ColorTranslator.FromHtml("#1976D2");
             BackColor = ColorTranslator.FromHtml("#F4F4F4");
             lblPrinter.ForeColor = ColorTranslator.FromHtml("#1976D2");
+            btnUpdate.FlatAppearance.BorderSize = 0;
+            btnCancel.FlatAppearance.BorderSize = 0;
+            btnCheck.FlatAppearance.BorderSize = 0;
 
             if (SelectedPrinter.Equals("hi", StringComparison.OrdinalIgnoreCase))
             {

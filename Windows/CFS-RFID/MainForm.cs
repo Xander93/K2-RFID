@@ -206,6 +206,16 @@ namespace CFS_RFID
             btnDel.ForeColor = BackColor;
             btnAdd.ForeColor = BackColor;
 
+            btnRead.FlatAppearance.BorderSize = 0;
+            btnWrite.FlatAppearance.BorderSize = 0;
+            btnColor.FlatAppearance.BorderSize = 0;
+            btnDel.FlatAppearance.BorderSize = 0;
+            btnEdit.FlatAppearance.BorderSize = 0;
+            btnAdd.FlatAppearance.BorderSize = 0;
+            btnFormat.FlatAppearance.BorderSize = 0;
+            btnUpdate.FlatAppearance.BorderSize = 0;
+            btnUpload.FlatAppearance.BorderSize = 0;
+
             toolTip.SetToolTip(btnUpload, "Upload database to printer");
             toolTip.SetToolTip(btnDel, "Delete selected filament");
             toolTip.SetToolTip(btnEdit, "Edit selected filament");
