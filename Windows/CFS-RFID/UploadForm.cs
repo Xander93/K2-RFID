@@ -190,12 +190,12 @@ namespace CFS_RFID
                 }
                 catch (Exception ex) {
                     lblMsg.Text = string.Empty;
-                    MessageBox.Show(this, ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Toast.Show(this, ex.Message, Toast.LENGTH_LONG, true);
                 }
             }
             else
             {
-                MessageBox.Show(this, "Printer IP and Password cannot be blank", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Toast.Show(this, "Printer IP and Password cannot be blank", Toast.LENGTH_LONG, true);
             }
         }
     }

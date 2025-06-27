@@ -3,7 +3,6 @@ using PCSC.Monitoring;
 using System;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using static CFS_RFID.Utils;
 
@@ -37,7 +36,7 @@ namespace CFS_RFID
                 {
                     if (!reader.LoadAuthenticationKeys(32, 1, encKey))
                     {
-                        Crumpet.Show(lblMsg, "Failed to load encKey", 2000);
+                        Toast.Show(this, "Failed to load encKey", Toast.LENGTH_SHORT);
                     }
                 }
 
@@ -137,7 +136,6 @@ namespace CFS_RFID
                     btnColor.Visible = true;
                     materialWeight.Visible = true;
                     lblUid.Visible = true;
-                    ActiveControl = lblMsg;
                     lblAutoRead.Visible = true;
                     lblAutoWrite.Visible = true;
 
@@ -145,7 +143,7 @@ namespace CFS_RFID
                 else
                 {
 
-                    Crumpet.Show(lblMsg, "Connect Failed", 2000);
+                    Toast.Show(this, "Connect Failed", Toast.LENGTH_SHORT);
                     lblConnect.Visible = true;
                     lblConnect.ForeColor = Color.IndianRed;
                     lblConnect.Text = "No Reader Found\nClick here to connect";
@@ -176,7 +174,7 @@ namespace CFS_RFID
                 lblUid.Visible = false;
                 ActiveControl = lblConnect;
                 lblAutoRead.Visible = false;
-                MessageBox.Show(this, e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Toast.Show(this, e.Message, Toast.LENGTH_LONG, true);
             }
         }
 
@@ -236,13 +234,13 @@ namespace CFS_RFID
             {
                 if (reader == null)
                 {
-                    Crumpet.Show(lblMsg, "Error reading tag", 2000);
+                    Toast.Show(this, "Error reading tag", Toast.LENGTH_SHORT);
                 }
                 else
                 {
                     if ((reader.Authentication10byte(7, 96, 0) || reader.Authentication6byte(7, 96, 0)))
                     {
-                        Crumpet.Show(lblMsg, "Empty tag", 2000);
+                        Toast.Show(this, "Empty tag", Toast.LENGTH_SHORT);
                     }
                     else
                     {
@@ -262,16 +260,16 @@ namespace CFS_RFID
                                     vendorName.SelectedIndex = vendorName.FindStringExact(materialInfo[1]);
                                     materialName.SelectedIndex = materialName.FindStringExact(MaterialName);
                                     materialWeight.SelectedIndex = materialWeight.FindStringExact(GetMaterialWeight(length));
-                                    Crumpet.Show(lblMsg, "Data read from tag", 2000);
+                                    Toast.Show(this, "Data read from tag", Toast.LENGTH_SHORT);
                                 }
                                 else
                                 {
-                                    Crumpet.Show(lblMsg, "Unknown or empty tag", 2000);
+                                    Toast.Show(this, "Unknown or empty tag", Toast.LENGTH_SHORT);
                                 }
                             }
                             catch
                             {
-                                Crumpet.Show(lblMsg, "Error reading tag", 2000);
+                                Toast.Show(this, "Error reading tag", Toast.LENGTH_SHORT);
                             }
                         }
                     }
@@ -279,8 +277,7 @@ namespace CFS_RFID
             }
             catch (Exception e)
             {
-                Crumpet.Show(lblMsg, "Error with reader or no tag", 2000);
-                MessageBox.Show(this, e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Toast.Show(this, e.Message, Toast.LENGTH_LONG, true);
             }
         }
 
@@ -290,7 +287,7 @@ namespace CFS_RFID
             {
                 if (reader == null)
                 {
-                    Crumpet.Show(lblMsg, "Error writing tag", 2000);
+                    Toast.Show(this, "Error writing tag", Toast.LENGTH_SHORT);
                 }
                 else
                 {
@@ -311,13 +308,12 @@ namespace CFS_RFID
                         imgEnc.Visible = true;
                         lblUid.Left = imgEnc.Right;
                     }
-                    Crumpet.Show(lblMsg, "Data written to tag", 2000);
+                    Toast.Show(this, "Data written to tag", Toast.LENGTH_SHORT);
                 }
             }
             catch (Exception e)
             {
-                Crumpet.Show(lblMsg, "Error with reader or no tag", 2000);
-                MessageBox.Show(this, e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Toast.Show(this, e.Message, Toast.LENGTH_LONG, true);
             }
         }
 
@@ -532,21 +528,20 @@ namespace CFS_RFID
                 {
                     if (reader == null)
                     {
-                        Crumpet.Show(lblMsg, "Error formatting tag", 2000);
+                        Toast.Show(this, "Error formatting tag", Toast.LENGTH_SHORT);
                     }
                     else
                     {
                         FormatTag(reader);
                         imgEnc.Visible = false;
                         lblUid.Left = lblTagId.Right;
-                        Crumpet.Show(lblMsg, "Tag formatted", 2000);
+                        Toast.Show(this, "Tag formatted", Toast.LENGTH_SHORT);
                     }
                 }
             }
             catch (Exception ex)
             {
-                Crumpet.Show(lblMsg, "Error with reader or no tag", 2000);
-                MessageBox.Show(this, ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Toast.Show(this, ex.Message, Toast.LENGTH_LONG, true);
             }
         }
 
@@ -596,13 +591,21 @@ namespace CFS_RFID
             balloonTip.Hide(imgEnc);
         }
 
+        private void MainForm_LocationChanged(object sender, EventArgs e)
+        {
+            if (Toast.currentToastInstance != null && !Toast.currentToastInstance.IsDisposed)
+            {
+                Toast.currentToastInstance.UpdatePosition(this);
+            }
+        }
+
         private void ImgEnc_Click(object sender, EventArgs e)
         {
             try
             {
                 Clipboard.Clear();
                 Clipboard.SetText("UID: " + lblUid.Text + "\r\nKey: " + BitConverter.ToString(encKey).Replace("-", ""));
-                Crumpet.Show(lblMsg, "Key copied to clipboard", 2000);
+                Toast.Show(this, "Key copied to clipboard", Toast.LENGTH_SHORT);
             }
             catch { }
         }

@@ -31,7 +31,6 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.btnWrite = new System.Windows.Forms.Button();
             this.btnRead = new System.Windows.Forms.Button();
-            this.lblMsg = new System.Windows.Forms.Label();
             this.btnColor = new System.Windows.Forms.Button();
             this.lblTagId = new System.Windows.Forms.Label();
             this.materialWeight = new System.Windows.Forms.ComboBox();
@@ -60,7 +59,7 @@
             this.btnWrite.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnWrite.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnWrite.ForeColor = System.Drawing.Color.White;
-            this.btnWrite.Location = new System.Drawing.Point(216, 616);
+            this.btnWrite.Location = new System.Drawing.Point(216, 582);
             this.btnWrite.Name = "btnWrite";
             this.btnWrite.Size = new System.Drawing.Size(140, 47);
             this.btnWrite.TabIndex = 23;
@@ -74,22 +73,13 @@
             this.btnRead.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnRead.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnRead.ForeColor = System.Drawing.Color.White;
-            this.btnRead.Location = new System.Drawing.Point(33, 616);
+            this.btnRead.Location = new System.Drawing.Point(33, 582);
             this.btnRead.Name = "btnRead";
             this.btnRead.Size = new System.Drawing.Size(140, 47);
             this.btnRead.TabIndex = 22;
             this.btnRead.Text = "Read Tag";
             this.btnRead.UseVisualStyleBackColor = false;
             this.btnRead.Click += new System.EventHandler(this.BtnRead_Click);
-            // 
-            // lblMsg
-            // 
-            this.lblMsg.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblMsg.Location = new System.Drawing.Point(36, 547);
-            this.lblMsg.Name = "lblMsg";
-            this.lblMsg.Size = new System.Drawing.Size(317, 48);
-            this.lblMsg.TabIndex = 29;
-            this.lblMsg.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // btnColor
             // 
@@ -353,7 +343,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(244)))), ((int)(((byte)(244)))), ((int)(((byte)(244)))));
-            this.ClientSize = new System.Drawing.Size(390, 694);
+            this.ClientSize = new System.Drawing.Size(390, 657);
             this.Controls.Add(this.imgEnc);
             this.Controls.Add(this.btnFormat);
             this.Controls.Add(this.lblAutoWrite);
@@ -369,7 +359,6 @@
             this.Controls.Add(this.btnDel);
             this.Controls.Add(this.btnEdit);
             this.Controls.Add(this.btnAdd);
-            this.Controls.Add(this.lblMsg);
             this.Controls.Add(this.btnColor);
             this.Controls.Add(this.lblTagId);
             this.Controls.Add(this.materialWeight);
@@ -384,6 +373,7 @@
             this.Text = "CFS RFID";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainForm_FormClosed);
             this.Load += new System.EventHandler(this.MainForm_Load);
+            this.LocationChanged += new System.EventHandler(this.MainForm_LocationChanged);
             ((System.ComponentModel.ISupportInitialize)(this.imgEnc)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -396,7 +386,6 @@
         private System.Windows.Forms.Button btnDel;
         private System.Windows.Forms.Button btnEdit;
         private System.Windows.Forms.Button btnAdd;
-        private System.Windows.Forms.Label lblMsg;
         private System.Windows.Forms.Button btnColor;
         private System.Windows.Forms.Label lblTagId;
         private System.Windows.Forms.ComboBox materialWeight;

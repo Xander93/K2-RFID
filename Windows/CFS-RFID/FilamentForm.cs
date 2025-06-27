@@ -231,7 +231,7 @@ namespace CFS_RFID
             }
             else
             {
-                MessageBox.Show(this, "Invalid paramList", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Toast.Show(this, "Invalid paramList", Toast.LENGTH_LONG, true);
             }
         }
 
@@ -243,29 +243,29 @@ namespace CFS_RFID
                   cboType.Text.Equals(string.Empty) ||
                    txtMinTemp.Text.Equals(string.Empty) ||
                      txtMaxTemp.Text.Equals(string.Empty)){
-                MessageBox.Show(this, "You must fill all fields","Error",MessageBoxButtons.OK,MessageBoxIcon.Error);
+                Toast.Show(this, "You must fill all fields", Toast.LENGTH_LONG, true);
                 return;
             }
             else
             {
                 if (txtId.Text.Length != 5)
                 {
-                    MessageBox.Show(this, "ID must be 5 digits long", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Toast.Show(this, "ID must be 5 digits long", Toast.LENGTH_LONG, true);
                     return;
                 }
                 if (!int.TryParse(txtId.Text, out _))
                 {
-                    MessageBox.Show(this, "ID must be a number", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Toast.Show(this, "ID must be a number", Toast.LENGTH_LONG, true);
                     return;
                 }
                 if (!int.TryParse(txtMinTemp.Text, out _))
                 {
-                    MessageBox.Show(this, "Min Temp must be a number", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Toast.Show(this, "Min Temp must be a number", Toast.LENGTH_LONG, true);
                     return;
                 }
                 if (!int.TryParse(txtMaxTemp.Text, out _))
                 {
-                    MessageBox.Show(this, "Max Temp must be a number", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Toast.Show(this, "Max Temp must be a number", Toast.LENGTH_LONG, true);
                     return;
                 }
                 if (GetMaterialByID(txtId.Text.Trim()) == null)
@@ -334,12 +334,12 @@ namespace CFS_RFID
                     }
                     else
                     {
-                        MessageBox.Show(this, "Invalid paramList", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        Toast.Show(this, "Invalid paramList", Toast.LENGTH_LONG, true);
                     }
                 }
                 else
                 {
-                    MessageBox.Show(this, "Filament ID Exists\nDuplicate ids are not allowed", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Toast.Show(this, "Filament ID Exists\nDuplicate IDs are not allowed", Toast.LENGTH_LONG, true);
                 }
             }
         }
