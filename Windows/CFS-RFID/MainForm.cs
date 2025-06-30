@@ -25,8 +25,17 @@ namespace CFS_RFID
             {
                 icReader = context.ConnectReader(args.ReaderName, SCardShareMode.Shared, SCardProtocol.Any);
                 reader = new Reader(icReader);
-
                 byte[] uid = reader.GetData();
+                if (uid == null) {
+                    Invoke((MethodInvoker)delegate ()
+                    {
+                        Toast.Show(this, "Tag not compatible", Toast.LENGTH_LONG, true);
+                       
+                    });
+                    icReader.Dispose();
+                    reader = null;
+                    return;
+                }
                 if (!reader.LoadAuthenticationKeys(0, 0, KEY_DEFAULT))
                 {
                     reader.LoadAuthenticationKeys(32, 0, KEY_DEFAULT);
@@ -36,10 +45,12 @@ namespace CFS_RFID
                 {
                     if (!reader.LoadAuthenticationKeys(32, 1, encKey))
                     {
-                        Toast.Show(this, "Failed to load encKey", Toast.LENGTH_SHORT);
+                        Invoke((MethodInvoker)delegate ()
+                        {
+                            Toast.Show(this, "Failed to load encKey", Toast.LENGTH_SHORT);
+                        });
                     }
                 }
-
                 Invoke((MethodInvoker)delegate ()
                 {
                     lblUid.Text = BitConverter.ToString(uid).Replace("-", " ");

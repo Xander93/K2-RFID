@@ -478,40 +478,6 @@ public class Utils {
         return server_response;
     }
 
-/*
-    public static String getJsonDB(String psw, String host, String pType) {
-        try {
-            JSch jsch = new JSch();
-            Session session = jsch.getSession("root", host, 22);
-            session.setPassword(psw);
-            Properties prop = new Properties();
-            prop.put("StrictHostKeyChecking", "no");
-            session.setConfig(prop);
-            session.connect();
-            ChannelExec channel = (ChannelExec) session.openChannel("exec");
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            channel.setOutputStream(baos);
-            if (pType.equalsIgnoreCase("k1")) {
-                channel.setCommand("cat /usr/data/creality/userdata/box/material_database.json");
-            }else {
-                channel.setCommand("cat /mnt/UDISK/creality/userdata/box/material_database.json");
-            }
-            channel.connect(5000);
-            while (true) {
-                if (channel.isClosed()) {
-                    channel.disconnect();
-                    session.disconnect();
-                    return baos.toString();
-                }
-            }
-        } catch (Exception ignored) {
-            return null;
-        }
-    }
- */
-
-
-
     public static void restorePrinterDB(Context context, String psw, String host, String pType) throws Exception {
         JSONObject jsonDb = new JSONObject(getAssetDB(context, pType));
         setJsonDB(jsonDb.toString(2), psw, host, pType, "material_database.json");

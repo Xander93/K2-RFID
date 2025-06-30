@@ -16,8 +16,11 @@ namespace CFS_RFID
 
         public byte[] GetData()
         {
-            byte[] response = new byte[6];
-            reader.Transmit(new byte[] { 0xFF, 0xCA, 0x00, 0x00, 0x00 }, response);
+            byte[] response = new byte[10];
+            if (reader.Transmit(new byte[] { 0xFF, 0xCA, 0x00, 0x00, 0x00 }, response) > 6)
+            {
+                return null;
+            }
             Array.Resize(ref response, 4);
             return response;
         }

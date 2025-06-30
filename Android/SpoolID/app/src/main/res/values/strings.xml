@@ -98,4 +98,6 @@
     <string name="downloading_update">Downloading update...</string>
     <string name="rfid_disabled_tap_here_to_enable_nfc">NFC Disabled\nTap here to enable NFC</string>
     <string name="rfid_functions_disabled">RFID functions disabled</string>
+    <string name="error">ERROR</string>
+    <string name="tag_not_compatible">Tag not compatible</string>
 </resources>

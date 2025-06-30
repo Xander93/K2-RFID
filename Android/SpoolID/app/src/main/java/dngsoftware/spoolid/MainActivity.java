@@ -1,12 +1,6 @@
 package dngsoftware.spoolid;
 
 import static java.lang.String.format;
-import dngsoftware.spoolid.databinding.ActivityMainBinding;
-import dngsoftware.spoolid.databinding.AddDialogBinding;
-import dngsoftware.spoolid.databinding.SaveDialogBinding;
-import dngsoftware.spoolid.databinding.UpdateDialogBinding;
-import dngsoftware.spoolid.databinding.PickerDialogBinding;
-import dngsoftware.spoolid.databinding.ManualDialogBinding;
 import static dngsoftware.spoolid.Utils.GetMaterialBrand;
 import static dngsoftware.spoolid.Utils.GetMaterialInfo;
 import static dngsoftware.spoolid.Utils.GetMaterialLength;
@@ -16,20 +10,20 @@ import static dngsoftware.spoolid.Utils.GetSetting;
 import static dngsoftware.spoolid.Utils.SaveSetting;
 import static dngsoftware.spoolid.Utils.SetPermissions;
 import static dngsoftware.spoolid.Utils.addFilament;
-import static dngsoftware.spoolid.Utils.createKey;
+import static dngsoftware.spoolid.Utils.bytesToHex;
+import static dngsoftware.spoolid.Utils.canMfc;
 import static dngsoftware.spoolid.Utils.cipherData;
+import static dngsoftware.spoolid.Utils.createKey;
 import static dngsoftware.spoolid.Utils.dp2Px;
 import static dngsoftware.spoolid.Utils.getDBVersion;
 import static dngsoftware.spoolid.Utils.getJsonDB;
 import static dngsoftware.spoolid.Utils.getMaterialBrands;
 import static dngsoftware.spoolid.Utils.getMaterialPos;
-import static dngsoftware.spoolid.Utils.getPositionByValue;
-import static dngsoftware.spoolid.Utils.playBeep;
-import static dngsoftware.spoolid.Utils.bytesToHex;
-import static dngsoftware.spoolid.Utils.canMfc;
 import static dngsoftware.spoolid.Utils.getMaterials;
 import static dngsoftware.spoolid.Utils.getPixelColor;
+import static dngsoftware.spoolid.Utils.getPositionByValue;
 import static dngsoftware.spoolid.Utils.materialWeights;
+import static dngsoftware.spoolid.Utils.playBeep;
 import static dngsoftware.spoolid.Utils.populateDatabase;
 import static dngsoftware.spoolid.Utils.printerTypes;
 import static dngsoftware.spoolid.Utils.removeFilament;
@@ -37,6 +31,7 @@ import static dngsoftware.spoolid.Utils.restartApp;
 import static dngsoftware.spoolid.Utils.restorePrinterDB;
 import static dngsoftware.spoolid.Utils.saveDBToPrinter;
 import static dngsoftware.spoolid.Utils.setMaterialInfo;
+
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
@@ -60,7 +55,6 @@ import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.style.ForegroundColorSpan;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -70,6 +64,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.SeekBar;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -78,7 +73,9 @@ import androidx.core.widget.ImageViewCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.room.Room;
+
 import org.json.JSONObject;
+
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
@@ -86,7 +83,14 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Objects;
+
+import dngsoftware.spoolid.databinding.ActivityMainBinding;
+import dngsoftware.spoolid.databinding.AddDialogBinding;
 import dngsoftware.spoolid.databinding.EditDialogBinding;
+import dngsoftware.spoolid.databinding.ManualDialogBinding;
+import dngsoftware.spoolid.databinding.PickerDialogBinding;
+import dngsoftware.spoolid.databinding.SaveDialogBinding;
+import dngsoftware.spoolid.databinding.UpdateDialogBinding;
 
 public class MainActivity extends AppCompatActivity implements NfcAdapter.ReaderCallback {
     private MatDB matDb;
@@ -103,7 +107,6 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
     byte[] encKey;
     private ActivityMainBinding main;
     private ManualDialogBinding manual;
-    ;
     private Context context;
 
     @Override
@@ -208,9 +211,7 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
             alert.show();
         });
 
-        main.editbutton.setOnClickListener(view -> {
-            loadEdit();
-        });
+        main.editbutton.setOnClickListener(view -> loadEdit());
 
         main.deletebutton.setOnClickListener(view -> {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -227,9 +228,7 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
         });
 
 
-        main.uploadbutton.setOnClickListener(view -> {
-            openUpload();
-        });
+        main.uploadbutton.setOnClickListener(view -> openUpload());
 
 
         main.ubtn.setOnClickListener(view -> openUpdate());
@@ -395,6 +394,12 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
         try {
             currentTag = tag;
             runOnUiThread(() -> {
+                if (currentTag.getId().length > 4)
+                {
+                    Toast.makeText(getApplicationContext(), R.string.tag_not_compatible, Toast.LENGTH_SHORT).show();
+                    main.tagid.setText(R.string.error);
+                    return;
+                }
                 Toast.makeText(getApplicationContext(), getString(R.string.tag_found) + bytesToHex(currentTag.getId()), Toast.LENGTH_SHORT).show();
                 main.tagid.setText(bytesToHex(currentTag.getId()));
                 encKey = createKey(currentTag.getId());
@@ -416,6 +421,12 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
                 if (NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.getAction()) || NfcAdapter.ACTION_TAG_DISCOVERED.equals(intent.getAction())) {
                     currentTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
                     assert currentTag != null;
+                    if (currentTag.getId().length > 4)
+                    {
+                        Toast.makeText(getApplicationContext(), R.string.tag_not_compatible, Toast.LENGTH_SHORT).show();
+                        main.tagid.setText(R.string.error);
+                        return;
+                    }
                     Toast.makeText(getApplicationContext(), getString(R.string.tag_found) + bytesToHex(currentTag.getId()), Toast.LENGTH_SHORT).show();
                     main.tagid.setText(bytesToHex(currentTag.getId()));
                     encKey = createKey(currentTag.getId());
@@ -874,19 +885,16 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
                     dl.lblpip.setVisibility(View.VISIBLE);
                     dl.lblpsw.setVisibility(View.VISIBLE);
                     dl.updatedesc.setText(spannableString);
-                    dl.btnupd.setVisibility(View.INVISIBLE);
-                    dl.txtmsg.setText("");
-                    dl.txtnewver.setText("");
                 } else {
                     dl.txtaddress.setVisibility(View.INVISIBLE);
                     dl.txtpsw.setVisibility(View.INVISIBLE);
                     dl.lblpip.setVisibility(View.INVISIBLE);
                     dl.lblpsw.setVisibility(View.INVISIBLE);
                     dl.updatedesc.setText(getString(R.string.update_desc));
-                    dl.btnupd.setVisibility(View.INVISIBLE);
-                    dl.txtmsg.setText("");
-                    dl.txtnewver.setText("");
                 }
+                dl.btnupd.setVisibility(View.INVISIBLE);
+                dl.txtmsg.setText("");
+                dl.txtnewver.setText("");
             });
 
             if (dl.chkprnt.isChecked()) {
@@ -1207,15 +1215,11 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
             sdl.updatedesc.setText(spannableString);
 
 
-            sdl.chkprevent.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                SaveSetting(this, "prevent_" + PrinterType, isChecked);
-            });
+            sdl.chkprevent.setOnCheckedChangeListener((buttonView, isChecked) -> SaveSetting(this, "prevent_" + PrinterType, isChecked));
             sdl.chkprevent.setChecked(GetSetting(this, "prevent_" + PrinterType, true));
 
 
-            sdl.chkreboot.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                SaveSetting(this, "reboot_" + PrinterType, isChecked);
-            });
+            sdl.chkreboot.setOnCheckedChangeListener((buttonView, isChecked) -> SaveSetting(this, "reboot_" + PrinterType, isChecked));
             sdl.chkreboot.setChecked(GetSetting(this, "reboot_" + PrinterType, true));
 
             sdl.chkreset.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -1271,9 +1275,7 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
                                 if (resetapp) {
                                     matDb.deleteAll();
                                     populateDatabase(this, matDb, null, PrinterType);
-                                    runOnUiThread(() -> {
-                                        setMatDb(PrinterType);
-                                    });
+                                    runOnUiThread(() -> setMatDb(PrinterType));
                                 }
                                 restorePrinterDB(this, psw, host, PrinterType);
                                 runOnUiThread(() -> {
@@ -1322,9 +1324,7 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
                             });
                             return;
                         }
-                        runOnUiThread(() -> {
-                            sdl.txtmsg.setText(R.string.uploading);
-                        });
+                        runOnUiThread(() -> sdl.txtmsg.setText(R.string.uploading));
                         saveDBToPrinter(matDb, psw, host, PrinterType, version, reboot);
                         runOnUiThread(() -> {
                             sdl.txtmsg.setTextColor(ContextCompat.getColor(this, R.color.text_color));
