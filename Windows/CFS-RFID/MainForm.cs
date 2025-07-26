@@ -30,7 +30,6 @@ namespace CFS_RFID
                     Invoke((MethodInvoker)delegate ()
                     {
                         Toast.Show(this, "Tag not compatible", Toast.LENGTH_LONG, true);
-                       
                     });
                     icReader.Dispose();
                     reader = null;

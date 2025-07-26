@@ -308,8 +308,24 @@ namespace CFS_RFID
                         //   baseval["weightPerMeter"] = 0;
                         //   baseval["rank"] = 10000;
 
-                        baseval["minTemp"] = txtMinTemp.Text.Trim();
-                        baseval["maxTemp"] = txtMaxTemp.Text.Trim();
+                        try
+                        {
+                            baseval["minTemp"] = int.Parse(txtMinTemp.Text.Trim());
+                        }
+                        catch 
+                        {
+                            baseval["minTemp"] = txtMinTemp.Text.Trim();
+                        }
+
+                        try
+                        {
+                            baseval["maxTemp"] = int.Parse(txtMaxTemp.Text.Trim());
+                        }
+                        catch 
+                        {
+                            baseval["maxTemp"] = txtMaxTemp.Text.Trim();
+                        }
+
                         baseval["isSoluble"] = chkSoluble.Checked;
                         baseval["isSupport"] = chkSupport.Checked;
 
