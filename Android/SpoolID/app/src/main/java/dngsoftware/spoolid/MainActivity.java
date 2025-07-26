@@ -1127,13 +1127,47 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
 
             adl.btnadd.setOnClickListener(v -> {
                 try {
-
                     JSONObject info = new JSONObject(GetMaterialInfo(matDb, MaterialID));
                     JSONObject base = info.getJSONObject("base");
 
                     for (jsonItem jsonItem : jsonItems) {
-                        base.put(jsonItem.jKey, jsonItem.jValue);
+                        if (jsonItem.jKey.equals("brand") || jsonItem.jKey.equals("name") || jsonItem.jKey.equals("meterialType") || jsonItem.jKey.equals("colors")) {
+                            base.put(jsonItem.jKey, jsonItem.jValue);
+                        }
+                        else {
+                            if (jsonItem.jValue instanceof Number) {
+                                Number num = (Number) jsonItem.jValue;
+                                if (num instanceof Float || num instanceof Double) {
+                                    base.put(jsonItem.jKey, jsonItem.jValue);
+                                } else if (num instanceof Integer || num instanceof Long || num instanceof Short || num instanceof Byte) {
+                                    base.put(jsonItem.jKey, num);
+                                } else {
+                                    base.put(jsonItem.jKey, jsonItem.jValue);
+                                }
+                            } else if (jsonItem.jValue instanceof String) {
+                                String stringValue = (String) jsonItem.jValue;
+                                try {
+                                    if (stringValue.equalsIgnoreCase("false") || stringValue.equalsIgnoreCase("true")) {
+                                        boolean booleanValue = Boolean.parseBoolean(stringValue);
+                                        base.put(jsonItem.jKey, booleanValue);
+                                    } else if (stringValue.contains(".") || stringValue.contains("e") || stringValue.contains("E")) {
+                                        base.put(jsonItem.jKey, jsonItem.jValue);
+                                    } else {
+                                        int intValue = Integer.parseInt(stringValue);
+                                        base.put(jsonItem.jKey, intValue);
+                                    }
+                                } catch (Exception ignored) {
+                                    base.put(jsonItem.jKey, jsonItem.jValue);
+                                }
+                            } else if (jsonItem.jValue instanceof Boolean) {
+                                boolean booleanValue = (Boolean) jsonItem.jValue;
+                                base.put(jsonItem.jKey, booleanValue);
+                            } else {
+                                base.put(jsonItem.jKey, jsonItem.jValue);
+                            }
+                        }
                     }
+
                     if (GetMaterialName(matDb, base.get("id").toString()) != null) {
                         Toast.makeText(getApplicationContext(), "ID: " + base.get("id") + " already exists", Toast.LENGTH_SHORT).show();
                         return;
