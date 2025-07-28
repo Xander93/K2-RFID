@@ -100,4 +100,14 @@
     <string name="rfid_functions_disabled">RFID functions disabled</string>
     <string name="error">ERROR</string>
     <string name="tag_not_compatible">Tag not compatible</string>
+    <string name="red">Red</string>
+    <string name="green">Green</string>
+    <string name="blue">Blue</string>
+    <string name="submit">Submit</string>
+    <string name="invalid_hex_code_please_use_rrggbb_format">Invalid Hex Code. Please use RRGGBB format.</string>
+    <string name="enter_hex_color_rrggbb">Enter Hex Color (RRGGBB)</string>
+    <string name="rrggbb">RRGGBB</string>
+    <string name="rgb_sliders">RGB Sliders</string>
+    <string name="color_picker">Color Picker</string>
+    <string name="preset_colors">Preset Colors</string>
 </resources>

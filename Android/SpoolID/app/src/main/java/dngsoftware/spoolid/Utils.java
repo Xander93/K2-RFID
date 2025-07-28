@@ -12,6 +12,7 @@ import android.content.pm.FeatureInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
@@ -767,4 +768,45 @@ public class Utils {
         editor.putLong(sKey, lValue);
         editor.apply();
     }
+
+    public static int[] presetColors() {
+        return new int[]{
+                Color.parseColor("#39C0CF"),
+                Color.parseColor("#008080"),
+                Color.parseColor("#0000CD"),
+                Color.parseColor("#0059B3"),
+                Color.parseColor("#00BFFF"),
+                Color.parseColor("#87CEEB"),
+                Color.parseColor("#FF8000"),
+                Color.parseColor("#FFA500"),
+                Color.parseColor("#FFCC00"),
+                Color.parseColor("#B8860B"),
+                Color.parseColor("#8B4513"),
+                Color.parseColor("#A52A2A"),
+                Color.parseColor("#FF0000"),
+                Color.parseColor("#FF0033"),
+                Color.parseColor("#FF4000"),
+                Color.parseColor("#FF1493"),
+                Color.parseColor("#C71585"),
+                Color.parseColor("#800080"),
+                Color.parseColor("#8B008B"),
+                Color.parseColor("#CC99CC"),
+                Color.parseColor("#008080"),
+                Color.parseColor("#008080"),
+                Color.parseColor("#40E0D0"),
+                Color.parseColor("#008000"),
+                Color.parseColor("#32CD32"),
+                Color.parseColor("#7CFC00"),
+                Color.parseColor("#36454F"),
+                Color.parseColor("#778899"),
+                Color.parseColor("#D3D3D3"),
+                Color.parseColor("#696969"),
+                Color.parseColor("#FFFF00"),
+                Color.parseColor("#FFD700"),
+                Color.parseColor("#F5DEB3"),
+                Color.parseColor("#FFFFFF"),
+                Color.parseColor("#000000")
+        };
+    }
+
 }

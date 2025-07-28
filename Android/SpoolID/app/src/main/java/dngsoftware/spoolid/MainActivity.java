@@ -1,5 +1,6 @@
 package dngsoftware.spoolid;
 
+import static android.view.View.TEXT_ALIGNMENT_CENTER;
 import static java.lang.String.format;
 import static dngsoftware.spoolid.Utils.GetMaterialBrand;
 import static dngsoftware.spoolid.Utils.GetMaterialInfo;
@@ -14,35 +15,34 @@ import static dngsoftware.spoolid.Utils.bytesToHex;
 import static dngsoftware.spoolid.Utils.canMfc;
 import static dngsoftware.spoolid.Utils.cipherData;
 import static dngsoftware.spoolid.Utils.createKey;
-import static dngsoftware.spoolid.Utils.dp2Px;
 import static dngsoftware.spoolid.Utils.getDBVersion;
 import static dngsoftware.spoolid.Utils.getJsonDB;
 import static dngsoftware.spoolid.Utils.getMaterialBrands;
 import static dngsoftware.spoolid.Utils.getMaterialPos;
 import static dngsoftware.spoolid.Utils.getMaterials;
-import static dngsoftware.spoolid.Utils.getPixelColor;
 import static dngsoftware.spoolid.Utils.getPositionByValue;
 import static dngsoftware.spoolid.Utils.materialWeights;
 import static dngsoftware.spoolid.Utils.playBeep;
 import static dngsoftware.spoolid.Utils.populateDatabase;
+import static dngsoftware.spoolid.Utils.presetColors;
 import static dngsoftware.spoolid.Utils.printerTypes;
 import static dngsoftware.spoolid.Utils.removeFilament;
 import static dngsoftware.spoolid.Utils.restartApp;
 import static dngsoftware.spoolid.Utils.restorePrinterDB;
 import static dngsoftware.spoolid.Utils.saveDBToPrinter;
 import static dngsoftware.spoolid.Utils.setMaterialInfo;
-
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.LinearGradient;
-import android.graphics.Shader;
-import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.RectShape;
+import android.graphics.Paint;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.GradientDrawable;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.MifareClassic;
@@ -50,32 +50,39 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
+import android.text.InputFilter;
+import android.text.InputType;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
+import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.Window;
-import android.view.inputmethod.InputMethodManager;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.GridLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.core.widget.ImageViewCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.room.Room;
-
 import org.json.JSONObject;
-
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
@@ -83,7 +90,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Objects;
-
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import dngsoftware.spoolid.databinding.ActivityMainBinding;
 import dngsoftware.spoolid.databinding.AddDialogBinding;
 import dngsoftware.spoolid.databinding.EditDialogBinding;
@@ -103,11 +111,13 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
     int SelectedSize, SelectedBrand;
     String MaterialName, MaterialID, MaterialWeight, MaterialColor, PrinterType;
     Dialog pickerDialog, customDialog, saveDialog, updateDialog, editDialog, addDialog;
+    AlertDialog inputDialog;
     boolean encrypted = false;
     byte[] encKey;
     private ActivityMainBinding main;
     private ManualDialogBinding manual;
     private Context context;
+    Bitmap gradientBitmap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -387,6 +397,9 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
             pickerDialog.dismiss();
             openPicker();
         }
+        if (inputDialog != null && inputDialog.isShowing()) {
+            inputDialog.dismiss();
+        }
     }
 
     @Override
@@ -646,112 +659,88 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
             PickerDialogBinding dl = PickerDialogBinding.inflate(getLayoutInflater());
             View rv = dl.getRoot();
             pickerDialog.setContentView(rv);
+            gradientBitmap = null;
 
-            dl.dcolorview.setBackgroundColor(Color.parseColor("#" + MaterialColor));
-            dl.txtcolor.setText(MaterialColor);
             dl.btncls.setOnClickListener(v -> {
-                if (customDialog != null && customDialog.isShowing()) {
-                    manual.txtcolor.setText(String.format("0%s", MaterialColor));
-                } else {
-                    if (dl.txtcolor.getText().toString().length() == 6) {
-                        try {
-                            MaterialColor = dl.txtcolor.getText().toString();
-                            main.colorview.setBackgroundColor(Color.parseColor("#" + MaterialColor));
-                            dl.dcolorview.setBackgroundColor(Color.parseColor("#" + MaterialColor));
-                        } catch (Exception ignored) {
-                        }
+                if (dl.txtcolor.getText().toString().length() == 6) {
+                    try {
+                        MaterialColor = dl.txtcolor.getText().toString();
+                        int color = Color.rgb(dl.redSlider.getProgress(), dl.greenSlider.getProgress(), dl.blueSlider.getProgress());
+                        main.colorview.setBackgroundColor(color);
+                    } catch (Exception ignored) {
                     }
                 }
                 pickerDialog.dismiss();
             });
-            dl.txtcolor.setOnEditorActionListener((v, actionId, event) -> {
-                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(dl.txtcolor.getWindowToken(), 0);
-                if (dl.txtcolor.getText().toString().length() == 6) {
-                    try {
-                        MaterialColor = dl.txtcolor.getText().toString();
-                        main.colorview.setBackgroundColor(Color.parseColor("#" + MaterialColor));
-                        dl.dcolorview.setBackgroundColor(Color.parseColor("#" + MaterialColor));
 
-                    } catch (Exception ignored) {
-                    }
+            dl.redSlider.setProgress(Color.red(Color.parseColor("#" + MaterialColor)));
+            dl.greenSlider.setProgress(Color.green(Color.parseColor("#" + MaterialColor)));
+            dl.blueSlider.setProgress(Color.blue(Color.parseColor("#" + MaterialColor)));
+
+
+            setupPresetColors(dl);
+            updateColorDisplay(dl, dl.redSlider.getProgress(), dl.greenSlider.getProgress(), dl.blueSlider.getProgress());
+
+
+            setupGradientPicker(dl);
+
+            dl.gradientPickerView.setOnTouchListener((v, event) -> {
+                v.performClick();
+                if (gradientBitmap == null) {
+                    return false;
                 }
-                return true;
-            });
-            dl.picker.setOnTouchListener((v, event) -> {
-                final int currPixel = getPixelColor(event, dl.picker);
-                if (currPixel != 0) {
-                    MaterialColor = format("%02x%02x%02x", Color.red(currPixel), Color.green(currPixel), Color.blue(currPixel)).toUpperCase();
-                    if (customDialog != null && customDialog.isShowing()) {
-                        manual.txtcolor.setText(String.format("0%s", MaterialColor));
-                    } else {
-                        main.colorview.setBackgroundColor(Color.argb(255, Color.red(currPixel), Color.green(currPixel), Color.blue(currPixel)));
-                        dl.dcolorview.setBackgroundColor(Color.argb(255, Color.red(currPixel), Color.green(currPixel), Color.blue(currPixel)));
-                    }
-                    pickerDialog.dismiss();
+                if (event.getAction() == MotionEvent.ACTION_DOWN || event.getAction() == MotionEvent.ACTION_MOVE) {
+                    float touchX = event.getX();
+                    float touchY = event.getY();
+                    int pixelX = Math.max(0, Math.min(gradientBitmap.getWidth() - 1, (int) touchX));
+                    int pixelY = Math.max(0, Math.min(gradientBitmap.getHeight() - 1, (int) touchY));
+                    int pickedColor = gradientBitmap.getPixel(pixelX, pixelY);
+                    setSlidersFromColor(dl, Color.argb(255, Color.red(pickedColor), Color.green(pickedColor), Color.blue(pickedColor)));
+                    return true;
                 }
                 return false;
             });
-            DisplayMetrics displayMetrics = new DisplayMetrics();
-            getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-            float scrWwidth = displayMetrics.widthPixels;
-            if (scrWwidth > dp2Px(this, 500)) scrWwidth = dp2Px(this, 500);
-            LinearGradient test = new LinearGradient(50.f, 0.f, scrWwidth - 250, 0.0f, new int[]{0xFF000000, 0xFF0000FF, 0xFF00FF00, 0xFF00FFFF, 0xFFFF0000, 0xFFFF00FF, 0xFFFFFF00, 0xFFFFFFFF}, null, Shader.TileMode.CLAMP);
-            ShapeDrawable shape = new ShapeDrawable(new RectShape());
-            shape.getPaint().setShader(test);
-            dl.seekbarFont.setProgressDrawable(shape);
-            dl.seekbarFont.setMax(256 * 7 - 1);
-            dl.seekbarFont.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+            setupCollapsibleSection(dl,
+                    dl.rgbSlidersHeader,
+                    dl.rgbSlidersContent,
+                    dl.rgbSlidersToggleIcon,
+                    GetSetting(this,"RGB_VIEW",false)
+            );
+            setupCollapsibleSection(dl,
+                    dl.gradientPickerHeader,
+                    dl.gradientPickerContent,
+                    dl.gradientPickerToggleIcon,
+                    GetSetting(this,"PICKER_VIEW",true)
+            );
+            setupCollapsibleSection(dl,
+                    dl.presetColorsHeader,
+                    dl.presetColorsContent,
+                    dl.presetColorsToggleIcon,
+                    GetSetting(this,"PRESET_VIEW",true)
+            );
+
+            SeekBar.OnSeekBarChangeListener rgbChangeListener = new SeekBar.OnSeekBarChangeListener() {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                    if (fromUser) {
-                        int r = 0;
-                        int g = 0;
-                        int b = 0;
-
-                        if (progress < 256) {
-                            b = progress;
-                        } else if (progress < 256 * 2) {
-                            g = progress % 256;
-                            b = 256 - progress % 256;
-                        } else if (progress < 256 * 3) {
-                            g = 255;
-                            b = progress % 256;
-                        } else if (progress < 256 * 4) {
-                            r = progress % 256;
-                            g = 256 - progress % 256;
-                            b = 256 - progress % 256;
-                        } else if (progress < 256 * 5) {
-                            r = 255;
-                            b = progress % 256;
-                        } else if (progress < 256 * 6) {
-                            r = 255;
-                            g = progress % 256;
-                            b = 256 - progress % 256;
-                        } else if (progress < 256 * 7) {
-                            r = 255;
-                            g = 255;
-                            b = progress % 256;
-                        }
-                        MaterialColor = format("%02x%02x%02x", r, g, b).toUpperCase();
-                        dl.txtcolor.setText(MaterialColor);
-                        main.colorview.setBackgroundColor(Color.argb(255, r, g, b));
-                        dl.dcolorview.setBackgroundColor(Color.argb(255, r, g, b));
-                    }
+                    updateColorDisplay(dl, dl.redSlider.getProgress(), dl.greenSlider.getProgress(), dl.blueSlider.getProgress());
                 }
 
                 @Override
-                public void onStartTrackingTouch(SeekBar seekBar) {
-                }
+                public void onStartTrackingTouch(SeekBar seekBar) {}
 
                 @Override
-                public void onStopTrackingTouch(SeekBar seekBar) {
-                }
-            });
+                public void onStopTrackingTouch(SeekBar seekBar) {}
+            };
+
+            dl.redSlider.setOnSeekBarChangeListener(rgbChangeListener);
+            dl.greenSlider.setOnSeekBarChangeListener(rgbChangeListener);
+            dl.blueSlider.setOnSeekBarChangeListener(rgbChangeListener);
+
+            dl.txtcolor.setOnClickListener(v -> showHexInputDialog(dl));
 
             pickerDialog.show();
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) {}
     }
 
     void openCustom() {
@@ -1378,5 +1367,192 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
             saveDialog.show();
         } catch (Exception ignored) {
         }
+    }
+
+    private void updateColorDisplay(PickerDialogBinding dl,int currentRed,int currentGreen,int currentBlue) {
+        int color = Color.rgb(currentRed, currentGreen, currentBlue);
+        dl.colorDisplay.setBackgroundColor(color);
+        String hexCode = rgbToHex(currentRed, currentGreen, currentBlue);
+        dl.txtcolor.setText(hexCode);
+        double alphaNormalized = 255.0;
+        int blendedRed = (int) (currentRed * alphaNormalized + 244 * (1 - alphaNormalized));
+        int blendedGreen = (int) (currentGreen * alphaNormalized + 244 * (1 - alphaNormalized));
+        int blendedBlue = (int) (currentBlue * alphaNormalized + 244 * (1 - alphaNormalized));
+        double brightness = (0.299 * blendedRed + 0.587 * blendedGreen + 0.114 * blendedBlue) / 255;
+        if (brightness > 0.5) {
+            dl.txtcolor.setTextColor(Color.BLACK);
+        } else {
+            dl.txtcolor.setTextColor(Color.WHITE);
+        }
+
+    }
+
+    private String rgbToHex(int r, int g, int b) {
+        return String.format("%02X%02X%02X", r, g, b);
+    }
+
+    private void setupPresetColors(PickerDialogBinding dl) {
+        for (int color : presetColors()) {
+            Button colorButton = new Button(this);
+            GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+            params.width = (int) getResources().getDimension(R.dimen.preset_circle_size);
+            params.height = (int) getResources().getDimension(R.dimen.preset_circle_size);
+            params.setMargins(
+                    (int) getResources().getDimension(R.dimen.preset_circle_margin),
+                    (int) getResources().getDimension(R.dimen.preset_circle_margin),
+                    (int) getResources().getDimension(R.dimen.preset_circle_margin),
+                    (int) getResources().getDimension(R.dimen.preset_circle_margin)
+            );
+            colorButton.setLayoutParams(params);
+            GradientDrawable circleDrawable = (GradientDrawable) ResourcesCompat.getDrawable(getResources(),R.drawable.circle_shape,null);
+            assert circleDrawable != null;
+            circleDrawable.setColor(color);
+            colorButton.setBackground(circleDrawable);
+            colorButton.setTag(color);
+
+            colorButton.setOnClickListener(v -> {
+                int selectedColor = (int) v.getTag();
+                setSlidersFromColor(dl, selectedColor);
+            });
+            dl.presetColorGrid.addView(colorButton);
+        }
+    }
+
+    private void setSlidersFromColor(PickerDialogBinding dl, int rgbColor) {
+        dl.redSlider.setProgress(Color.red(rgbColor));
+        dl.greenSlider.setProgress(Color.green(rgbColor));
+        dl.blueSlider.setProgress(Color.blue(rgbColor));
+        updateColorDisplay(dl, Color.red(rgbColor), Color.green(rgbColor), Color.blue(rgbColor));
+    }
+
+    private void showHexInputDialog(PickerDialogBinding dl) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AlertDialogTheme);
+        builder.setTitle(R.string.enter_hex_color_rrggbb);
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS | InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);
+        input.setHint(R.string.rrggbb);
+        input.setTextColor(Color.BLACK);
+        input.setHintTextColor(Color.GRAY);
+        input.setTextAlignment(TEXT_ALIGNMENT_CENTER);
+        input.setText(rgbToHex(dl.redSlider.getProgress(), dl.greenSlider.getProgress(), dl.blueSlider.getProgress()));
+        InputFilter[] filters = new InputFilter[3];
+        filters[0] = new HexInputFilter();
+        filters[1] = new InputFilter.LengthFilter(6);
+        filters[2] = new InputFilter.AllCaps();
+        input.setFilters(filters);
+        builder.setView(input);
+        builder.setCancelable(true);
+        builder.setPositiveButton(R.string.submit, (dialog, which) -> {
+            String hexInput = input.getText().toString().trim();
+            if (isValidHexCode(hexInput)) {
+                setSlidersFromColor(dl, Color.parseColor("#" + hexInput));
+            } else {
+                Toast.makeText(MainActivity.this, R.string.invalid_hex_code_please_use_rrggbb_format, Toast.LENGTH_LONG).show();
+            }
+        });
+        builder.setNegativeButton(R.string.cancel, (dialog, which) -> dialog.cancel());
+        inputDialog = builder.create();
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        int screenWidthPx = displayMetrics.widthPixels;
+        float density = getResources().getDisplayMetrics().density;
+        int maxWidthDp = 100;
+        int maxWidthPx = (int) (maxWidthDp * density);
+        int dialogWidthPx = (int) (screenWidthPx * 0.80);
+        if (dialogWidthPx > maxWidthPx) {
+            dialogWidthPx = maxWidthPx;
+        }
+        Objects.requireNonNull(inputDialog.getWindow()).setLayout(dialogWidthPx, WindowManager.LayoutParams.WRAP_CONTENT);
+        inputDialog.getWindow().setGravity(Gravity.CENTER); // Center the dialog on the screen
+        inputDialog.setOnShowListener(dialogInterface -> {
+            Button positiveButton = inputDialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            Button negativeButton = inputDialog.getButton(AlertDialog.BUTTON_NEGATIVE);
+            positiveButton.setTextColor(Color.parseColor("#82B1FF"));
+            negativeButton.setTextColor(Color.parseColor("#82B1FF"));
+        });
+        inputDialog.show();
+    }
+
+    private static class HexInputFilter implements InputFilter {
+        @Override
+        public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
+            StringBuilder filtered = new StringBuilder();
+            for (int i = start; i < end; i++) {
+                char character = source.charAt(i);
+                if (Character.isDigit(character) || (character >= 'a' && character <= 'f') || (character >= 'A' && character <= 'F')) {
+                    filtered.append(character);
+                }
+            }
+            return filtered.toString();
+        }
+    }
+
+    private boolean isValidHexCode(String hexCode) {
+        Pattern pattern = Pattern.compile("^[0-9a-fA-F]{6}$");
+        Matcher matcher = pattern.matcher(hexCode);
+        return matcher.matches();
+    }
+
+
+    void setupGradientPicker(PickerDialogBinding dl) {
+        dl.gradientPickerView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                dl.gradientPickerView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                int width = dl.gradientPickerView.getWidth();
+                int height = dl.gradientPickerView.getHeight();
+                if (width > 0 && height > 0) {
+                    gradientBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                    Canvas canvas = new Canvas(gradientBitmap);
+                    Paint paint = new Paint();
+                    float[] hsv = new float[3];
+                    hsv[1] = 1.0f;
+                    for (int y = 0; y < height; y++) {
+                        hsv[2] = 1.0f - (float) y / height;
+                        for (int x = 0; x < width; x++) {
+                            hsv[0] = (float) x / width * 360f;
+                            paint.setColor(Color.HSVToColor(255, hsv));
+                            canvas.drawPoint(x, y, paint);
+                        }
+                    }
+                    dl.gradientPickerView.setBackground(new BitmapDrawable(getResources(), gradientBitmap));
+                }
+            }
+        });
+    }
+
+    private void setupCollapsibleSection(PickerDialogBinding dl, LinearLayout header, final LinearLayout content, final ImageView toggleIcon, boolean isExpandedInitially) {
+        content.setVisibility(isExpandedInitially ? View.VISIBLE : View.GONE);
+        toggleIcon.setImageResource(isExpandedInitially ? R.drawable.ic_arrow_up : R.drawable.ic_arrow_down);
+        header.setOnClickListener(v -> {
+            if (content.getVisibility() == View.VISIBLE) {
+                content.setVisibility(View.GONE);
+                toggleIcon.setImageResource(R.drawable.ic_arrow_down);
+                if (header.getId() == dl.rgbSlidersHeader.getId()) {
+                    SaveSetting(this,"RGB_VIEW",false);
+                }
+                else if (header.getId() == dl.gradientPickerHeader.getId()) {
+                    SaveSetting(this,"PICKER_VIEW",false);
+                }
+                else if (header.getId() == dl.presetColorsHeader.getId()) {
+                    SaveSetting(this,"PRESET_VIEW",false);
+                }
+            } else {
+                content.setVisibility(View.VISIBLE);
+                toggleIcon.setImageResource(R.drawable.ic_arrow_up);
+                if (header.getId() == dl.rgbSlidersHeader.getId()) {
+                    SaveSetting(this,"RGB_VIEW",true);
+                }
+                else if (header.getId() == dl.gradientPickerHeader.getId()) {
+                    SaveSetting(this,"PICKER_VIEW",true);
+                    if (gradientBitmap == null) {
+                        setupGradientPicker(dl);
+                    }
+                }
+                else if (header.getId() == dl.presetColorsHeader.getId()) {
+                    SaveSetting(this,"PRESET_VIEW",true);
+                }
+            }
+        });
     }
 }
