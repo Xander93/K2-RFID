@@ -1120,7 +1120,9 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
                     JSONObject base = info.getJSONObject("base");
 
                     for (jsonItem jsonItem : jsonItems) {
-                        if (jsonItem.jKey.equals("brand") || jsonItem.jKey.equals("name") || jsonItem.jKey.equals("meterialType") || jsonItem.jKey.equals("colors")) {
+                        if (jsonItem.jKey.equalsIgnoreCase("brand") || jsonItem.jKey.equalsIgnoreCase("name")
+                                || jsonItem.jKey.equalsIgnoreCase("meterialtype") || jsonItem.jKey.equalsIgnoreCase("colors")
+                                || jsonItem.jKey.equalsIgnoreCase("id")) {
                             base.put(jsonItem.jKey, jsonItem.jValue);
                         }
                         else {
