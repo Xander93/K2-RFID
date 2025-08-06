@@ -68,7 +68,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
@@ -82,6 +81,9 @@ import androidx.core.widget.ImageViewCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.room.Room;
+
+import com.google.android.flexbox.FlexboxLayout;
+
 import org.json.JSONObject;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -1394,11 +1396,13 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
     }
 
     private void setupPresetColors(PickerDialogBinding dl) {
+        dl.presetColorGrid.removeAllViews();
         for (int color : presetColors()) {
             Button colorButton = new Button(this);
-            GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-            params.width = (int) getResources().getDimension(R.dimen.preset_circle_size);
-            params.height = (int) getResources().getDimension(R.dimen.preset_circle_size);
+            FlexboxLayout.LayoutParams params = new FlexboxLayout.LayoutParams(
+                    (int) getResources().getDimension(R.dimen.preset_circle_size),
+                    (int) getResources().getDimension(R.dimen.preset_circle_size)
+            );
             params.setMargins(
                     (int) getResources().getDimension(R.dimen.preset_circle_margin),
                     (int) getResources().getDimension(R.dimen.preset_circle_margin),
@@ -1406,12 +1410,11 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
                     (int) getResources().getDimension(R.dimen.preset_circle_margin)
             );
             colorButton.setLayoutParams(params);
-            GradientDrawable circleDrawable = (GradientDrawable) ResourcesCompat.getDrawable(getResources(),R.drawable.circle_shape,null);
+            GradientDrawable circleDrawable = (GradientDrawable) ResourcesCompat.getDrawable(getResources(), R.drawable.circle_shape, null);
             assert circleDrawable != null;
             circleDrawable.setColor(color);
             colorButton.setBackground(circleDrawable);
             colorButton.setTag(color);
-
             colorButton.setOnClickListener(v -> {
                 int selectedColor = (int) v.getTag();
                 setSlidersFromColor(dl, selectedColor);
